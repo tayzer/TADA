@@ -224,7 +224,9 @@ public sealed class RunEngine(BaselineStore store, string dotnet = "dotnet", Act
                 string beforeJson = prefix + "-before.json", beforeXml = prefix + "-before.xml";
                 string afterJson = prefix + "-after.json", afterXml = prefix + "-after.xml";
                 progress?.Invoke($"Evaluating {subdirectory} build inputs for {selected}.");
-                await Msbuild(["-getItem:" + BuildInputs.Items, "-getProperty:" + BuildInputs.Properties, "-getResultOutputFile:" + beforeJson]);
+                // Resolve SDK-added transitive references before capturing the dependency graph.
+                await Msbuild(["-t:IncludeTransitiveProjectReferences", "-getItem:" + BuildInputs.Items,
+                    "-getProperty:" + BuildInputs.Properties, "-getResultOutputFile:" + beforeJson]);
                 await Msbuild(["-preprocess:" + beforeXml]);
                 var config = inventory!.Engineering?.Configuration ?? Data.Read<Config>(store.Repository.Resolve("tada.json"));
                 var before = BuildInputs.Capture(store.Repository, inventory!, config, sdk, generated, output, subdirectory, selected, beforeJson, beforeXml);
@@ -248,7 +250,7 @@ public sealed class RunEngine(BaselineStore store, string dotnet = "dotnet", Act
                 await Msbuild(["-t:Rebuild", "-p:BuildProjectReferences=false", "-getItem:" + BuildInputs.Items,
                     "-getProperty:" + BuildInputs.Properties, "-getResultOutputFile:" + afterJson]);
                 await Msbuild(["-preprocess:" + afterXml]);
-                var after = BuildInputs.Capture(store.Repository, inventory!, config, sdk, generated, output, subdirectory, selected, afterJson, afterXml);
+                var after = BuildInputs.Capture(store.Repository, inventory!, config, sdk, generated, output, subdirectory, selected, afterJson, afterXml, before);
                 BuildInputs.CheckStable(before, after);
                 if (dependencies != null && !BuildInputs.ReadDependencies(afterJson, subdirectory,
                     null, config.Execution.Applications().Select(service => store.Repository.Resolve(service.Project)).ToArray(),

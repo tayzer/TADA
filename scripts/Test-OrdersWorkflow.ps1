@@ -31,6 +31,41 @@ function Check([string]$Name, [int]$Expected, $Actual) {
 pwsh -NoProfile -File (Join-Path $PSScriptRoot 'Build-NativeObserver.ps1') -Fixture
 if ($LASTEXITCODE -ne 0) { throw 'Native provenance fixture build failed.' }
 $nativeFixture = Join-Path $repository '.artifacts/native/tests/tada_fixture.dll'
+# Exercise SDK item transformations through the recorded-run entry point. The
+# harness gains a three-project dependency graph and content consumed by a target.
+$controlRoot = Join-Path $workspace 'Acceptance/BuildInputControl'
+New-Item -ItemType Directory -Path "$controlRoot/Bridge", "$controlRoot/Leaf" -Force | Out-Null
+$leafProject = @'
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup>
+</Project>
+'@
+$bridgeProject = @'
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup>
+  <ItemGroup><ProjectReference Include="../Leaf/InputLeaf.csproj" /></ItemGroup>
+</Project>
+'@
+[IO.File]::WriteAllText("$controlRoot/Leaf/InputLeaf.csproj", $leafProject)
+[IO.File]::WriteAllText("$controlRoot/Bridge/InputBridge.csproj", $bridgeProject)
+$contentControl = Join-Path $controlRoot 'settings.json'
+[IO.File]::WriteAllText($contentControl, '{}')
+$controlProject = Join-Path $workspace 'Acceptance/Orders.Acceptance.csproj'
+$controlXml = @'
+  <ItemGroup>
+    <ProjectReference Include="BuildInputControl/Bridge/InputBridge.csproj" />
+    <Content Include="BuildInputControl/settings.json" />
+  </ItemGroup>
+  <Target Name="ConsumeContentControl" AfterTargets="Build">
+    <ItemGroup><Content Remove="BuildInputControl/settings.json" /></ItemGroup>
+  </Target>
+'@
+[IO.File]::WriteAllText($controlProject, [IO.File]::ReadAllText($controlProject).Replace('</Project>', $controlXml + '</Project>'))
+$restoreArguments = @('restore', $controlProject, '--use-lock-file', '--force-evaluate',
+    '--configfile', (Join-Path $workspace 'NuGet.Config'), '-p:NuGetAudit=false',
+    '-p:UseArtifactsOutput=true', "-p:ArtifactsPath=$workspace/.tada/control-restore")
+$controlRestore = & $Dotnet @restoreArguments 2>&1
+if ($LASTEXITCODE -ne 0) { throw "Build-input control restore failed: $($controlRestore -join "`n")" }
 $responseFile = Join-Path $workspace 'Directory.Build.rsp'
 [IO.File]::WriteAllText($responseFile, '-TADA_UNREVIEWED_RESPONSE_CONTROL')
 $responseOutput = & $Dotnet msbuild (Join-Path $workspace 'Acceptance/Orders.Acceptance.csproj') -getProperty:TargetFramework 2>&1
@@ -55,6 +90,17 @@ if ($nativeInputs.Count -lt 3) { throw 'Observer did not identify native SQLite 
 Check 'real native SQLite module identities captured' 0 @{Code=0;Result=@{observations=$nativeInputs.Count;processIds=@($nativeInputs.processId | Select-Object -Unique)}}
 $positiveRecord = Get-Content -Raw (Join-Path $positiveDirectory 'run.json') | ConvertFrom-Json
 if (@($positiveRecord.commands | Where-Object { $_.arguments[0] -in @('restore','msbuild') -and '-noAutoResponse' -notin $_.arguments }).Count -gt 0) { throw 'A build command accepted ambient response files.' }
+
+$buildInputs = Get-Content -Raw (Join-Path $positiveDirectory 'build-inputs.json') | ConvertFrom-Json
+$harnessInputs = $buildInputs.projects | Where-Object { $_.project -eq 'Acceptance/Orders.Acceptance.csproj' }
+if (@($harnessInputs.dependencies | Where-Object { $_.path.EndsWith('InputLeaf.csproj') }).Count -ne 1) { throw 'SDK transitive project reference was not captured before build.' }
+Check 'SDK transitive project graph verifies offline' 0 @{ Code=0; Result=@{ project='InputLeaf.csproj' } }
+$capturedContent = @($harnessInputs.after | Where-Object { $_.path -eq $contentControl })
+if ($capturedContent.Count -ne 1 -or $capturedContent[0].digest -ne ('sha256:' + (Get-FileHash $contentControl -Algorithm SHA256).Hash.ToLowerInvariant())) { throw 'Consumed content lost its post-build byte identity.' }
+$afterReport = $harnessInputs.reports.PSObject.Properties.Name | Where-Object { $_.EndsWith('-after.json') }
+$rawAfter = Get-Content -Raw (Join-Path $positiveDirectory $afterReport) | ConvertFrom-Json
+if (@($rawAfter.Items.Content | Where-Object { $_.FullPath -eq $contentControl }).Count -ne 0) { throw 'Content control did not leave the evaluated item list.' }
+Check 'consumed content retains its verified file identity' 0 @{ Code=0; Result=@{ path=$contentControl } }
 
 # Reviewed projects must not pull unselected oracle source/imports into an otherwise passing suite.
 $harnessProject = Join-Path $workspace 'Acceptance/Orders.Acceptance.csproj'

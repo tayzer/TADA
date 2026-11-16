@@ -81,7 +81,8 @@ public static class BuildInputs
     }
 
     public static BuildInput[] Capture(Repository repository, Inventory inventory, Config config, string sdk,
-        string generated, string output, string role, string project, string evaluation, string preprocessed)
+        string generated, string output, string role, string project, string evaluation, string preprocessed,
+        BuildInput[]? before = null)
     {
         using var document = JsonDocument.Parse(File.ReadAllBytes(evaluation));
         var properties = document.RootElement.GetProperty("Properties");
@@ -120,6 +121,10 @@ public static class BuildInputs
         foreach (var group in document.RootElement.GetProperty("Items").EnumerateObject())
             foreach (var item in group.Value.EnumerateArray())
                 Add(item.GetProperty("FullPath").GetString()!, group.Name);
+        // Targets can consume and remove items, as Blazor does with static web assets.
+        // Recapture their bytes even when they no longer appear in the final item lists.
+        foreach (var input in (before ?? []).Where(input => input.Category != "generated"))
+            foreach (string use in input.Uses) Add(input.Path, use);
         var result = new List<BuildInput>();
         string dotnetRoot = Path.GetDirectoryName(Path.GetDirectoryName(sdk))!;
         foreach (var pair in paths.OrderBy(pair => pair.Key, StringComparer.Ordinal))

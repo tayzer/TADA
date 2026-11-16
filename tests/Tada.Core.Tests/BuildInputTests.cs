@@ -141,6 +141,59 @@ public sealed class BuildInputTests
     }
 
     [TestMethod]
+    public void ContentRemovedFromEvaluatedItemsRemainsCapturedAfterBuild()
+    {
+        using var fixture = new Fixture();
+        string content = fixture.File("acceptance/wwwroot/appsettings.json", "{}");
+        fixture.Select("acceptance");
+        fixture.EvaluateContent(content);
+        var before = fixture.Capture();
+        fixture.Evaluate();
+        var after = fixture.Capture(before);
+
+        BuildInputs.CheckStable(before, after);
+        var captured = after.Single(input => input.Path == content);
+        Assert.AreEqual("oracle", captured.Category);
+        Assert.AreEqual(CanonicalJson.FileDigest(content), captured.Digest);
+        CollectionAssert.AreEqual(new[] { "Content" }, captured.Uses);
+        BuildInputs.CheckCurrent(after);
+        File.AppendAllText(content, " ");
+        Assert.ThrowsExactly<TadaException>(() => BuildInputs.CheckCurrent(after));
+    }
+
+    [TestMethod]
+    [DataRow("changed")]
+    [DataRow("deleted")]
+    public void RemovedContentStillRejectsPhysicalFileChanges(string mutation)
+    {
+        using var fixture = new Fixture();
+        string content = fixture.File("acceptance/wwwroot/appsettings.json", "{}");
+        fixture.Select("acceptance");
+        fixture.EvaluateContent(content);
+        var before = fixture.Capture();
+        fixture.Evaluate();
+        if (mutation == "changed") File.AppendAllText(content, " ");
+        else File.Delete(content);
+
+        Assert.ThrowsExactly<TadaException>(() => BuildInputs.CheckStable(before, fixture.Capture(before)));
+    }
+
+    [TestMethod]
+    public void RemovedToolchainInputIsRehashedBeforeStabilityCheck()
+    {
+        using var fixture = new Fixture();
+        string content = fixture.File("sdk/config.json", "{}");
+        fixture.EvaluateContent(content);
+        var before = fixture.Capture();
+        fixture.Evaluate();
+        File.AppendAllText(content, " ");
+        var after = fixture.Capture(before);
+
+        Assert.AreNotEqual(before.Single(input => input.Path == content).Digest, after.Single(input => input.Path == content).Digest);
+        Assert.ThrowsExactly<TadaException>(() => BuildInputs.CheckStable(before, after));
+    }
+
+    [TestMethod]
     public void UnlockedPackageCannotBecomeTrustedThroughPackageFolderProperty()
     {
         using var fixture = new Fixture();
@@ -308,12 +361,18 @@ public sealed class BuildInputTests
                 Items = new { Compile = source == null ? Array.Empty<object>() : [new { FullPath = source }], ProjectReference = Array.Empty<object>() }
             }));
         }
+        public void EvaluateContent(string path)
+        {
+            var evaluation = System.Text.Json.Nodes.JsonNode.Parse(System.IO.File.ReadAllText(Evaluation))!;
+            evaluation["Items"]!["Content"] = JsonSerializer.SerializeToNode(new[] { new { FullPath = path } });
+            System.IO.File.WriteAllText(Evaluation, evaluation.ToJsonString());
+        }
         public void Preprocess(params string[] imports) => File(".tada/audit/preprocessed.xml", "<Project>" +
             string.Join("", imports.Prepend(Path.Combine(Root, "acceptance", "Acceptance.csproj"))
                 .Select(path => "<!--\n====================\n" + path + "\n====================\n-->")) + "</Project>");
-        public BuildInput[] Capture() => BuildInputs.Capture(new Repository(Root), Inventory,
+        public BuildInput[] Capture(BuildInput[]? before = null) => BuildInputs.Capture(new Repository(Root), Inventory,
             Data.Read<Config>(Path.Combine(Root, "tada.json")), Sdk, Generated, Path.Combine(Root, ".tada", "audit", "harness"),
-            "harness", "acceptance/Acceptance.csproj", Evaluation, Preprocessed);
+            "harness", "acceptance/Acceptance.csproj", Evaluation, Preprocessed, before);
         public void Dispose() => project.Dispose();
     }
 }

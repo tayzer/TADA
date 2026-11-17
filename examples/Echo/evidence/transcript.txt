@@ -1,0 +1,401 @@
+Automated demonstration control approval. Human business acceptance remains separate.
+Results are local advisory L1.
+> tada '--version' --json
+{
+  "name": "TADA",
+  "version": "0.1.0-alpha.13",
+  "assurance": "L1-advisory"
+}
+Exit 0
+> tada 'init' --json
+{
+  "status": "initialised",
+  "created": [
+    ".tada/WORKFLOW.md",
+    ".tada/context.md",
+    "global.json",
+    "NuGet.Config",
+    ".gitattributes",
+    ".tada/.gitattributes",
+    "Directory.Build.props",
+    "Directory.Build.targets",
+    ".gitignore",
+    "tests/Acceptance/Acceptance.csproj",
+    "tests/Acceptance/reqnroll.json",
+    "tests/Acceptance/Bindings.cs",
+    "tests/Acceptance/TadaRuntimeCheckpoint.cs",
+    "tests/Acceptance/TadaAcceptance.cs",
+    "tests/Acceptance/Tada.Acceptance.targets",
+    "features/README.md",
+    "tada.json"
+  ],
+  "updated": [],
+  "next": "Project prepared. Enable the TADA plugin, start a fresh agent session and describe what you want to build or change normally."
+}
+Exit 0
+> tada 'baseline' 'prepare' --json
+{
+  "baseline": "sha256:251e0912f8b0a7d14087f56bfc672b576bef87d7ec61b73d5be66239581ca8a4",
+  "status": "DRAFT",
+  "next": "baseline review --baseline \u003Cdigest\u003E"
+}
+Exit 0
+> tada 'baseline' 'review' '--baseline' 'sha256:251e0912f8b0a7d14087f56bfc672b576bef87d7ec61b73d5be66239581ca8a4' --json
+{
+  "review": {
+    "id": "302558e619ab401ea27bbcdee671989d",
+    "baseline": "sha256:251e0912f8b0a7d14087f56bfc672b576bef87d7ec61b73d5be66239581ca8a4",
+    "created": "2026-11-17T14:30:42.767572+00:00",
+    "comparedTo": null
+  },
+  "inventory": {
+    "schemaVersion": 6,
+    "scope": {
+      "requirementIds": [
+        "REQ_ECHO_MESSAGE"
+      ],
+      "scenarioIds": [
+        "AC_ECHO_EMPTY",
+        "AC_ECHO_SPACES"
+      ]
+    },
+    "files": [
+      {
+        "path": "Directory.Build.props",
+        "roles": [
+          "support"
+        ],
+        "digest": "sha256:74373f2b2e7fb699d6d56a4505523915e5a4ced0337d78c75ffae8322c727c2f"
+      },
+      {
+        "path": "Directory.Build.targets",
+        "roles": [
+          "support"
+        ],
+        "digest": "sha256:649ac3538ec7263ce752ea92592999ae50d76951bb91693ce801facb3aee1f1c"
+      },
+      {
+        "path": "NuGet.Config",
+        "roles": [
+          "support"
+        ],
+        "digest": "sha256:1f5fc4d90c7b3e91fd074884d383ba39c04282518859ba8803dccd95f7e71cee"
+      },
+      {
+        "path": "features/README.md",
+        "roles": [
+          "support"
+        ],
+        "digest": "sha256:774958b48392fc20aade55768dfbc0c4ad09d7ae24aec895f4f72e0965c76bac"
+      },
+      {
+        "path": "features/echo.feature",
+        "roles": [
+          "specification"
+        ],
+        "digest": "sha256:28ceec16767b8eee89bdf1c2c4a2646c0714cae2b629f68065d66ebec2c7b905"
+      },
+      {
+        "path": "global.json",
+        "roles": [
+          "support"
+        ],
+        "digest": "sha256:ddeb361ead58f6b644be76db18e570d388cfe06e54f67b42e637554aaa8b47b8"
+      },
+      {
+        "path": "tada.json",
+        "roles": [
+          "support"
+        ],
+        "digest": "sha256:1976d72f179c0b915ff5c5e541651a5bc437edd32b4c9ebfabfc355d9e698dd4"
+      },
+      {
+        "path": "tests/Acceptance/Acceptance.csproj",
+        "roles": [
+          "support"
+        ],
+        "digest": "sha256:283c16da40c29b5aef68d01beb7fc2de01ce26572098394a4262f1b0c2e4fc55"
+      },
+      {
+        "path": "tests/Acceptance/Bindings.cs",
+        "roles": [
+          "support"
+        ],
+        "digest": "sha256:775224882b1d98f8907e8ea58817f7e0bd02d5875d6c3a9b90d7806aa284477c"
+      },
+      {
+        "path": "tests/Acceptance/Tada.Acceptance.targets",
+        "roles": [
+          "support"
+        ],
+        "digest": "sha256:08fb3b23bf12dce1917f9b5d4a8e53a9f49046374196f1d29c334c3754d86ae3"
+      },
+      {
+        "path": "tests/Acceptance/TadaAcceptance.cs",
+        "roles": [
+          "support"
+        ],
+        "digest": "sha256:0e22cb9c9e9173c4547c273218ce7de47293a6a585ece151d229baaf25035e04"
+      },
+      {
+        "path": "tests/Acceptance/TadaRuntimeCheckpoint.cs",
+        "roles": [
+          "support"
+        ],
+        "digest": "sha256:0d3f4354eb2246d6f3351ec4071abac67ea12696a7e47942ec456463685cb702"
+      },
+      {
+        "path": "tests/Acceptance/packages.lock.json",
+        "roles": [
+          "support"
+        ],
+        "digest": "sha256:9596e7e49f34a7afc59df8e0e1533e486cc4276890bc17fd43ef1a4c88715b28"
+      },
+      {
+        "path": "tests/Acceptance/reqnroll.json",
+        "roles": [
+          "support"
+        ],
+        "digest": "sha256:58afbb8bf149023bd8831d16581cb217f7f3ec20a44e10c378a1c33192fb24d3"
+      }
+    ],
+    "expectedCases": [
+      {
+        "caseId": "AC_ECHO_EMPTY",
+        "scenarioId": "AC_ECHO_EMPTY",
+        "requirementIds": [
+          "REQ_ECHO_MESSAGE"
+        ],
+        "sourcePath": "features/echo.feature"
+      },
+      {
+        "caseId": "AC_ECHO_SPACES",
+        "scenarioId": "AC_ECHO_SPACES",
+        "requirementIds": [
+          "REQ_ECHO_MESSAGE"
+        ],
+        "sourcePath": "features/echo.feature"
+      }
+    ],
+    "execution": {
+      "project": "tests/Acceptance/Acceptance.csproj",
+      "assembly": "Acceptance.dll",
+      "messagesFile": "tada-messages.ndjson",
+      "timeoutSeconds": 120,
+      "sutProject": "Api/Echo.Api.csproj",
+      "sutAssembly": "Echo.Api.dll"
+    },
+    "externalInputs": [
+      {
+        "id": "dotnet-sdk-policy",
+        "digest": "sha256:ddeb361ead58f6b644be76db18e570d388cfe06e54f67b42e637554aaa8b47b8"
+      },
+      {
+        "id": "nuget-locked-graph",
+        "digest": "sha256:9596e7e49f34a7afc59df8e0e1533e486cc4276890bc17fd43ef1a4c88715b28"
+      }
+    ],
+    "policy": {
+      "assurance": "L1-advisory",
+      "automaticRetries": false,
+      "messagesProtocol": "30.1.0",
+      "buildInputs": "evaluated-dotnet-build-v4",
+      "runtimeInputs": "dotnet-loader-observation-v2",
+      "buildTasks": "msbuild-tasks-and-declared-inputs-v2"
+    }
+  },
+  "buildTaskContracts": [],
+  "changedFiles": [
+    "Directory.Build.props",
+    "Directory.Build.targets",
+    "NuGet.Config",
+    "features/README.md",
+    "features/echo.feature",
+    "global.json",
+    "tada.json",
+    "tests/Acceptance/Acceptance.csproj",
+    "tests/Acceptance/Bindings.cs",
+    "tests/Acceptance/Tada.Acceptance.targets",
+    "tests/Acceptance/TadaAcceptance.cs",
+    "tests/Acceptance/TadaRuntimeCheckpoint.cs",
+    "tests/Acceptance/packages.lock.json",
+    "tests/Acceptance/reqnroll.json"
+  ],
+  "removedFiles": [],
+  "removedCaseIds": [],
+  "protectedChanges": [],
+  "specifications": [
+    {
+      "path": "features/echo.feature",
+      "content": "# Demonstration candidate. Automated controls do not substitute for human business approval.\n@REQ_ECHO_MESSAGE\nFeature: Echo a message\n  @AC_ECHO_SPACES\n  Scenario: Preserve the submitted message\n    Given an isolated echo API\n    When I send the message \u0022hello world\u0022\n    Then the echo status is 200\n    And the echoed message is \u0022hello world\u0022\n\n  @AC_ECHO_EMPTY\n  Scenario: Reject an empty message\n    Given an isolated echo API\n    When I send the message \u0022\u0022\n    Then the echo status is 400\n    And the error is \u0022message_required\u0022\n"
+    }
+  ],
+  "notice": "Review the captured specification, assertions, setup, observation and policy. This record is not approval."
+}
+Exit 0
+> tada 'baseline' 'approve' '--review' '302558e619ab401ea27bbcdee671989d' '--by' 'automated Echo demonstration control; not human acceptance' --json
+{
+  "id": "d00567218f45421db68002dda8582c5b",
+  "review": "302558e619ab401ea27bbcdee671989d",
+  "baseline": "sha256:251e0912f8b0a7d14087f56bfc672b576bef87d7ec61b73d5be66239581ca8a4",
+  "by": "automated Echo demonstration control; not human acceptance",
+  "created": "2026-11-17T14:30:43.0056655+00:00",
+  "replaces": null
+}
+Exit 0
+> tada 'run' '--baseline' 'sha256:251e0912f8b0a7d14087f56bfc672b576bef87d7ec61b73d5be66239581ca8a4' '--dotnet' 'C:\Program Files\dotnet\dotnet.exe' --json
+{
+  "outcome": "FAIL",
+  "assurance": "L1-advisory",
+  "baseline": "sha256:251e0912f8b0a7d14087f56bfc672b576bef87d7ec61b73d5be66239581ca8a4",
+  "runId": "1039d847c2964733879a5bf1939d699c",
+  "passedCases": [],
+  "reasons": [
+    {
+      "code": "requirement-failure",
+      "detail": "Assertion failed. Expected values to be equal.\r\n\r\nexpected: 400\r\nactual:   501\r\n\r\nAssert.AreEqual(code, (int)response!.StatusCode)",
+      "caseId": "AC_ECHO_EMPTY"
+    },
+    {
+      "code": "step-skipped",
+      "detail": "Required step or hook did not pass.",
+      "caseId": "AC_ECHO_EMPTY"
+    },
+    {
+      "code": "requirement-failure",
+      "detail": "Assertion failed. Expected values to be equal.\r\n\r\nexpected: 200\r\nactual:   501\r\n\r\nAssert.AreEqual(code, (int)response!.StatusCode)",
+      "caseId": "AC_ECHO_SPACES"
+    },
+    {
+      "code": "step-skipped",
+      "detail": "Required step or hook did not pass.",
+      "caseId": "AC_ECHO_SPACES"
+    }
+  ],
+  "exitCode": 1
+}
+Exit 1
+> tada 'verify' '--run' '1039d847c2964733879a5bf1939d699c' --json
+{
+  "outcome": "FAIL",
+  "assurance": "L1-advisory",
+  "baseline": "sha256:251e0912f8b0a7d14087f56bfc672b576bef87d7ec61b73d5be66239581ca8a4",
+  "runId": "1039d847c2964733879a5bf1939d699c",
+  "passedCases": [],
+  "reasons": [
+    {
+      "code": "requirement-failure",
+      "detail": "Assertion failed. Expected values to be equal.\r\n\r\nexpected: 400\r\nactual:   501\r\n\r\nAssert.AreEqual(code, (int)response!.StatusCode)",
+      "caseId": "AC_ECHO_EMPTY"
+    },
+    {
+      "code": "step-skipped",
+      "detail": "Required step or hook did not pass.",
+      "caseId": "AC_ECHO_EMPTY"
+    },
+    {
+      "code": "requirement-failure",
+      "detail": "Assertion failed. Expected values to be equal.\r\n\r\nexpected: 200\r\nactual:   501\r\n\r\nAssert.AreEqual(code, (int)response!.StatusCode)",
+      "caseId": "AC_ECHO_SPACES"
+    },
+    {
+      "code": "step-skipped",
+      "detail": "Required step or hook did not pass.",
+      "caseId": "AC_ECHO_SPACES"
+    }
+  ],
+  "exitCode": 1
+}
+Exit 1
+> tada 'run' '--baseline' 'sha256:251e0912f8b0a7d14087f56bfc672b576bef87d7ec61b73d5be66239581ca8a4' '--dotnet' 'C:\Program Files\dotnet\dotnet.exe' --json
+{
+  "outcome": "PASS",
+  "assurance": "L1-advisory",
+  "baseline": "sha256:251e0912f8b0a7d14087f56bfc672b576bef87d7ec61b73d5be66239581ca8a4",
+  "runId": "6e02370eec9f4e548a4c067ebabe72ed",
+  "passedCases": [
+    "AC_ECHO_EMPTY",
+    "AC_ECHO_SPACES"
+  ],
+  "reasons": [],
+  "exitCode": 0
+}
+Exit 0
+> tada 'verify' '--run' '6e02370eec9f4e548a4c067ebabe72ed' --json
+{
+  "outcome": "PASS",
+  "assurance": "L1-advisory",
+  "baseline": "sha256:251e0912f8b0a7d14087f56bfc672b576bef87d7ec61b73d5be66239581ca8a4",
+  "runId": "6e02370eec9f4e548a4c067ebabe72ed",
+  "passedCases": [
+    "AC_ECHO_EMPTY",
+    "AC_ECHO_SPACES"
+  ],
+  "reasons": [],
+  "exitCode": 0
+}
+Exit 0
+> Replace status assertion in tests/Acceptance/Bindings.cs with Assert.IsTrue(true);
+> tada 'run' '--baseline' 'sha256:251e0912f8b0a7d14087f56bfc672b576bef87d7ec61b73d5be66239581ca8a4' '--dotnet' 'C:\Program Files\dotnet\dotnet.exe' --json
+{
+  "outcome": "INDETERMINATE",
+  "assurance": "L1-advisory",
+  "baseline": "sha256:251e0912f8b0a7d14087f56bfc672b576bef87d7ec61b73d5be66239581ca8a4",
+  "runId": "3e5057aff7cc4cc8aa3a9d9448c5f288",
+  "passedCases": [],
+  "reasons": [
+    {
+      "code": "execution-invalid",
+      "detail": "Oracle inputs changed or the selected file set differs. Prepare, review and approve a new revision.",
+      "caseId": null
+    }
+  ],
+  "exitCode": 2
+}
+Exit 2
+> tada 'verify' '--run' '6e02370eec9f4e548a4c067ebabe72ed' --json
+{
+  "outcome": "PASS",
+  "assurance": "L1-advisory",
+  "baseline": "sha256:251e0912f8b0a7d14087f56bfc672b576bef87d7ec61b73d5be66239581ca8a4",
+  "runId": "6e02370eec9f4e548a4c067ebabe72ed",
+  "passedCases": [
+    "AC_ECHO_EMPTY",
+    "AC_ECHO_SPACES"
+  ],
+  "reasons": [],
+  "exitCode": 0
+}
+Exit 0
+> Apply the same assertion edit to the captured snapshot in this disposable control.
+> tada 'verify' '--run' '6e02370eec9f4e548a4c067ebabe72ed' --json
+{
+  "outcome": "INDETERMINATE",
+  "assurance": "L1-advisory",
+  "baseline": "sha256:251e0912f8b0a7d14087f56bfc672b576bef87d7ec61b73d5be66239581ca8a4",
+  "runId": "6e02370eec9f4e548a4c067ebabe72ed",
+  "passedCases": [],
+  "reasons": [
+    {
+      "code": "integrity",
+      "detail": "Captured baseline bytes changed: tests/Acceptance/Bindings.cs",
+      "caseId": null
+    }
+  ],
+  "exitCode": 2
+}
+Exit 2
+> tada 'verify' '--run' '6e02370eec9f4e548a4c067ebabe72ed' --json
+{
+  "outcome": "PASS",
+  "assurance": "L1-advisory",
+  "baseline": "sha256:251e0912f8b0a7d14087f56bfc672b576bef87d7ec61b73d5be66239581ca8a4",
+  "runId": "6e02370eec9f4e548a4c067ebabe72ed",
+  "passedCases": [
+    "AC_ECHO_EMPTY",
+    "AC_ECHO_SPACES"
+  ],
+  "reasons": [],
+  "exitCode": 0
+}
+Exit 0

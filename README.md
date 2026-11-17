@@ -2,15 +2,20 @@
 
 **Test-Assured Development Assistance.** Your coding agent agrees *what success means* with you before it writes code, then proves the result against that agreement. TADA works with Codex, Claude Code and Cursor.
 
+> **Available on 2026-11-17** — Published preview `0.1.0-alpha.13.109` supports Codex, Claude Code and Cursor. Install from the TADA marketplace or matching release ZIP below. [Release and downloads](https://github.com/tayzer/TADA/releases/tag/v0.1.0-alpha.13.109)
+> **Upgrading alpha.12** — Its Codex plugin ID was `tada@tada-development`. Follow the migration steps under [Update or uninstall](#update-or-uninstall) to use `tada@tada`.
+
 [![Release](https://img.shields.io/github/v/release/tayzer/TADA?include_prereleases&label=release)](https://github.com/tayzer/TADA/releases)
 [![Licence: MIT](https://img.shields.io/badge/licence-MIT-blue)](LICENSE)
 ![Platform](https://img.shields.io/badge/platform-Windows%20x64-lightgrey)
 ![.NET](https://img.shields.io/badge/.NET-10.0-512BD4)
 ![Hosts](https://img.shields.io/badge/hosts-Codex%20%7C%20Claude%20Code%20%7C%20Cursor-black)
 
-**[Install](#install)** · **[First use](#first-use)** · **[Turn it on and off](#turn-it-on-and-off)** · **[Optional pieces](#optional-pieces)** · **[Commands](#commands)** · **[Configuration](#configuration)** · **[Uninstall](#update-or-uninstall)** · **[Troubleshooting](#troubleshooting)** · **[How it works](docs/how-it-works.md)**
+**[Install](#install)** · **[Demo](examples/Echo/README.md#run-the-short-demonstration)** · **[First use](#first-use)** · **[Turn it on and off](#turn-it-on-and-off)** · **[Optional pieces](#optional-pieces)** · **[Commands](#commands)** · **[Configuration](#configuration)** · **[Uninstall](#update-or-uninstall)** · **[Troubleshooting](#troubleshooting)** · **[Tester feedback](#tester-feedback)** · **[How it works](docs/how-it-works.md)**
 
 > AI may propose and implement changes, but it must not independently redefine the conditions by which those changes are judged successful.
+
+Results are **local advisory L1**. A machine owner can forge local approval and evidence records. For team CI, run `tada gate --run <id> --base origin/main` as a required check, require code-owner review of protected inputs and review its `protectedChanges` list. The independent approval adapter remains proposed work. [CI and approval authority](docs/ci-pr-workflows.md#approval-authority)
 
 ## What you get
 
@@ -25,29 +30,21 @@ You ask your agent for something in plain words. With TADA enabled, the agent:
 
 Chores and refactors take a lighter path. They reuse existing checks, and the agent does not invent business scenarios for ceremony.
 
-```text
-You:   Orders above five units should be rejected.
+The runnable Echo API demonstration captures the complete sequence. A reachable endpoint returning HTTP 501 produces `FAIL`. Implementing the agreed response produces `PASS` under the same baseline. Replacing a working status assertion with `Assert.IsTrue(true);` blocks a new run with `INDETERMINATE`. Editing the captured assertion makes `tada verify` report an integrity failure. Read the actual commands, JSON and exit codes in its transcript. [Run the demo and read the evidence](examples/Echo/README.md#run-the-short-demonstration)
 
-Agent: I checked OrdersController, the stock reservation path and the existing
-       order scenarios. Two questions before I change anything. Should the limit
-       apply per order line or per order? And should a rejected order return
-       400 or 422?
-       ...
-       Here are three proposed scenarios (features/orders.feature). Please review
-       them. When you are happy, run the approval command below yourself.
-```
+The demonstration uses explicitly labelled automated control approval. Your application's business approval comes from you.
 
 ## Requirements
 
 | Need | Version |
 | --- | --- |
 | OS | Windows x64 |
-| .NET SDK | 10.0.403 for the alpha.12 release and for building TADA. From source, application projects accept any stable .NET 10.0 SDK. |
+| .NET SDK | Any stable .NET 10.0 SDK for application projects. Building TADA requires 10.0.403. Existing application SDK policies are preserved. |
 | Git | Git for Windows |
 | Agent host | [Codex](https://developers.openai.com/codex), [Claude Code](https://code.claude.com/docs) or [Cursor](https://cursor.com/docs/plugins) |
 | Project type | C#/.NET API, with acceptance tests in Reqnroll 3.3.4 and MSTest 4.5.2 (generated for you) |
 
-The current release is `0.1.0-alpha.12`, an early alpha. Its results are **local advisory (L1)**. See [Limits](#limits).
+The published preview checked on 2026-11-17 is `0.1.0-alpha.13.109`. Its results are **local advisory (L1)**. See [Limits](#limits).
 
 | Host | Release ZIP | TADA marketplace | Public directory |
 | --- | --- | --- | --- |
@@ -129,8 +126,10 @@ if ($LASTEXITCODE -eq 0) { codex plugin add tada@tada }
 Use this to drive approvals and verification yourself, or from a different agent or tool.
 
 ```powershell
-gh release download v0.1.0-alpha.12 -R tayzer/TADA -p "TADA-0.1.0-alpha.12-win-x64.zip"
-Expand-Archive .\TADA-0.1.0-alpha.12-win-x64.zip -DestinationPath "$HOME\tools\tada-cli"
+gh release download v0.1.0-alpha.13.109 -R tayzer/TADA -p "TADA-0.1.0-alpha.13.109-win-x64.zip" -p SHA256SUMS
+$expected = ((Select-String SHA256SUMS -SimpleMatch 'TADA-0.1.0-alpha.13.109-win-x64.zip').Line -split '\s+')[0]
+if ((Get-FileHash .\TADA-0.1.0-alpha.13.109-win-x64.zip -Algorithm SHA256).Hash.ToLowerInvariant() -ne $expected) { throw 'Bundle checksum mismatch.' }
+Expand-Archive .\TADA-0.1.0-alpha.13.109-win-x64.zip -DestinationPath "$HOME\tools\tada-cli"
 ```
 
 Then follow the `README.md` inside the extracted folder. It installs `Tada.Cli` as a repository-local .NET tool from the bundled feed. `Tada.Cli` is not on NuGet.org yet. The [quickstart](docs/quickstart.md) covers building the CLI from source.
@@ -214,13 +213,13 @@ Only the plugin is required. Everything else is added when a task needs it. Each
 | **Acceptance baseline** | Locks the approved Gherkin plus its bindings and fixtures | `tada baseline prepare`, then review and approve | Not needed for chores and refactors with existing checks |
 | **Contract and fitness obligations** | Protects agreed API contracts and NFR thresholds, such as latency budgets and architecture rules | `obligations` in `tada.json` | Leave `obligations` out |
 | **Several local services** | One acceptance run across several of your .NET services | `execution.services` in `tada.json` (schema 2) | Use a single `sutProject` |
-| **Enforcement ledger** *(source)* | Splits approved scenarios into **active** (must pass to merge) and **candidates** (agreed, not built yet) | `.tada/enforcement.json` | Leave out the file and don't run `tada gate`, which needs it |
-| **Verification plan** *(source)* | Coordinates acceptance, unit, contract and journey checks for a change | `tada plan prepare --file .tada/verification-plan.json` | Leave it out and run `tada run --baseline` directly |
-| **CI merge gate** *(source)* | Blocks pull requests when active obligations fail | `tada gate --run <id> --base origin/main` in CI | Leave it out of CI |
-| **Knowledge augment mode** *(source)* | Lets the agent propose short, evidence-backed knowledge records when a real gap exists. The default **reference** mode only reuses and updates your existing docs. | `.tada/knowledge.json` with `{ "schemaVersion": 1, "mode": "augment" }` | Delete the file to return to reference mode |
+| **Enforcement ledger** | Splits approved scenarios into **active** (must pass to merge) and **candidates** (agreed, not built yet) | `.tada/enforcement.json` | Leave out the file and don't run `tada gate`, which needs it |
+| **Verification plan** | Coordinates acceptance, unit, contract and journey checks for a change | `tada plan prepare --file .tada/verification-plan.json` | Leave it out and run `tada run --baseline` directly |
+| **CI merge gate** | Blocks pull requests when active obligations fail | `tada gate --run <id> --base origin/main` in CI | Leave it out of CI |
+| **Knowledge augment mode** | Lets the agent propose short, evidence-backed knowledge records when a real gap exists. The default **reference** mode only reuses and updates your existing docs. | `.tada/knowledge.json` with `{ "schemaVersion": 1, "mode": "augment" }` | Delete the file to return to reference mode |
 | **Native test runs** | The same scenarios in Visual Studio Test Explorer and `dotnet test` | Generated by `tada init` | Optional; recorded TADA runs work without it |
 
-Items marked *(source)* are on `main` for alpha.13 but are not in the released alpha.12 package.
+These optional pieces are included in the alpha.13 preview. The alpha.12 package retains its original scope.
 
 ## Commands
 
@@ -234,10 +233,10 @@ You rarely type these yourself, because the agent runs them. The one exception i
 | `tada baseline approve --review <id> --by <name> [--replaces <old>]` | **Human only.** Records approval of a reviewed baseline |
 | `tada run --baseline <digest> [--dotnet <path>]` | Restores and rebuilds from scratch, runs the scenarios once and keeps all evidence |
 | `tada verify --run <id>` | Checks the retained evidence without re-running anything |
-| `tada plan prepare --file <path>` *(source)* | Captures a verification plan |
-| `tada run --plan <digest>` *(source)* | Runs a captured verification plan |
-| `tada gate [--run <id>] [--base <branch>]` *(source)* | Checks the merge obligations in `.tada/enforcement.json` |
-| `tada knowledge check` *(source)* | Shows the knowledge mode and flags records whose sources have changed |
+| `tada plan prepare --file <path>` | Captures a verification plan |
+| `tada run --plan <digest>` | Runs a captured verification plan |
+| `tada gate [--run <id>] [--base <branch>]` | Checks the merge obligations in `.tada/enforcement.json` |
+| `tada knowledge check` | Shows the knowledge mode and flags records whose sources have changed |
 
 Run each one as `dotnet tool run tada …` inside the repository.
 
@@ -336,6 +335,10 @@ A new CLI version can change captured tool bytes. Expect to review and re-approv
 - Supported today: Windows x64, .NET 10, Reqnroll, MSTest and the Microsoft Testing Platform, with ASP.NET Core APIs. Scenario Outlines are not supported yet.
 
 The [quickstart](docs/quickstart.md) and [release notes](docs/releases/0.1.0-alpha.12.md) list the full trust boundary.
+
+## Tester feedback
+
+Report installation friction, confusing instructions, unexpected results or the point where you stopped through the **Tester feedback** issue form. Include your TADA version and installation source, agent host, expected result and actual output when available. Partial reports are welcome. Remove secrets and private application data before attaching logs. [Open tester feedback](https://github.com/tayzer/TADA/issues/new?template=tester.yml)
 
 ## Learn more
 

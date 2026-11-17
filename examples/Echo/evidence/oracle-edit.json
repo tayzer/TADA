@@ -1,0 +1,15 @@
+{
+  "outcome": "INDETERMINATE",
+  "assurance": "L1-advisory",
+  "baseline": "sha256:251e0912f8b0a7d14087f56bfc672b576bef87d7ec61b73d5be66239581ca8a4",
+  "runId": "3e5057aff7cc4cc8aa3a9d9448c5f288",
+  "passedCases": [],
+  "reasons": [
+    {
+      "code": "execution-invalid",
+      "detail": "Oracle inputs changed or the selected file set differs. Prepare, review and approve a new revision.",
+      "caseId": null
+    }
+  ],
+  "exitCode": 2
+}

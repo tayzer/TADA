@@ -1,0 +1,15 @@
+{
+  "sourceCommit": "b409e417f74b7ca8076c715f72ff02e87ff44039",
+  "verifier": {
+    "name": "TADA",
+    "version": "0.1.0-alpha.13",
+    "assurance": "L1-advisory"
+  },
+  "verifierSha256": "cda0a721999d01633bf7c6d9b1cd9789c9a82f0c6abb8e1352c6ccb805ee0c3e",
+  "baseline": "sha256:251e0912f8b0a7d14087f56bfc672b576bef87d7ec61b73d5be66239581ca8a4",
+  "failedRun": "1039d847c2964733879a5bf1939d699c",
+  "passingRun": "6e02370eec9f4e548a4c067ebabe72ed",
+  "workspace": "E:\\Development\\git\\AAATDD\\.artifacts\\tester-onboarding\\.artifacts\\echo-demo\\d5ffd895c5b14eb4bff597a0aabb497d",
+  "approval": "Automated demonstration control; not human business acceptance.",
+  "evidence": "Complete local evidence is under .tada/ in this workspace. Result JSON and transcript are excerpts for readers."
+}

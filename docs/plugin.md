@@ -1,5 +1,8 @@
 # TADA plugin
 
+> **Published preview checked on 2026-11-17** — `0.1.0-alpha.13.109` includes Codex, Claude Code and Cursor manifests and uses `tada@tada`. [Release downloads](https://github.com/tayzer/TADA/releases/tag/v0.1.0-alpha.13.109)
+> **Alpha.12 migration** — Remove the older Codex `tada@tada-development` installation before following the current installation path. [Migration commands](../README.md#update-or-uninstall)
+
 TADA's plugin supplies the agent workflow. The `tada` CLI supplies project preparation, immutable baseline review and evidence verification. The CLI remains usable by other coding agents and local tooling.
 
 The local plugin lives in `plugins/tada`. Codex, Claude Code and Cursor share its skill, setup helper and matching verifier feed. The root `plugin.json` supplies the portable Codex manifest, `.claude-plugin/plugin.json` supplies Claude Code metadata and `.cursor-plugin/plugin.json` supplies Cursor metadata. Packaging refuses mismatched names or versions. Each host's plugin controls govern ordinary-request workflow selection. See the [Codex plugin documentation](https://developers.openai.com/plugins/build/plugins), [Claude Code manifest reference](https://code.claude.com/docs/en/plugins-reference) and [Cursor plugin reference](https://cursor.com/docs/plugins/building).

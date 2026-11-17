@@ -1,6 +1,6 @@
 # Build and try the development alpha
 
-This guide covers alpha `0.1.0-alpha.12`. Initial support is Windows x64. Applications created with alpha.12 pin .NET SDK **10.0.403**; the alpha.13 source relaxes this as described below. See [release notes](releases/0.1.0-alpha.12.md) for scope and distribution. Public feed availability of `Tada.Cli` is not assumed.
+The published preview checked on 2026-11-17 is `0.1.0-alpha.13.109`, for Windows x64. Codex, Claude Code and Cursor can install its matching plugin and verifier from the marketplace or release ZIP. Start with the [installation guide](../README.md#install) or [release downloads](https://github.com/tayzer/TADA/releases/tag/v0.1.0-alpha.13.109). The commands below build the source version `0.1.0-alpha.13` locally. `Tada.Cli` is distributed through the bundled feed.
 
 From alpha.13, application prerequisites are Windows x64 and a stable **.NET 10.0 SDK**. New projects use a 10.0.100 floor with `rollForward: latestFeature` and `allowPrerelease: false`, allowing installed 10.0 patch and feature-band updates. Existing application `global.json` files are preserved. TADA's source build and CI remain pinned to SDK 10.0.403.
 
@@ -36,7 +36,7 @@ dotnet tool run tada --version
 dotnet tool run tada init
 ```
 
-Commit the tool manifest, configuration, guidance and useful context. Depending on SDK defaults the manifest can be `dotnet-tools.json` or `.config/dotnet-tools.json`; TADA captures either. Later sessions use `dotnet tool restore` with the appropriate feed configuration. A published installation command will follow an actual release.
+Commit the tool manifest, configuration, guidance and useful context. Depending on SDK defaults the manifest can be `dotnet-tools.json` or `.config/dotnet-tools.json`; TADA captures either. Later sessions use `dotnet tool restore` with the appropriate feed configuration. For a published package, use the matching release bundle's feed and version.
 
 On Windows, run `git config core.longpaths true` inside the application repository before committing or checking out deep snapshot paths. This is a repository-local setting; the snapshot digest directories can exceed Git's default Windows path limit in a deeply nested workspace. Validation commands supply `-c core.longpaths=true` without changing global Git settings.
 
@@ -148,6 +148,8 @@ Implementation identity identifies selected implementation source. Exact executa
 Implement the application change and rerun the same approved baseline. Oracle edits, including line-ending changes, require new review and approval. For amendments, review `--against <old-baseline>` and explicitly approve `--replaces <old-baseline>`; dropping obligations is rejected by this increment.
 
 ## Run the implemented Orders controls
+
+For a shorter introduction, run the [Echo demonstration](../examples/Echo/README.md#run-the-short-demonstration). It captures complete result JSON for a failed assertion, a passing implementation and verification after editing an approved assertion. The accompanying transcript records the actual commands and exit codes.
 
 From the TADA source directory:
 

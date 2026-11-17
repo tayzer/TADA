@@ -1,0 +1,38 @@
+name: Tester feedback
+description: Report installation friction, workflow confusion, or a verification result.
+title: "[Tester] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Tell us where you stopped, even if you have no workaround. Partial reports are welcome.
+        Remove secrets and private application data from logs before attaching them.
+  - type: input
+    id: version
+    attributes:
+      label: TADA version and installation source
+      description: Paste `tada --version` if available, plus marketplace, release ZIP, or source commit.
+  - type: input
+    id: environment
+    attributes:
+      label: Host and environment
+      description: Codex, Claude Code, or Cursor version, Windows version, and `dotnet --version` if available.
+  - type: textarea
+    id: goal
+    attributes:
+      label: What were you trying to do?
+      description: Include the command or ordinary agent request and what you expected.
+    validations:
+      required: true
+  - type: textarea
+    id: stopped
+    attributes:
+      label: Where did you get stuck?
+      description: Include the actual result, error, or confusing instruction. Reproduction steps help when available.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Output or evidence
+      description: Paste relevant output, PASS/FAIL/INDETERMINATE reasons, run ID, or a redacted screenshot. Logs are optional.

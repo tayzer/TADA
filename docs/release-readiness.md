@@ -1,6 +1,12 @@
 # First release checklist
 
-The next development increment is alpha.13, described in [change-aware multi-level verification](multi-level-verification.md). It adds optional verification plans, supporting MSTest evidence and named local services. Its source/package controls and requester acceptance are separate from the published alpha.12 record below.
+## Published previews
+
+Every validated main build publishes a preview. Its release record identifies the exact source, completed validation run, CLI bundle, shared plugin, marketplace, checksums and source manifest. Use that record to select matching artifacts. Requester experience checks retain their recorded scope. [Current releases and validation links](https://github.com/tayzer/TADA/releases)
+
+The available workflow includes the optional plans, supporting MSTest evidence and named local services described in [change-aware multi-level verification](multi-level-verification.md). Installation instructions live in the [README](../README.md#install).
+
+## First public alpha record
 
 Status is **PUBLIC ALPHA RELEASED; DOWNLOAD AND INSTALLATION VERIFIED**. Version `0.1.0-alpha.12` was published on 2026-11-09 at 21:57 UTC. The active goal supersedes the earlier design-only workflow under [ADR 0041](decisions/0041-authorise-autonomous-release-implementation.md). The [release page](https://github.com/tayzer/AAATDD/releases/tag/v0.1.0-alpha.12) contains the approved assets and manifest.
 

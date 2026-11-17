@@ -2,15 +2,20 @@
 
 **Test-Assured Development Assistance.** Your coding agent agrees *what success means* with you before it writes code, then proves the result against that agreement. TADA works with Codex, Claude Code and Cursor.
 
+> **Published preview** — Codex, Claude Code and Cursor can install from the TADA marketplace or matching release ZIP below. Every validated main build publishes a new preview. [Current release and downloads](https://github.com/tayzer/TADA/releases)
+> **Legacy Codex migration** — If your plugin ID is `tada@tada-development`, follow the migration steps under [Update or uninstall](#update-or-uninstall) to use `tada@tada`.
+
 [![Release](https://img.shields.io/github/v/release/tayzer/TADA?include_prereleases&label=release)](https://github.com/tayzer/TADA/releases)
 [![Licence: MIT](https://img.shields.io/badge/licence-MIT-blue)](LICENSE)
 ![Platform](https://img.shields.io/badge/platform-Windows%20x64-lightgrey)
 ![.NET](https://img.shields.io/badge/.NET-10.0-512BD4)
 ![Hosts](https://img.shields.io/badge/hosts-Codex%20%7C%20Claude%20Code%20%7C%20Cursor-black)
 
-**[Install](#install)** · **[First use](#first-use)** · **[Turn it on and off](#turn-it-on-and-off)** · **[Optional pieces](#optional-pieces)** · **[Commands](#commands)** · **[Configuration](#configuration)** · **[Uninstall](#update-or-uninstall)** · **[Troubleshooting](#troubleshooting)** · **[How it works](docs/how-it-works.md)**
+**[Install](#install)** · **[Demo](examples/Echo/README.md#run-the-short-demonstration)** · **[First use](#first-use)** · **[Turn it on and off](#turn-it-on-and-off)** · **[Optional pieces](#optional-pieces)** · **[Commands](#commands)** · **[Configuration](#configuration)** · **[Uninstall](#update-or-uninstall)** · **[Troubleshooting](#troubleshooting)** · **[Tester feedback](#tester-feedback)** · **[How it works](docs/how-it-works.md)**
 
 > AI may propose and implement changes, but it must not independently redefine the conditions by which those changes are judged successful.
+
+Results are **local advisory L1**. A machine owner can forge local approval and evidence records. For team CI, run `tada gate --run <id> --base origin/main` as a required check, require code-owner review of protected inputs and review its `protectedChanges` list. The independent approval adapter remains proposed work. [CI and approval authority](docs/ci-pr-workflows.md#approval-authority)
 
 ## What you get
 
@@ -25,17 +30,9 @@ You ask your agent for something in plain words. With TADA enabled, the agent:
 
 Chores and refactors take a lighter path. They reuse existing checks, and the agent does not invent business scenarios for ceremony.
 
-```text
-You:   Orders above five units should be rejected.
+The runnable Echo API demonstration captures the complete sequence. A reachable endpoint returning HTTP 501 produces `FAIL`. Implementing the agreed response produces `PASS` under the same baseline. Replacing a working status assertion with `Assert.IsTrue(true);` blocks a new run with `INDETERMINATE`. Editing the captured assertion makes `tada verify` report an integrity failure. Read the actual commands, JSON and exit codes in its transcript. [Run the demo and read the evidence](examples/Echo/README.md#run-the-short-demonstration)
 
-Agent: I checked OrdersController, the stock reservation path and the existing
-       order scenarios. Two questions before I change anything. Should the limit
-       apply per order line or per order? And should a rejected order return
-       400 or 422?
-       ...
-       Here are three proposed scenarios (features/orders.feature). Please review
-       them. When you are happy, run the approval command below yourself.
-```
+The demonstration uses explicitly labelled automated control approval. Your application's business approval comes from you.
 
 ## Requirements
 
@@ -109,7 +106,7 @@ if ($LASTEXITCODE -eq 0) { codex plugin add tada@tada }
 
 A host accepts only one marketplace named `tada`. To switch between the GitHub marketplace, a ZIP folder and a source build, first run `codex plugin marketplace remove tada` or `claude plugin marketplace remove tada`, then register the new source. Install only after registration succeeds, so you never install from the old source by mistake.
 
-Do not delete or move the extracted folder while a host uses it. The first alpha's ZIP (`0.1.0-alpha.12`) supports Codex only and uses a different plugin ID; see [moving from alpha.12](#update-or-uninstall).
+Do not delete or move the extracted folder while a host uses it. Older Codex-only ZIPs use the plugin ID `tada@tada-development`; see [legacy Codex migration](#update-or-uninstall).
 
 ### From source
 
@@ -304,7 +301,7 @@ On Windows, run `git config core.longpaths true` once in the repository, because
 | Claude Code | `claude plugin marketplace update tada`, then `claude plugin update tada@tada` and restart Claude Code | `claude plugin marketplace remove tada`, then add the new folder and run `claude plugin install tada@tada` |
 | Cursor | Marketplace installs update automatically | Replace `~/.cursor/plugins/local/tada` with the new folder, then restart Cursor |
 
-**Moving from alpha.12:** the first alpha, `0.1.0-alpha.12`, used the plugin ID `tada@tada-development`. Remove it with `codex plugin remove tada@tada-development` and `codex plugin marketplace remove tada-development`, then install from the TADA marketplace. Your project files are unaffected.
+**Legacy Codex migration.** If your plugin ID is `tada@tada-development`, remove it with `codex plugin remove tada@tada-development` and `codex plugin marketplace remove tada-development`, then install from the TADA marketplace. Your project files are unaffected.
 
 A new CLI version can change captured tool bytes. Expect to review and re-approve the baseline once, so the agreement stays honest.
 
@@ -346,6 +343,10 @@ A new CLI version can change captured tool bytes. Expect to review and re-approv
 - Supported today: Windows x64, .NET 10, Reqnroll, MSTest and the Microsoft Testing Platform, with ASP.NET Core APIs. Scenario Outlines are not supported yet.
 
 The [quickstart](docs/quickstart.md) lists the full trust boundary. Each [release](https://github.com/tayzer/TADA/releases) states its own scope.
+
+## Tester feedback
+
+Report installation friction, confusing instructions, unexpected results or the point where you stopped through the **Tester feedback** issue form. Include your TADA version and installation source, agent host, expected result and actual output when available. Partial reports are welcome. Remove secrets and private application data before attaching logs. [Open tester feedback](https://github.com/tayzer/TADA/issues/new?template=tester.yml)
 
 ## Learn more
 

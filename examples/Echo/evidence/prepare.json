@@ -1,0 +1,5 @@
+{
+  "baseline": "sha256:251e0912f8b0a7d14087f56bfc672b576bef87d7ec61b73d5be66239581ca8a4",
+  "status": "DRAFT",
+  "next": "baseline review --baseline \u003Cdigest\u003E"
+}

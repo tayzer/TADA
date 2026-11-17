@@ -1,0 +1,30 @@
+{
+  "outcome": "FAIL",
+  "assurance": "L1-advisory",
+  "baseline": "sha256:251e0912f8b0a7d14087f56bfc672b576bef87d7ec61b73d5be66239581ca8a4",
+  "runId": "1039d847c2964733879a5bf1939d699c",
+  "passedCases": [],
+  "reasons": [
+    {
+      "code": "requirement-failure",
+      "detail": "Assertion failed. Expected values to be equal.\r\n\r\nexpected: 400\r\nactual:   501\r\n\r\nAssert.AreEqual(code, (int)response!.StatusCode)",
+      "caseId": "AC_ECHO_EMPTY"
+    },
+    {
+      "code": "step-skipped",
+      "detail": "Required step or hook did not pass.",
+      "caseId": "AC_ECHO_EMPTY"
+    },
+    {
+      "code": "requirement-failure",
+      "detail": "Assertion failed. Expected values to be equal.\r\n\r\nexpected: 200\r\nactual:   501\r\n\r\nAssert.AreEqual(code, (int)response!.StatusCode)",
+      "caseId": "AC_ECHO_SPACES"
+    },
+    {
+      "code": "step-skipped",
+      "detail": "Required step or hook did not pass.",
+      "caseId": "AC_ECHO_SPACES"
+    }
+  ],
+  "exitCode": 1
+}

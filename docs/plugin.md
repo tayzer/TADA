@@ -10,8 +10,9 @@ From the source checkout, build the verifier and package the plugin.
 
 ```powershell
 dotnet pack src/Tada.Cli/Tada.Cli.csproj -o .artifacts/packages
-$package = Get-ChildItem .artifacts/packages/Tada.Cli.*.nupkg | Sort-Object LastWriteTime | Select-Object -Last 1
-$plugin = & ./scripts/New-TadaPlugin.ps1 -Package $package.FullName
+$version = dotnet msbuild src/Tada.Cli/Tada.Cli.csproj -getProperty:Version
+$package = ".artifacts/packages/Tada.Cli.$version.nupkg"   # the package just built, not an older one in the folder
+$plugin = & ./scripts/New-TadaPlugin.ps1 -Package $package
 pwsh -File scripts/Test-TadaPlugin.ps1 -PluginRoot $plugin.pluginRoot -Archive $plugin.archive
 ```
 

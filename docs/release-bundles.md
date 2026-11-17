@@ -6,11 +6,12 @@ The [first public alpha](https://github.com/tayzer/TADA/releases/tag/v0.1.0-alph
 
 ## Prepare and check a bundle
 
-After building and validating the tool package, run from the repository root:
+After building and validating the tool package, run from the repository root. Pass the exact package you validated; the commands below derive its path from the checkout's version rather than picking whichever package in the folder is newest.
 
 ```powershell
-$package = Get-ChildItem .artifacts/packages/Tada.Cli.*.nupkg | Sort-Object LastWriteTime | Select-Object -Last 1
-$bundle = & ./scripts/New-ReleaseBundle.ps1 -Package $package.FullName
+$version = dotnet msbuild src/Tada.Cli/Tada.Cli.csproj -getProperty:Version
+$package = ".artifacts/packages/Tada.Cli.$version.nupkg"   # the package just built, not an older one in the folder
+$bundle = & ./scripts/New-ReleaseBundle.ps1 -Package $package
 pwsh -File scripts/Test-ReleaseBundle.ps1 -Archive $bundle.archive
 ```
 

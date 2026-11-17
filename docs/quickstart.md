@@ -21,6 +21,7 @@ dotnet build tests/Tada.Core.Tests/Tada.Core.Tests.csproj --no-restore -c Releas
 dotnet tests/Tada.Core.Tests/bin/Release/net10.0/Tada.Core.Tests.dll --progress off
 dotnet pack src/Tada.Cli/Tada.Cli.csproj --no-restore -o .artifacts/packages
 $tadaSource = (Get-Location).Path
+$tadaVersion = dotnet msbuild src/Tada.Cli/Tada.Cli.csproj -getProperty:Version
 ```
 
 In a new application directory, create a local tool manifest. Use an explicit local-only installation feed so a similarly named public package cannot be selected for this development build:
@@ -31,7 +32,7 @@ cd MyApi
 dotnet new tool-manifest
 $feedPath = [Security.SecurityElement]::Escape("$tadaSource/.artifacts/packages")
 "<configuration><packageSources><clear/><add key='local' value='$feedPath'/></packageSources></configuration>" | Set-Content NuGet.Local.Config
-dotnet tool install Tada.Cli --prerelease --configfile NuGet.Local.Config
+dotnet tool install Tada.Cli --version $tadaVersion --configfile NuGet.Local.Config
 dotnet tool run tada --version
 dotnet tool run tada init
 ```

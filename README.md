@@ -118,8 +118,9 @@ This needs PowerShell 7 as well:
 ```powershell
 git clone https://github.com/tayzer/TADA.git; cd TADA
 dotnet pack src/Tada.Cli/Tada.Cli.csproj -o .artifacts/packages
-$package = Get-ChildItem .artifacts/packages/Tada.Cli.*.nupkg | Sort-Object LastWriteTime | Select-Object -Last 1
-$plugin = & ./scripts/New-TadaPlugin.ps1 -Package $package.FullName
+$version = dotnet msbuild src/Tada.Cli/Tada.Cli.csproj -getProperty:Version
+$package = ".artifacts/packages/Tada.Cli.$version.nupkg"   # the package just built, not an older one in the folder
+$plugin = & ./scripts/New-TadaPlugin.ps1 -Package $package
 codex plugin marketplace add $plugin.marketplaceRoot
 if ($LASTEXITCODE -eq 0) { codex plugin add tada@tada }
 # Claude Code: claude plugin marketplace add $plugin.marketplaceRoot, then claude plugin install tada@tada
@@ -130,13 +131,21 @@ if ($LASTEXITCODE -eq 0) { codex plugin add tada@tada }
 Use this to drive approvals and verification yourself, or from a different agent or tool.
 
 ```powershell
-# Every TADA release is a prerelease, so look up the newest tag rather than GitHub's "latest".
-$tag = gh release list -R tayzer/TADA --exclude-drafts --limit 1 --json tagName --jq '.[0].tagName'
-gh release download $tag -R tayzer/TADA -p "TADA-*-win-x64.zip" -p SHA256SUMS
-Expand-Archive (Get-Item .\TADA-*-win-x64.zip).FullName -DestinationPath "$HOME\tools\tada-cli"
+# Every TADA release is a prerelease, so take the newest one rather than GitHub's "latest".
+$release = (Invoke-RestMethod 'https://api.github.com/repos/tayzer/TADA/releases?per_page=1')[0]
+$zipName = "TADA-$($release.tag_name.TrimStart('v'))-win-x64.zip"
+$download = New-Item -ItemType Directory -Force (Join-Path $HOME "Downloads\tada-$($release.tag_name)")
+foreach ($name in $zipName, 'SHA256SUMS') {
+    $asset = $release.assets | Where-Object name -eq $name
+    Invoke-WebRequest $asset.browser_download_url -OutFile (Join-Path $download $name)
+}
+$zip = Join-Path $download $zipName
+$expected = ((Select-String -LiteralPath (Join-Path $download 'SHA256SUMS') -SimpleMatch $zipName).Line -split '\s+')[0]
+(Get-FileHash -LiteralPath $zip -Algorithm SHA256).Hash.ToLower() -eq $expected   # should print True
+Expand-Archive -LiteralPath $zip -DestinationPath "$HOME\tools\tada-cli"
 ```
 
-Then follow the `README.md` inside the extracted folder. It installs `Tada.Cli` as a repository-local .NET tool from the bundled feed. `Tada.Cli` is not on NuGet.org yet. The [quickstart](docs/quickstart.md) covers building the CLI from source.
+You can also download `TADA-<version>-win-x64.zip` and `SHA256SUMS` from the [releases page](https://github.com/tayzer/TADA/releases) in a browser. Then follow the `README.md` inside the extracted folder. It installs `Tada.Cli` as a repository-local .NET tool from the bundled feed. `Tada.Cli` is not on NuGet.org yet. The [quickstart](docs/quickstart.md) covers building the CLI from source.
 
 ## First use
 

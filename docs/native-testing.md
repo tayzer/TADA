@@ -1,6 +1,6 @@
 # Native acceptance execution
 
-The Windows/.NET alpha supports the same acceptance scenarios through Visual Studio Test Explorer, `dotnet test` with MTP and recorded `tada run` execution. Use SDK 10.0.403 with the pinned Reqnroll 3.3.4, MSTest 4.5.2 and MTP 2.5.2 stack.
+The Windows/.NET alpha supports the same acceptance scenarios through Visual Studio Test Explorer, `dotnet test` with MTP and recorded `tada run` execution. Use a stable .NET 10.0 SDK with the pinned Reqnroll 3.3.4, MSTest 4.5.2 and MTP 2.5.2 stack.
 
 ## Project setup
 

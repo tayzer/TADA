@@ -10,13 +10,15 @@ From the source checkout, build the verifier and package the plugin.
 
 ```powershell
 dotnet pack src/Tada.Cli/Tada.Cli.csproj -o .artifacts/packages
-$plugin = & ./scripts/New-TadaPlugin.ps1 -Package .artifacts/packages/Tada.Cli.0.1.0-alpha.13.nupkg
+$version = dotnet msbuild src/Tada.Cli/Tada.Cli.csproj -getProperty:Version
+$package = ".artifacts/packages/Tada.Cli.$version.nupkg"   # the package just built, not an older one in the folder
+$plugin = & ./scripts/New-TadaPlugin.ps1 -Package $package
 pwsh -File scripts/Test-TadaPlugin.ps1 -PluginRoot $plugin.pluginRoot -Archive $plugin.archive
 ```
 
 The output contains a standalone plugin ZIP and a local marketplace directory. The marketplace directory includes `.agents/plugins/marketplace.json` for Codex, `.claude-plugin/marketplace.json` for Claude Code, `.cursor-plugin/marketplace.json` for Cursor, and one shared packaged `tada` folder. The plugin ZIP contains one plugin at its root, including all three plugin manifests, Codex and Claude Code marketplace catalogs that resolve the ZIP root, an installation README, the skill, setup helper, verifier feed and licence notices. Validation extracts that exact ZIP and prepares a disposable application from the extracted plugin.
 
-The marketplace directory is also the published content of the [`tayzer/tada-plugins`](https://github.com/tayzer/tada-plugins) Git marketplace. The [release guide](releasing.md) describes how releases update it. From alpha.13 the marketplace is named `tada`, so the plugin ID is `tada@tada`. Alpha.12 used `tada@tada-development`.
+The marketplace directory is also the published content of the [`tayzer/tada-plugins`](https://github.com/tayzer/tada-plugins) Git marketplace. The [release guide](releasing.md) describes how releases update it. The marketplace is named `tada`, so the plugin ID is `tada@tada`. The first alpha (`0.1.0-alpha.12`) used `tada@tada-development`.
 
 ## Install and toggle in Codex
 
@@ -31,7 +33,7 @@ An extracted standalone plugin ZIP also registers directly, because its bundled 
 
 Open the host's Plugins browser, select the `tada` marketplace and install TADA. Use its normal plugin controls to enable or disable it. In Codex CLI, `/plugins` opens the browser and Space toggles an installed plugin. Start a fresh session after changing activation so the trial observes the selected skill set. [Official plugin controls](https://learn.chatgpt.com/docs/plugins)
 
-Installation requires no application folder or project setup. Alpha.10 omits the optional `onboardingSkill` hook that launched the development skill during alpha.9 installation. Open the application you want to work on and describe the task normally. The enabled skill discovers requirements and prepares the local verifier in that project's workspace when business verification needs it. It asks for a folder only if the target is then ambiguous. [Official onboarding hook documentation](https://developers.openai.com/plugins/build/plugins#add-an-onboarding-skill)
+Installation requires no application folder or project setup. The plugin deliberately omits the optional `onboardingSkill` hook, because an earlier alpha that used it asked for a project folder during installation. Open the application you want to work on and describe the task normally. The enabled skill discovers requirements and prepares the local verifier in that project's workspace when business verification needs it. It asks for a folder only if the target is then ambiguous. [Official onboarding hook documentation](https://developers.openai.com/plugins/build/plugins#add-an-onboarding-skill)
 
 The host can also apply project-scoped configuration in a trusted application repository.
 
@@ -69,7 +71,7 @@ On Windows, the agent runs the packaged PowerShell helper with `pwsh -NoProfile 
 Cursor loads a local plugin from a folder under `~/.cursor/plugins/local`. Copy the complete extracted standalone plugin ZIP there. Keep the `feed` folder, because the setup helper installs the verifier from it.
 
 ```powershell
-Expand-Archive -LiteralPath ./TADA-plugin-0.1.0-alpha.13.zip -DestinationPath "$HOME/.cursor/plugins/local/tada"
+Expand-Archive -LiteralPath ./TADA-plugin-<version>.zip -DestinationPath "$HOME/.cursor/plugins/local/tada"
 ```
 
 Quit and reopen Cursor. A window reload may keep a cached plugin list. Check that TADA appears under **Customize**. If it does not, check that **Include third-party Plugins, Skills, and other configs** is enabled in Cursor settings. Some organisations must also allow local plugin imports in their team settings.
@@ -84,13 +86,13 @@ Cursor discovers the shared skill from its `name` and `description`. **Customize
 
 While the plugin is enabled, its skill handles discovery and proportionate work from the user's ordinary request. When business verification needs setup, the packaged helper installs the matching repository-local tool and runs `tada init`. It records the SDK host in new project context. The user supplies the business request and acceptance decisions.
 
-Application setup accepts stable .NET 10.0 SDKs and checks selection from the application directory. New application SDK policy permits patch and feature-band roll-forward within 10.0. Existing `global.json` bytes are preserved. TADA's source build retains SDK 10.0.403 for reproducible development validation. The runner records the resolved SDK and observed toolchain identities. Changing an existing captured SDK policy requires a new reviewed and human-approved baseline.
+Application setup accepts stable .NET 10.0 SDKs and checks selection from the application directory. New application SDK policy permits patch and feature-band roll-forward within 10.0. Existing `global.json` bytes are preserved. TADA's own source build keeps the SDK pinned in its [`global.json`](../global.json) for reproducible development validation. The runner records the resolved SDK and observed toolchain identities. Changing an existing captured SDK policy requires a new reviewed and human-approved baseline.
 
-Alpha.9 moves activation into the plugin. `tada init` removes recognised generated guidance from alpha.7 and alpha.8 agent entry points. It preserves every byte outside that generated text, including file encoding and BOM. Edited legacy sections produce a reconciliation error so activation can be checked before further work. Tool-manifest changes can require a fresh baseline review under exact-byte integrity checks.
+Activation lives in the plugin. `tada init` removes recognised generated guidance from alpha.7 and alpha.8 agent entry points. It preserves every byte outside that generated text, including file encoding and BOM. Edited legacy sections produce a reconciliation error so activation can be checked before further work. Tool-manifest changes can require a fresh baseline review under exact-byte integrity checks.
 
 ## Acceptance
 
-Alpha.11's skill uses the generated fixture context and build-only API dependency to support [native MSTest/MTP execution](native-testing.md), including Visual Studio Test Explorer and `dotnet test`. Existing harness files require a reviewable migration and renewed baseline approval when their bytes change.
+The skill uses the generated fixture context and build-only API dependency to support [native MSTest/MTP execution](native-testing.md), including Visual Studio Test Explorer and `dotnet test`. Existing harness files require a reviewable migration and renewed baseline approval when their bytes change.
 
 Enable TADA and make a normal project request in a fresh session. Observe automatic discovery, human-agreed executable acceptance and verified implementation. Then disable TADA through the same host and open another fresh session. Observe that the plugin skill is absent and automatic TADA orchestration has stopped. Re-enable it and recover the project's accepted behaviour and evidence from another ordinary request.
 

@@ -1,6 +1,6 @@
 # Change-aware verification
 
-Alpha.13 adds discovery-time verification selection, supporting MSTest/MTP checks and named local .NET services. The scope is one Git repository on Windows x64 with SDK 10.0.403, MSTest 4.5.2, MTP 2.5.2 and Reqnroll 3.3.4. Reports retain local advisory L1 limits.
+TADA selects verification levels during discovery and supports MSTest/MTP checks and named local .NET services. The validated scope is one Git repository on Windows x64 with a stable .NET 10.0 SDK, MSTest 4.5.2, MTP 2.5.2 and Reqnroll 3.3.4. Reports retain local advisory L1 limits.
 
 ## Select evidence during discovery
 

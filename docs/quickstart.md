@@ -1,8 +1,8 @@
 # Build and try the development alpha
 
-The published preview checked on 2026-11-17 is `0.1.0-alpha.13.109`, for Windows x64. Codex, Claude Code and Cursor can install its matching plugin and verifier from the marketplace or release ZIP. Start with the [installation guide](../README.md#install) or [release downloads](https://github.com/tayzer/TADA/releases/tag/v0.1.0-alpha.13.109). The commands below build the source version `0.1.0-alpha.13` locally. `Tada.Cli` is distributed through the bundled feed.
+This guide builds TADA from source and tries it on a new application. Support is Windows x64 for now. The [releases page](https://github.com/tayzer/TADA/releases) lists published builds and their scope. `Tada.Cli` is not on NuGet.org yet.
 
-From alpha.13, application prerequisites are Windows x64 and a stable **.NET 10.0 SDK**. New projects use a 10.0.100 floor with `rollForward: latestFeature` and `allowPrerelease: false`, allowing installed 10.0 patch and feature-band updates. Existing application `global.json` files are preserved. TADA's source build and CI remain pinned to SDK 10.0.403.
+Application prerequisites are Windows x64 and a stable **.NET 10.0 SDK**. New projects use a 10.0.100 floor with `rollForward: latestFeature` and `allowPrerelease: false`, allowing installed 10.0 patch and feature-band updates. Existing application `global.json` files are preserved, including the exact SDK pin that the first alpha (`0.1.0-alpha.12`) generated. TADA's own source build and CI use the SDK pinned in its [`global.json`](../global.json).
 
 The .NET host resolves the reviewed application SDK policy. TADA captures the actual selected SDK, platform and observed toolchain identities for each run. An unavailable SDK policy produces INDETERMINATE with retained diagnostics. To relax an earlier generated exact pin, explicitly edit the application's `global.json`, then prepare, review and obtain human approval for a new baseline. Existing approval records retain their captured bytes. See Microsoft's [SDK roll-forward reference](https://learn.microsoft.com/en-us/dotnet/core/tools/global-json).
 
@@ -21,6 +21,7 @@ dotnet build tests/Tada.Core.Tests/Tada.Core.Tests.csproj --no-restore -c Releas
 dotnet tests/Tada.Core.Tests/bin/Release/net10.0/Tada.Core.Tests.dll --progress off
 dotnet pack src/Tada.Cli/Tada.Cli.csproj --no-restore -o .artifacts/packages
 $tadaSource = (Get-Location).Path
+$tadaVersion = dotnet msbuild src/Tada.Cli/Tada.Cli.csproj -getProperty:Version
 ```
 
 In a new application directory, create a local tool manifest. Use an explicit local-only installation feed so a similarly named public package cannot be selected for this development build:
@@ -31,7 +32,7 @@ cd MyApi
 dotnet new tool-manifest
 $feedPath = [Security.SecurityElement]::Escape("$tadaSource/.artifacts/packages")
 "<configuration><packageSources><clear/><add key='local' value='$feedPath'/></packageSources></configuration>" | Set-Content NuGet.Local.Config
-dotnet tool install Tada.Cli --version 0.1.0-alpha.13 --configfile NuGet.Local.Config
+dotnet tool install Tada.Cli --version $tadaVersion --configfile NuGet.Local.Config
 dotnet tool run tada --version
 dotnet tool run tada init
 ```
@@ -64,7 +65,7 @@ Approved scenarios do not all have to pass immediately. `.tada/enforcement.json`
 
 ## Work with Codex or another agent
 
-Alpha.13 selects verification levels during discovery and supports [coordinated checks and several local services](multi-level-verification.md). Existing single-baseline commands remain available. Chores and refactors retain proportionate existing checks and can justify no new tests.
+TADA selects verification levels during discovery and supports [coordinated checks and several local services](multi-level-verification.md). Existing single-baseline commands remain available. Chores and refactors retain proportionate existing checks and can justify no new tests.
 
 Enable the installed TADA plugin in Codex, Claude Code or Cursor, start a fresh session in the application directory and ask for the project normally. The [plugin guide](plugin.md) gives each host's installation and toggle commands.
 
@@ -78,7 +79,7 @@ The host discovers the enabled plugin's skill for ordinary software requests. It
 
 The core requires no model API or agent SDK. Gherkin is business authority; context Markdown indexes it and records reasoning without duplicating the functional specification.
 
-Use the generated `TadaAcceptance.Create()` fixture context and build-only API reference so the same scenarios run in Visual Studio Test Explorer and through `dotnet test --project tests/Acceptance/Acceptance.csproj`. The [native testing guide](native-testing.md) covers configuration, debugging, isolated storage and migration. Recorded TADA runs supply their own captured execution context. Alpha.11 records build-only dependencies under `evaluated-dotnet-build-v4`, while retaining verification of historical v3 evidence.
+Use the generated `TadaAcceptance.Create()` fixture context and build-only API reference so the same scenarios run in Visual Studio Test Explorer and through `dotnet test --project tests/Acceptance/Acceptance.csproj`. The [native testing guide](native-testing.md) covers configuration, debugging, isolated storage and migration. Recorded TADA runs supply their own captured execution context. New runs record build-only dependencies under `evaluated-dotnet-build-v4`; evidence recorded under the historical v3 policy remains verifiable.
 
 Implement meaningful bindings with scenario-owned setup and cleanup. Observe public application outcomes; privileged observation needs its applicable scoped agreement. Do not share application business-rule assemblies with assertions. In `tada.json`:
 
@@ -91,9 +92,9 @@ Capture HTTP responses even when their status or body is wrong; assert the expec
 
 Include linked source, custom imports and referenced projects in the appropriate selected roots; every project needs its own `packages.lock.json`. The harness cannot borrow unselected implementation sources as reviewed oracle inputs. Inputs outside the repository must belong to the supported installed SDK or an explicitly pinned package/SDK dependency; arbitrary external/shared source is unsupported. Copy it into a selected repository location for review.
 
-Alpha.7 records evaluated compiler/resource/reference inputs and preprocessed imports in `build-inputs.json`, alongside hashed before/after MSBuild reports. Builds use fresh per-run intermediates and process project references in dependency order. SDK, reference-pack and workload-manifest identities come from the actual pinned SDK installation, rather than a project-overridable SDK property. Package paths are limited to the restored locked graph and explicitly versioned NuGet SDKs. This policy trusts installed toolchain/cache contents: it does not independently authenticate package bytes from NuGet lock hashes or sandbox reviewed build tasks.
+TADA records evaluated compiler/resource/reference inputs and preprocessed imports in `build-inputs.json`, alongside hashed before/after MSBuild reports. Builds use fresh per-run intermediates and process project references in dependency order. SDK, reference-pack and workload-manifest identities come from the actual pinned SDK installation, rather than a project-overridable SDK property. Package paths are limited to the restored locked graph and explicitly versioned NuGet SDKs. This policy trusts installed toolchain/cache contents: it does not independently authenticate package bytes from NuGet lock hashes or sandbox reviewed build tasks.
 
-New baselines use inventory schema 6 and explicitly record the build-input, runtime-observation and task-input policies. Older baselines remain readable historical records, but alpha.7 will not run or verify them as if the new identity policy had been captured. Use the matching historical tool to inspect its old results, or prepare/review/approve a new baseline for alpha.7. Existing approval is not silently carried forward.
+New baselines use inventory schema 6 and explicitly record the build-input, runtime-observation and task-input policies. Older baselines remain readable historical records, but the current tool will not run or verify them as if the new identity policy had been captured. Use the matching historical tool to inspect its old results, or prepare/review/approve a new baseline. Existing approval is not silently carried forward.
 
 Actual restore/rebuild task journals identify invoked task code and supported structured file inputs. Opaque custom tasks, shell commands and detected file/opaque evaluation require reviewed `buildTaskContracts` declarations. The origin and declared read roots join the oracle snapshot. See [build-task contracts](build-task-contracts.md) for configuration and limitations: declarations trust reviewed code and do not trace arbitrary I/O.
 
@@ -137,7 +138,7 @@ dotnet tool run tada verify --run <printed-run-id>
 
 Replace placeholders with actual IDs; do not type angle brackets literally. `run` performs locked restore, rebuilds fresh output, checks input drift, executes once and retains commands, binaries and native Messages. `verify` does not rerun the application. An intended outcome assertion establishes meaningful behavioural RED; a broken build or pending binding is INDETERMINATE. Already-satisfied behaviour needs no artificial RED.
 
-Default output is readable terminal text, including the captured Gherkin during review. Alpha.12 reports run and verification phases with elapsed time on stderr. While a phase continues, an update appears every ten seconds. Full subprocess diagnostics remain in retained command evidence. Add `--json` for scripting to suppress progress and receive the structured result on stdout. Review is not approval; the printed next command is for the human, not permission for the agent to approve on their behalf.
+Default output is readable terminal text, including the captured Gherkin during review. TADA reports run and verification phases with elapsed time on stderr. While a phase continues, an update appears every ten seconds. Full subprocess diagnostics remain in retained command evidence. Add `--json` for scripting to suppress progress and receive the structured result on stdout. Review is not approval; the printed next command is for the human, not permission for the agent to approve on their behalf.
 
 For application pull requests, see [CI and PR workflows](ci-pr-workflows.md) for the available CLI checks and the proposed trusted approval integration.
 

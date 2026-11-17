@@ -2,7 +2,7 @@
 
 **Test-Assured Development Assistance.** Your coding agent agrees *what success means* with you before it writes code, then proves the result against that agreement. TADA works with Codex, Claude Code and Cursor.
 
-> **Available on 2026-11-17** — Published preview `0.1.0-alpha.13.109` supports Codex, Claude Code and Cursor. Install from the TADA marketplace or matching release ZIP below. [Release and downloads](https://github.com/tayzer/TADA/releases/tag/v0.1.0-alpha.13.109)
+> **Published preview** — Codex, Claude Code and Cursor can install from the TADA marketplace or matching release ZIP below. Every validated main build publishes a new preview. [Current release and downloads](https://github.com/tayzer/TADA/releases)
 > **Upgrading alpha.12** — Its Codex plugin ID was `tada@tada-development`. Follow the migration steps under [Update or uninstall](#update-or-uninstall) to use `tada@tada`.
 
 [![Release](https://img.shields.io/github/v/release/tayzer/TADA?include_prereleases&label=release)](https://github.com/tayzer/TADA/releases)
@@ -39,18 +39,18 @@ The demonstration uses explicitly labelled automated control approval. Your appl
 | Need | Version |
 | --- | --- |
 | OS | Windows x64 |
-| .NET SDK | Any stable .NET 10.0 SDK for application projects. Building TADA requires 10.0.403. Existing application SDK policies are preserved. |
+| .NET SDK | Any stable .NET 10.0 SDK for your application. Building TADA itself uses the SDK pinned in [`global.json`](global.json). |
 | Git | Git for Windows |
 | Agent host | [Codex](https://developers.openai.com/codex), [Claude Code](https://code.claude.com/docs) or [Cursor](https://cursor.com/docs/plugins) |
-| Project type | C#/.NET API, with acceptance tests in Reqnroll 3.3.4 and MSTest 4.5.2 (generated for you) |
+| Project type | C#/.NET API, with acceptance tests in Reqnroll and MSTest (generated for you) |
 
-The published preview checked on 2026-11-17 is `0.1.0-alpha.13.109`. Its results are **local advisory (L1)**. See [Limits](#limits).
+TADA is an early alpha. The [releases page](https://github.com/tayzer/TADA/releases) lists the latest build and what changed. Results are **local advisory (L1)**. See [Limits](#limits).
 
-| Host | Release ZIP | TADA marketplace | Public directory |
+| Host | TADA marketplace | Release ZIP | Public directory |
 | --- | --- | --- | --- |
-| Codex | alpha.12 and later | From alpha.13 | Submission planned |
-| Claude Code | From alpha.13 | From alpha.13 | Submission planned |
-| Cursor | From alpha.13 | Team import from alpha.13 | Submission planned |
+| Codex | Yes | Yes | Submission planned |
+| Claude Code | Yes | Yes | Submission planned |
+| Cursor | Team import | Yes | Submission planned |
 
 ## Install
 
@@ -59,7 +59,7 @@ TADA has two parts:
 - **The plugin** gives the agent the workflow. Most people only install this. It carries the matching verifier with it.
 - **The `tada` CLI** handles approvals and verification. The plugin installs it into a project automatically when a task needs it.
 
-### From the TADA marketplace (alpha.13 and later)
+### From the TADA marketplace
 
 The [`tayzer/tada-plugins`](https://github.com/tayzer/tada-plugins) repository is the install source for all three hosts. Every validated merge to `main` publishes a new build there automatically.
 
@@ -106,7 +106,7 @@ if ($LASTEXITCODE -eq 0) { codex plugin add tada@tada }
 
 A host accepts only one marketplace named `tada`. To switch between the GitHub marketplace, a ZIP folder and a source build, first run `codex plugin marketplace remove tada` or `claude plugin marketplace remove tada`, then register the new source. Install only after registration succeeds, so you never install from the old source by mistake.
 
-Do not delete or move the extracted folder while a host uses it. The alpha.12 ZIP supports Codex only, and its plugin ID is `tada@tada-development`.
+Do not delete or move the extracted folder while a host uses it. The first alpha's ZIP (`0.1.0-alpha.12`) supports Codex only and uses a different plugin ID; see [moving from alpha.12](#update-or-uninstall).
 
 ### From source
 
@@ -115,7 +115,9 @@ This needs PowerShell 7 as well:
 ```powershell
 git clone https://github.com/tayzer/TADA.git; cd TADA
 dotnet pack src/Tada.Cli/Tada.Cli.csproj -o .artifacts/packages
-$plugin = & ./scripts/New-TadaPlugin.ps1 -Package .artifacts/packages/Tada.Cli.0.1.0-alpha.13.nupkg
+$version = dotnet msbuild src/Tada.Cli/Tada.Cli.csproj -getProperty:Version
+$package = ".artifacts/packages/Tada.Cli.$version.nupkg"   # the package just built, not an older one in the folder
+$plugin = & ./scripts/New-TadaPlugin.ps1 -Package $package
 codex plugin marketplace add $plugin.marketplaceRoot
 if ($LASTEXITCODE -eq 0) { codex plugin add tada@tada }
 # Claude Code: claude plugin marketplace add $plugin.marketplaceRoot, then claude plugin install tada@tada
@@ -126,13 +128,21 @@ if ($LASTEXITCODE -eq 0) { codex plugin add tada@tada }
 Use this to drive approvals and verification yourself, or from a different agent or tool.
 
 ```powershell
-gh release download v0.1.0-alpha.13.109 -R tayzer/TADA -p "TADA-0.1.0-alpha.13.109-win-x64.zip" -p SHA256SUMS
-$expected = ((Select-String SHA256SUMS -SimpleMatch 'TADA-0.1.0-alpha.13.109-win-x64.zip').Line -split '\s+')[0]
-if ((Get-FileHash .\TADA-0.1.0-alpha.13.109-win-x64.zip -Algorithm SHA256).Hash.ToLowerInvariant() -ne $expected) { throw 'Bundle checksum mismatch.' }
-Expand-Archive .\TADA-0.1.0-alpha.13.109-win-x64.zip -DestinationPath "$HOME\tools\tada-cli"
+# Every TADA release is a prerelease, so take the newest one rather than GitHub's "latest".
+$release = (Invoke-RestMethod 'https://api.github.com/repos/tayzer/TADA/releases?per_page=1')[0]
+$zipName = "TADA-$($release.tag_name.TrimStart('v'))-win-x64.zip"
+$download = New-Item -ItemType Directory -Force (Join-Path $HOME "Downloads\tada-$($release.tag_name)")
+foreach ($name in $zipName, 'SHA256SUMS') {
+    $asset = $release.assets | Where-Object name -eq $name
+    Invoke-WebRequest $asset.browser_download_url -OutFile (Join-Path $download $name)
+}
+$zip = Join-Path $download $zipName
+$expected = ((Select-String -LiteralPath (Join-Path $download 'SHA256SUMS') -SimpleMatch $zipName).Line -split '\s+')[0]
+(Get-FileHash -LiteralPath $zip -Algorithm SHA256).Hash.ToLower() -eq $expected   # should print True
+Expand-Archive -LiteralPath $zip -DestinationPath "$HOME\tools\tada-cli"
 ```
 
-Then follow the `README.md` inside the extracted folder. It installs `Tada.Cli` as a repository-local .NET tool from the bundled feed. `Tada.Cli` is not on NuGet.org yet. The [quickstart](docs/quickstart.md) covers building the CLI from source.
+You can also download `TADA-<version>-win-x64.zip` and `SHA256SUMS` from the [releases page](https://github.com/tayzer/TADA/releases) in a browser. Then follow the `README.md` inside the extracted folder. It installs `Tada.Cli` as a repository-local .NET tool from the bundled feed. `Tada.Cli` is not on NuGet.org yet. The [quickstart](docs/quickstart.md) covers building the CLI from source.
 
 ## First use
 
@@ -219,8 +229,6 @@ Only the plugin is required. Everything else is added when a task needs it. Each
 | **Knowledge augment mode** | Lets the agent propose short, evidence-backed knowledge records when a real gap exists. The default **reference** mode only reuses and updates your existing docs. | `.tada/knowledge.json` with `{ "schemaVersion": 1, "mode": "augment" }` | Delete the file to return to reference mode |
 | **Native test runs** | The same scenarios in Visual Studio Test Explorer and `dotnet test` | Generated by `tada init` | Optional; recorded TADA runs work without it |
 
-These optional pieces are included in the alpha.13 preview. The alpha.12 package retains its original scope.
-
 ## Commands
 
 You rarely type these yourself, because the agent runs them. The one exception is `baseline approve`, which only a human should run.
@@ -293,7 +301,7 @@ On Windows, run `git config core.longpaths true` once in the repository, because
 | Claude Code | `claude plugin marketplace update tada`, then `claude plugin update tada@tada` and restart Claude Code | `claude plugin marketplace remove tada`, then add the new folder and run `claude plugin install tada@tada` |
 | Cursor | Marketplace installs update automatically | Replace `~/.cursor/plugins/local/tada` with the new folder, then restart Cursor |
 
-**Moving from alpha.12:** alpha.12 used the plugin ID `tada@tada-development`. Remove it with `codex plugin remove tada@tada-development` and `codex plugin marketplace remove tada-development`, then install from the TADA marketplace. Your project files are unaffected.
+**Moving from alpha.12:** the first alpha, `0.1.0-alpha.12`, used the plugin ID `tada@tada-development`. Remove it with `codex plugin remove tada@tada-development` and `codex plugin marketplace remove tada-development`, then install from the TADA marketplace. Your project files are unaffected.
 
 A new CLI version can change captured tool bytes. Expect to review and re-approve the baseline once, so the agreement stays honest.
 
@@ -334,7 +342,7 @@ A new CLI version can change captured tool bytes. Expect to review and re-approv
 - Passing checks do not replace proportionate code review.
 - Supported today: Windows x64, .NET 10, Reqnroll, MSTest and the Microsoft Testing Platform, with ASP.NET Core APIs. Scenario Outlines are not supported yet.
 
-The [quickstart](docs/quickstart.md) and [release notes](docs/releases/0.1.0-alpha.12.md) list the full trust boundary.
+The [quickstart](docs/quickstart.md) lists the full trust boundary. Each [release](https://github.com/tayzer/TADA/releases) states its own scope.
 
 ## Tester feedback
 
@@ -346,6 +354,7 @@ Report installation friction, confusing instructions, unexpected results or the 
 - [Configuration reference](docs/configuration.md)
 - [Plugin details](docs/plugin.md) for Codex, Claude Code and Cursor
 - [Quickstart](docs/quickstart.md): building from source and running the verifier by hand
+- [Contributing](CONTRIBUTING.md): development setup, tests and pull requests. Report security problems privately as described in [SECURITY.md](SECURITY.md).
 - [Native testing](docs/native-testing.md) and [CI and PR workflows](docs/ci-pr-workflows.md)
 - [Enforcement guide](docs/enforcement.md), [multi-level verification](docs/multi-level-verification.md) and [discovery and knowledge](docs/knowledge.md)
 - [Releasing](docs/releasing.md) and the [directory listing kit](docs/listings.md)

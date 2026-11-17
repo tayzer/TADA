@@ -8,8 +8,8 @@ Settings live in three places:
 | --- | --- | --- |
 | Agent host settings | Whether the TADA workflow is active | You |
 | `tada.json` | What the verifier captures, builds and runs | The agent proposes changes. You approve them as part of a baseline. |
-| `.tada/enforcement.json` *(alpha.13)* | Which approved scenarios must pass before merge | The agent proposes changes. You review them in the pull request. |
-| `.tada/knowledge.json` *(alpha.13)* | Whether the agent may propose new knowledge records | You |
+| `.tada/enforcement.json` | Which approved scenarios must pass before merge | The agent proposes changes. You review them in the pull request. |
+| `.tada/knowledge.json` | Whether the agent may propose new knowledge records | You |
 
 ## Host settings
 
@@ -27,7 +27,7 @@ enabled = false   # true to enable
 
 Codex reads project configuration only in trusted repositories. A common setup is to disable TADA in the user file and enable it in the project file of each repository that uses TADA; the project setting wins inside that repository. In the Codex CLI, `/plugins` opens the plugin browser, and Space toggles an installed plugin.
 
-### Claude Code *(source; first release in alpha.13)*
+### Claude Code
 
 ```powershell
 claude plugin install tada@tada --scope project   # this repository only
@@ -37,7 +37,7 @@ claude plugin enable tada@tada --scope project     # on for this repository
 
 Project scope is recorded in the repository's `.claude/settings.json`. The skill can also be invoked explicitly as `/tada:tada`.
 
-### Cursor *(source; first release in alpha.13)*
+### Cursor
 
 Cursor loads the plugin from `~/.cursor/plugins/local/tada`, which applies to every workspace. Remove the folder and restart Cursor to turn it off. For per-repository control, publish the generated marketplace to a Git repository, import it as a team marketplace (Teams and Enterprise plans), and install TADA with project scope from **Customize**. See [plugin details](plugin.md#install-and-toggle-in-cursor).
 
@@ -145,7 +145,7 @@ Builds are observed. Opaque custom MSBuild tasks, shell commands and file-readin
 
 For opaque project evaluation, use target `@evaluation` and task `property-functions`. A declaration is a trust contract, not a sandbox. Do not add broad entries just to silence a gap. See [build-task contracts](build-task-contracts.md).
 
-## `.tada/enforcement.json` *(alpha.13)*
+## `.tada/enforcement.json`
 
 TADA works without this file, but `tada gate` requires it. Without it, `tada gate` stops with a command error (exit code 3). With the file present, `tada gate` reports `NO_CHECKS` only when there are no active obligations and no `--run` is supplied. `NO_CHECKS` is not a behavioural pass.
 
@@ -170,7 +170,7 @@ TADA works without this file, but `tada gate` requires it. Without it, `tada gat
 
 A passing candidate must be moved to `active` in the same change. An active scenario cannot be demoted unless an approved amendment changed it. See the [enforcement guide](enforcement.md).
 
-## `.tada/knowledge.json` *(alpha.13)*
+## `.tada/knowledge.json`
 
 This file is optional. Without it, TADA uses **reference** mode: it reuses and proposes updates to your existing documentation, decisions and history, and never creates standalone knowledge documents.
 
@@ -180,7 +180,7 @@ This file is optional. Without it, TADA uses **reference** mode: it reuses and p
 
 **Augment** mode also lets the agent propose one focused, evidence-backed record when a significant finding has no suitable home. Records still go through normal Git review. The file sits outside the captured oracle, so changing the mode never invalidates approved expectations. `tada knowledge check` reports the active mode and flags records whose sources have changed. See [discovery and knowledge](knowledge.md).
 
-## `.tada/verification-plan.json` *(alpha.13)*
+## `.tada/verification-plan.json`
 
 This file is optional. It coordinates acceptance, supporting MSTest, contract and journey checks for one change. Capture it with `tada plan prepare --file .tada/verification-plan.json` and run it with `tada run --plan <digest>`. The format is described in [multi-level verification](multi-level-verification.md).
 
@@ -193,7 +193,7 @@ This file is optional. It coordinates acceptance, supporting MSTest, contract an
 | `--dotnet <path>` | `run` | The `dotnet` host to use. Defaults to `dotnet` on `PATH`. The agent passes the host recorded in `.tada/context.md`. |
 | `--against <digest>` | `baseline review` | Compares against an earlier baseline, for amendments. |
 | `--replaces <digest>` | `baseline approve` | Approves an amendment that supersedes an earlier baseline. |
-| `--base <revision>` | `gate` *(alpha.13)* | Compares with the target branch's committed ledger. Merge checks must pass this option. |
+| `--base <revision>` | `gate` | Compares with the target branch's committed ledger. Merge checks must pass this option. |
 | `--help`, `--version` | All commands | Prints usage or the version. |
 
 Unknown or duplicated options are rejected.

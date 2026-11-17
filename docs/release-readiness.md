@@ -1,6 +1,6 @@
 # First release checklist
 
-## Current published preview
+## Publication checkpoint on 2026-11-17
 
 On 2026-11-17, GitHub lists `0.1.0-alpha.13.109`, published at 09:26 UTC from `b409e417f74b7ca8076c715f72ff02e87ff44039`. The release includes the CLI bundle, package, shared Codex/Claude Code/Cursor plugin, marketplace ZIP, checksums and source manifest. Its release record links the completed validation run. Requester experience checks retain their recorded scope. [Release and validation links](https://github.com/tayzer/TADA/releases/tag/v0.1.0-alpha.13.109)
 

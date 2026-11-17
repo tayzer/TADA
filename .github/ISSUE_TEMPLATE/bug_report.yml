@@ -1,0 +1,63 @@
+name: Bug report
+description: Something in TADA did not work as documented.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. Please do not include secrets, private source code or customer data.
+        For security problems, use private reporting instead (see SECURITY.md).
+  - type: input
+    id: version
+    attributes:
+      label: TADA version
+      description: Output of `tada --version`, or the release or plugin version you installed.
+    validations:
+      required: true
+  - type: dropdown
+    id: host
+    attributes:
+      label: Agent host
+      options:
+        - Codex
+        - Claude Code
+        - Cursor
+        - CLI only
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Windows version, `dotnet --version` and your host's version.
+      placeholder: Windows 11 24H2, .NET SDK 10.0.403, Claude Code 2.x
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: Include the verdict (`PASS`, `FAIL` or `INDETERMINATE`) and the reasons `tada verify` printed, if relevant.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: The smallest set of steps or a minimal project that shows the problem.
+      placeholder: |
+        1. Run `tada init` in a new ASP.NET Core API
+        2. ...
+  - type: textarea
+    id: logs
+    attributes:
+      label: Output or logs
+      description: Paste relevant command output. It will be formatted as code.
+      render: text

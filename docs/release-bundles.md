@@ -2,14 +2,16 @@
 
 The download bundle lets an application developer try the packaged tool without building TADA or downloading a C compiler. It contains a local NuGet feed, installation/agent-start guidance, TADA's MIT licence, the package's third-party notices, a file manifest and SHA-256 checksums.
 
-The [first public alpha](https://github.com/tayzer/AAATDD/releases/tag/v0.1.0-alpha.12) contains the approved artifacts, manifest and checksums. Requester ordinary-use, activation and fresh-chat recovery acceptance passed on 2026-11-09. See [publication validation](validation/release-candidate-12.md) for the selected source, exact-file audit and verified downloaded installation. Package metadata can record a parent Git commit when built from a dirty working tree. That commit alone does not identify the uncommitted implementation. Release artifacts must come from the validated publication source.
+The [first public alpha](https://github.com/tayzer/TADA/releases/tag/v0.1.0-alpha.12) contains the approved artifacts, manifest and checksums. Requester ordinary-use, activation and fresh-chat recovery acceptance passed on 2026-11-09. See [publication validation](validation/release-candidate-12.md) for the selected source, exact-file audit and verified downloaded installation. Package metadata can record a parent Git commit when built from a dirty working tree. That commit alone does not identify the uncommitted implementation. Release artifacts must come from the validated publication source.
 
 ## Prepare and check a bundle
 
-After building and validating the tool package, run from the repository root:
+After building and validating the tool package, run from the repository root. Pass the exact package you validated; the commands below derive its path from the checkout's version rather than picking whichever package in the folder is newest.
 
 ```powershell
-$bundle = & ./scripts/New-ReleaseBundle.ps1 -Package .artifacts/packages/Tada.Cli.0.1.0-alpha.13.nupkg
+$version = dotnet msbuild src/Tada.Cli/Tada.Cli.csproj -getProperty:Version
+$package = ".artifacts/packages/Tada.Cli.$version.nupkg"   # the package just built, not an older one in the folder
+$bundle = & ./scripts/New-ReleaseBundle.ps1 -Package $package
 pwsh -File scripts/Test-ReleaseBundle.ps1 -Archive $bundle.archive
 ```
 

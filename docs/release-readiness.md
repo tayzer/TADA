@@ -1,10 +1,10 @@
 # First release checklist
 
-## Publication checkpoint on 2026-11-17
+## Published previews
 
-On 2026-11-17, GitHub lists `0.1.0-alpha.13.109`, published at 09:26 UTC from `b409e417f74b7ca8076c715f72ff02e87ff44039`. The release includes the CLI bundle, package, shared Codex/Claude Code/Cursor plugin, marketplace ZIP, checksums and source manifest. Its release record links the completed validation run. Requester experience checks retain their recorded scope. [Release and validation links](https://github.com/tayzer/TADA/releases/tag/v0.1.0-alpha.13.109)
+Every validated main build publishes a preview. Its release record identifies the exact source, completed validation run, CLI bundle, shared plugin, marketplace, checksums and source manifest. Use that record to select matching artifacts. Requester experience checks retain their recorded scope. [Current releases and validation links](https://github.com/tayzer/TADA/releases)
 
-Alpha.13 includes the optional plans, supporting MSTest evidence and named local services described in [change-aware multi-level verification](multi-level-verification.md). Installation instructions live in the [README](../README.md#install).
+The available workflow includes the optional plans, supporting MSTest evidence and named local services described in [change-aware multi-level verification](multi-level-verification.md). Installation instructions live in the [README](../README.md#install).
 
 ## First public alpha record
 

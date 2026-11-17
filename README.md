@@ -3,7 +3,7 @@
 **Test-Assured Development Assistance.** Your coding agent agrees *what success means* with you before it writes code, then proves the result against that agreement. TADA works with Codex, Claude Code and Cursor.
 
 > **Published preview** — Codex, Claude Code and Cursor can install from the TADA marketplace or matching release ZIP below. Every validated main build publishes a new preview. [Current release and downloads](https://github.com/tayzer/TADA/releases)
-> **Upgrading alpha.12** — Its Codex plugin ID was `tada@tada-development`. Follow the migration steps under [Update or uninstall](#update-or-uninstall) to use `tada@tada`.
+> **Legacy Codex migration** — If your plugin ID is `tada@tada-development`, follow the migration steps under [Update or uninstall](#update-or-uninstall) to use `tada@tada`.
 
 [![Release](https://img.shields.io/github/v/release/tayzer/TADA?include_prereleases&label=release)](https://github.com/tayzer/TADA/releases)
 [![Licence: MIT](https://img.shields.io/badge/licence-MIT-blue)](LICENSE)
@@ -106,7 +106,7 @@ if ($LASTEXITCODE -eq 0) { codex plugin add tada@tada }
 
 A host accepts only one marketplace named `tada`. To switch between the GitHub marketplace, a ZIP folder and a source build, first run `codex plugin marketplace remove tada` or `claude plugin marketplace remove tada`, then register the new source. Install only after registration succeeds, so you never install from the old source by mistake.
 
-Do not delete or move the extracted folder while a host uses it. The first alpha's ZIP (`0.1.0-alpha.12`) supports Codex only and uses a different plugin ID; see [moving from alpha.12](#update-or-uninstall).
+Do not delete or move the extracted folder while a host uses it. Older Codex-only ZIPs use the plugin ID `tada@tada-development`; see [legacy Codex migration](#update-or-uninstall).
 
 ### From source
 
@@ -301,7 +301,7 @@ On Windows, run `git config core.longpaths true` once in the repository, because
 | Claude Code | `claude plugin marketplace update tada`, then `claude plugin update tada@tada` and restart Claude Code | `claude plugin marketplace remove tada`, then add the new folder and run `claude plugin install tada@tada` |
 | Cursor | Marketplace installs update automatically | Replace `~/.cursor/plugins/local/tada` with the new folder, then restart Cursor |
 
-**Moving from alpha.12:** the first alpha, `0.1.0-alpha.12`, used the plugin ID `tada@tada-development`. Remove it with `codex plugin remove tada@tada-development` and `codex plugin marketplace remove tada-development`, then install from the TADA marketplace. Your project files are unaffected.
+**Legacy Codex migration.** If your plugin ID is `tada@tada-development`, remove it with `codex plugin remove tada@tada-development` and `codex plugin marketplace remove tada-development`, then install from the TADA marketplace. Your project files are unaffected.
 
 A new CLI version can change captured tool bytes. Expect to review and re-approve the baseline once, so the agreement stays honest.
 

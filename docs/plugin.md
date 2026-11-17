@@ -1,7 +1,7 @@
 # TADA plugin
 
 > **Published preview** — The shared plugin includes Codex, Claude Code and Cursor manifests and uses `tada@tada`. [Current release downloads](https://github.com/tayzer/TADA/releases)
-> **Alpha.12 migration** — Remove the older Codex `tada@tada-development` installation before following the current installation path. [Migration commands](../README.md#update-or-uninstall)
+> **Legacy Codex migration** — Remove the older `tada@tada-development` installation before following the current installation path. [Migration commands](../README.md#update-or-uninstall)
 
 TADA's plugin supplies the agent workflow. The `tada` CLI supplies project preparation, immutable baseline review and evidence verification. The CLI remains usable by other coding agents and local tooling.
 
@@ -21,7 +21,7 @@ pwsh -File scripts/Test-TadaPlugin.ps1 -PluginRoot $plugin.pluginRoot -Archive $
 
 The output contains a standalone plugin ZIP and a local marketplace directory. The marketplace directory includes `.agents/plugins/marketplace.json` for Codex, `.claude-plugin/marketplace.json` for Claude Code, `.cursor-plugin/marketplace.json` for Cursor, and one shared packaged `tada` folder. The plugin ZIP contains one plugin at its root, including all three plugin manifests, Codex and Claude Code marketplace catalogs that resolve the ZIP root, an installation README, the skill, setup helper, verifier feed and licence notices. Validation extracts that exact ZIP and prepares a disposable application from the extracted plugin.
 
-The marketplace directory is also the published content of the [`tayzer/tada-plugins`](https://github.com/tayzer/tada-plugins) Git marketplace. The [release guide](releasing.md) describes how releases update it. The marketplace is named `tada`, so the plugin ID is `tada@tada`. The first alpha (`0.1.0-alpha.12`) used `tada@tada-development`.
+The marketplace directory is also the published content of the [`tayzer/tada-plugins`](https://github.com/tayzer/tada-plugins) Git marketplace. The [release guide](releasing.md) describes how releases update it. The marketplace is named `tada`, so the plugin ID is `tada@tada`. Older Codex-only installations used `tada@tada-development`.
 
 ## Install and toggle in Codex
 
@@ -91,7 +91,7 @@ While the plugin is enabled, its skill handles discovery and proportionate work 
 
 Application setup accepts stable .NET 10.0 SDKs and checks selection from the application directory. New application SDK policy permits patch and feature-band roll-forward within 10.0. Existing `global.json` bytes are preserved. TADA's own source build keeps the SDK pinned in its [`global.json`](../global.json) for reproducible development validation. The runner records the resolved SDK and observed toolchain identities. Changing an existing captured SDK policy requires a new reviewed and human-approved baseline.
 
-Activation lives in the plugin. `tada init` removes recognised generated guidance from alpha.7 and alpha.8 agent entry points. It preserves every byte outside that generated text, including file encoding and BOM. Edited legacy sections produce a reconciliation error so activation can be checked before further work. Tool-manifest changes can require a fresh baseline review under exact-byte integrity checks.
+Activation lives in the plugin. `tada init` removes recognised legacy generated guidance from agent entry points. It preserves every byte outside that generated text, including file encoding and BOM. Edited legacy sections produce a reconciliation error so activation can be checked before further work. Tool-manifest changes can require a fresh baseline review under exact-byte integrity checks.
 
 ## Acceptance
 

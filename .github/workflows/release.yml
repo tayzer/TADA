@@ -96,6 +96,11 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ steps.version.outputs.tag }}
         run: |
+          # A prerelease can reuse an existing Git tag only when it identifies the validated source.
+          $tagged = git rev-parse --quiet --verify "refs/tags/$($env:TAG)^{commit}"
+          if ($LASTEXITCODE -eq 0 -and $tagged -ne $env:SOURCE_SHA) {
+            throw "Tag $env:TAG points to $tagged. Expected $env:SOURCE_SHA."
+          }
           # A rerun after a failed marketplace push must not rebuild or overwrite published assets.
           gh release view $env:TAG --repo $env:GITHUB_REPOSITORY --json tagName 2>$null | Out-Null
           if ($LASTEXITCODE) { "exists=false" >> $env:GITHUB_OUTPUT; exit 0 }

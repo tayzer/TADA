@@ -121,23 +121,36 @@ public sealed class PlanTests
     }
 
     [TestMethod]
-    public void GateRetainsGapFromSelectedSupportingCheckWithOnlyPendingAcceptance()
+    [DataRow("supporting")]
+    [DataRow("contract")]
+    [DataRow("fitness")]
+    public void GateRetainsGapFromSelectedCheckOutsideLedgerWithOnlyPendingAcceptance(string purpose)
     {
         using var project = new CoreTests.Project();
         string baseline = project.Store.Prepare();
         project.Store.Approve(project.Store.Review(baseline).Id, "isolated supporting gate control");
         var ledger = new EnforcementLedger(1, baseline, [], [new Candidate("AC_ONE", "2026-11-25", "Pending acceptance")]);
         Data.WriteNew(Path.Join(project.Store.Repository.State, "enforcement.json"), ledger);
-        var prepared = Prepare(project, Supporting(project));
+        var definition = Supporting(project);
+        if (purpose != "supporting")
+        {
+            string source = WriteProtectedSuite(project, "native", purpose, []);
+            string native = project.Store.PrepareProtected(source);
+            project.Store.Approve(project.Store.Review(native).Id, "isolated native plan gate control");
+            definition = definition with { Checks = [new PlannedCheck("native", purpose, purpose,
+                ["Protected expectation"], "Exercise a selected suite outside the ledger.", native)] };
+        }
+        var prepared = Prepare(project, definition);
+        string checkId = definition.Checks.Single().Id;
         string id = Guid.NewGuid().ToString("N");
         var started = DateTimeOffset.UtcNow;
         Data.WriteNew(Path.Join(project.Store.Repository.StateDirectory("plan-runs", id), "run.json"),
-            new PlanRun(id, prepared.Plan, started, started, [new CheckRun("service", null)], []));
+            new PlanRun(id, prepared.Plan, started, started, [new CheckRun(checkId, null)], []));
 
         var gate = Enforcement.Assess(project.Store, new RunEngine(project.Store), id, true, ledger, new DateOnly(2026, 11, 25));
 
         Assert.AreEqual("INDETERMINATE", gate.Outcome);
-        Assert.IsTrue(gate.Reasons.Any(reason => reason.Code == "not-executed" && reason.CaseId == "service"));
+        Assert.IsTrue(gate.Reasons.Any(reason => reason.Code == "not-executed" && reason.CaseId == checkId));
     }
 
     [TestMethod]

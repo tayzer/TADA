@@ -161,28 +161,31 @@ public static partial class Enforcement
 
         PlanVerification? plan = null;
         bool checkFailed = false;
-        CheckAssessment[] supporting = [];
+        CheckAssessment[] additionalChecks = [];
         if (runId != null && Guid.TryParseExact(runId, "N", out _) && Directory.Exists(Path.Join(store.Repository.State, "plan-runs", runId)))
         {
             plan = new PlanEngine(store).Verify(runId);
             preconditions.AddRange(plan.Reasons.Where(reason => reason.Code is "plan-integrity" or "no-checks-unestablished"));
-            supporting = plan.Checks.Where(check => check.Purpose == "supporting").ToArray();
-            foreach (var check in supporting)
+            var ledgerBaselines = suites.Values.Select(suite => suite.Baseline).ToHashSet(StringComparer.Ordinal);
+            if (ledger.Baseline != null) ledgerBaselines.Add(ledger.Baseline);
+            additionalChecks = plan.Checks.Where(check => !ledgerBaselines.Contains(check.Result.Baseline)).ToArray();
+            foreach (var check in additionalChecks)
             {
                 var proof = check.Result;
                 if (proof.Outcome is "PASS" or "FAIL")
                 {
                     try
                     {
+                        if (check.Purpose != "supporting") store.Approved(proof.Baseline);
                         store.CheckCurrent(proof.Baseline);
                         engine.CheckCurrentImplementation(proof.RunId, proof.Baseline, store.Read(proof.Baseline));
                     }
                     catch (Exception error) when (error is TadaException or IOException or System.Text.Json.JsonException or UnauthorizedAccessException)
                     {
-                        proof = proof with { Outcome = "INDETERMINATE", Reasons = [new Reason("supporting-check-stale", error.Message)] };
+                        proof = proof with { Outcome = "INDETERMINATE", Reasons = [new Reason("plan-check-stale", error.Message)] };
                     }
                 }
-                RecordCheck(check.Id, proof, "supporting-check-unverified");
+                RecordCheck(check.Id, proof, "plan-check-unverified");
             }
         }
         Verification? run = null;
@@ -229,7 +232,7 @@ public static partial class Enforcement
         var result = Evaluate(new GateInputs(ledger, baseLedger, inventory?.ExpectedCases.Select(c => c.ScenarioId).ToArray() ?? [],
             run, earlier, gaps, lineage, amended, changes.ToArray(), preconditions.ToArray(), today));
         string outcome = checkFailed ? "FAIL" : result.Outcome;
-        if (outcome == "NO_CHECKS" && (suites.Count > 0 || supporting.Length > 0)) outcome = "PASS";
+        if (outcome == "NO_CHECKS" && (suites.Count > 0 || additionalChecks.Length > 0)) outcome = "PASS";
         return result with
         {
             Outcome = outcome,

@@ -70,7 +70,7 @@ public sealed partial class Repository
             if (File.Exists(full)) paths.Add(Relative(Resolve(selected)));
             else Visit(Resolve(selected, true));
         }
-        if (includePrimaryConfig && File.Exists(Path.Combine(Root, "tada.json"))) paths.Add("tada.json");
+        if (includePrimaryConfig && File.Exists(Path.Join(Root, "tada.json"))) paths.Add("tada.json");
         foreach (string input in new[] { "global.json", "NuGet.Config", "dotnet-tools.json", ".config/dotnet-tools.json", "Directory.Build.props", "Directory.Build.targets", "Directory.Packages.props" })
             if (File.Exists(Path.Combine(Root, input))) paths.Add(input);
         foreach (var selected in selectedRoots.Append(config.Execution.Project))

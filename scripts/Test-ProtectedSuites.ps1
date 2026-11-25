@@ -118,6 +118,17 @@ try {
         $failed = ($red.checks | Where-Object id -eq 'echo-fitness').result
         Assert-Control ($failed.reasons[0].code -eq 'protected-test-failure' -and $failed.reasons[0].detail -like '*Allocated*bytes*') 'Fitness RED did not come from its intended assertion.'
         Check 'Verified fitness failure blocks merge gate' @('gate','--run',$red.runId,'--base','HEAD') 1 | Out-Null
+        # A suite can be selected before enrolment. The plan still requires its result.
+        $ledger.protectedSuites = @($contract)
+        try {
+            Write-Json '.tada/enforcement.json' $ledger
+            $selectedOnly = Check 'Selected fitness failure blocks the gate before enrolment' @('gate','--run',$red.runId) 1
+            Assert-Control ($selectedOnly.reasons.code -contains 'protected-test-failure') 'Gate discarded the selected fitness failure.'
+        }
+        finally {
+            $ledger.protectedSuites = @($contract,$fitness)
+            Write-Json '.tada/enforcement.json' $ledger
+        }
     }
     finally { [IO.File]::WriteAllText($implementation, $source) }
 

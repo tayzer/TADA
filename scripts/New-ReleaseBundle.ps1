@@ -54,7 +54,7 @@ dotnet tool run tada init
 
 The local-only feed selects this package rather than an identically named public package.
 Keep the extracted feed available for later `dotnet tool restore --configfile NuGet.Bundle.Config`.
-`init` prepares `.tada/WORKFLOW.md`, `.tada/context.md` and harness scaffolding. It migrates recognised generated agent rules from earlier alphas so the host plugin controls can govern automatic workflow selection. The SDK host used for preparation is recorded in new context.
+`init` records the layout preference and prepares `.tada/WORKFLOW.md` and `.tada/context.md`. Use `tada init --acceptance` when a new project needs the supported .NET acceptance harness. It migrates recognised generated agent rules from earlier alphas so the host plugin controls can govern automatic workflow selection. The SDK host used for preparation is recorded in new context.
 
 Enable the matching TADA plugin through the host's plugin controls. The plugin distribution includes this verifier package and its setup helper. Open MyApi in a fresh session and ask for your project normally.
 

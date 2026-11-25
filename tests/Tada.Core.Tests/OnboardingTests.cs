@@ -12,9 +12,22 @@ public sealed class OnboardingTests
     {
         using var project = new CoreTests.Project();
         string root = Path.Combine(project.Root, "new-api");
+        Directory.CreateDirectory(root);
+        File.WriteAllText(Path.Combine(root, "README.md"), "# New project");
         string host = @"C:\portable SDK\dotnet.exe";
         var result = Onboarding.Initialise(root, host);
         CollectionAssert.Contains(result.Created, ".tada/WORKFLOW.md");
+        Assert.AreEqual("recommended", result.Layout);
+        Assert.IsFalse(Directory.Exists(Path.Combine(root, "tests")));
+        Assert.IsFalse(File.Exists(Path.Combine(root, "tada.json")));
+        Assert.IsFalse(File.Exists(Path.Combine(root, "global.json")));
+        Onboarding.Initialise(root, acceptance: true);
+        var config = Data.Read<Config>(Path.Combine(root, "tada.json"));
+        CollectionAssert.AreEqual(new[] { "specifications/functional", "tests/Acceptance" }, config.OracleRoots);
+        StringAssert.Contains(File.ReadAllText(Path.Combine(root, config.Execution.Project)), "../../specifications/functional/**/*.feature");
+        Assert.IsFalse(File.Exists(Path.Combine(root, "tests", "Acceptance", "Bindings.cs")));
+        Assert.IsFalse(Directory.Exists(Path.Combine(root, "tests", "Fitness")));
+        Assert.AreEqual(0, Onboarding.Initialise(root, acceptance: true).Created.Length);
         Assert.AreEqual(0, result.Updated.Length);
         Assert.IsFalse(File.Exists(Path.Combine(root, "AGENTS.md")));
         StringAssert.Contains(File.ReadAllText(Path.Combine(root, ".tada", "context.md")), host);
@@ -25,6 +38,60 @@ public sealed class OnboardingTests
         Assert.IsFalse(sdk.GetProperty("allowPrerelease").GetBoolean());
         Assert.AreEqual(0, Directory.GetFiles(root, "*.feature", SearchOption.AllDirectories).Length);
         Assert.IsFalse(Directory.Exists(Path.Combine(root, ".tada", "approvals")));
+    }
+
+    [TestMethod]
+    public void ExistingVerificationIsDiscoveredAndRetainedWhenAdoptingNewConventions()
+    {
+        using var project = new CoreTests.Project();
+        string root = Path.Combine(project.Root, "existing");
+        Directory.CreateDirectory(Path.Combine(root, "interfaces"));
+        Directory.CreateDirectory(Path.Combine(root, "checks"));
+        File.WriteAllText(Path.Combine(root, "interfaces", "api.yaml"), "openapi: 3.1.0\n");
+        File.WriteAllText(Path.Combine(root, "checks", "Legacy.Tests.csproj"), "<Project/>");
+        var initial = Onboarding.Initialise(root);
+        Assert.AreEqual("existing", initial.Layout);
+        CollectionAssert.Contains(initial.Discovered, "interfaces/api.yaml");
+        CollectionAssert.Contains(initial.Discovered, "checks/Legacy.Tests.csproj");
+        Assert.IsFalse(File.Exists(Path.Combine(root, "tada.json")));
+        Assert.IsFalse(File.Exists(Path.Combine(root, ".gitattributes")));
+
+        var adopted = Onboarding.Initialise(root, layout: "recommended");
+        Assert.AreEqual("recommended", adopted.Layout);
+        Assert.AreEqual("recommended", Onboarding.Initialise(root).Layout);
+        Assert.AreEqual(0, Onboarding.Initialise(root, layout: "recommended").Updated.Length);
+        Assert.AreEqual("openapi: 3.1.0\n", File.ReadAllText(Path.Combine(root, "interfaces", "api.yaml")));
+        Assert.AreEqual("<Project/>", File.ReadAllText(Path.Combine(root, "checks", "Legacy.Tests.csproj")));
+        Assert.IsFalse(Directory.Exists(Path.Combine(root, "tests")));
+    }
+
+    [TestMethod]
+    public void AdoptingRecommendedLayoutKeepsExistingBaselineCurrent()
+    {
+        using var project = new CoreTests.Project();
+        string baseline = project.Store.Prepare();
+        project.Store.Approve(project.Store.Review(baseline).Id, "isolated legacy adoption control");
+        byte[] config = File.ReadAllBytes(Path.Combine(project.Root, "tada.json"));
+        Assert.AreEqual("existing", Onboarding.Initialise(project.Root).Layout);
+        Assert.AreEqual("recommended", Onboarding.Initialise(project.Root, layout: "recommended").Layout);
+        CollectionAssert.AreEqual(config, File.ReadAllBytes(Path.Combine(project.Root, "tada.json")));
+        project.Store.CheckCurrent(baseline);
+        Assert.AreEqual(baseline, project.Store.Approved(baseline).Baseline);
+        Assert.IsTrue(File.Exists(project.Feature));
+    }
+
+    [TestMethod]
+    public void ScaffoldRefusesToOccupyAnExistingAcceptanceDirectory()
+    {
+        using var project = new CoreTests.Project();
+        string root = Path.Combine(project.Root, "existing");
+        string acceptance = Path.Combine(root, "tests", "Acceptance");
+        Directory.CreateDirectory(acceptance);
+        string existing = Path.Combine(acceptance, "Custom.csproj");
+        File.WriteAllText(existing, "<Project/>");
+        Assert.ThrowsExactly<TadaException>(() => Onboarding.Initialise(root, layout: "recommended", acceptance: true));
+        CollectionAssert.AreEqual(new[] { existing }, Directory.GetFiles(acceptance));
+        Assert.IsFalse(File.Exists(Path.Combine(root, "tada.json")));
     }
 
     [TestMethod]

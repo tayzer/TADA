@@ -13,7 +13,7 @@ try
         if (!args[i].StartsWith("--", StringComparison.Ordinal)) { words.Add(args[i]); continue; }
         string key = args[i][2..];
         string value;
-        if (key is "json" or "help" or "version") value = "true";
+        if (key is "json" or "help" or "version" or "acceptance") value = "true";
         else
         {
             if (i + 1 >= args.Length || args[i + 1].StartsWith("--", StringComparison.Ordinal))
@@ -22,7 +22,7 @@ try
         }
         if (!options.TryAdd(key, value)) throw new TadaException($"Duplicate option: --{key}");
     }
-    var known = new[] { "repo", "baseline", "review", "by", "replaces", "against", "run", "dotnet", "base", "json", "help", "version", "plan", "file" };
+    var known = new[] { "repo", "baseline", "review", "by", "replaces", "against", "run", "dotnet", "base", "json", "help", "version", "plan", "file", "layout", "acceptance" };
     if (options.Keys.Except(known).Any()) throw new TadaException("Unknown option: " + options.Keys.Except(known).First());
     string Need(string name) => options.GetValueOrDefault(name) ?? throw new TadaException($"Explicit --{name} is required.");
     string? Maybe(string name) => options.GetValueOrDefault(name);
@@ -37,7 +37,7 @@ try
         Console.WriteLine("""
         TADA — Test-Assured Development Assistance (local advisory L1)
 
-        tada init [--repo DIRECTORY]
+        tada init [--repo DIRECTORY] [--layout existing|recommended] [--acceptance]
         tada baseline prepare [--repo DIRECTORY]
         tada baseline review --baseline sha256:... [--against sha256:...]
         tada baseline approve --review ID --by NAME [--replaces sha256:...]
@@ -71,11 +71,13 @@ try
     {
         string? host = Environment.ProcessPath;
         if (!string.Equals(Path.GetFileNameWithoutExtension(host), "dotnet", StringComparison.OrdinalIgnoreCase)) host = null;
-        var result = Onboarding.Initialise(root, host);
-        Print(new { status = "initialised", created = result.Created, updated = result.Updated,
+        var result = Onboarding.Initialise(root, host, Maybe("layout"), options.ContainsKey("acceptance"));
+        Print(new { status = "initialised", result.Created, result.Updated, result.Layout, result.Discovered,
             next = "Project prepared. Enable the TADA plugin, start a fresh agent session and describe what you want to build or change normally." });
         return 0;
     }
+    if (options.ContainsKey("layout") || options.ContainsKey("acceptance"))
+        throw new TadaException("--layout and --acceptance apply only to tada init.");
     var repository = new Repository(root);
     var store = new BaselineStore(repository);
     switch (string.Join(' ', words))

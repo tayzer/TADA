@@ -28,21 +28,21 @@ function Invoke-DemoTada([string]$Name, [string[]]$Arguments, [int]$ExpectedExit
 }
 
 $version = Invoke-DemoTada 'version' @('--version')
-Invoke-DemoTada 'init' @('init') | Out-Null
-Copy-Item -LiteralPath (Join-Path $repository 'examples/Echo/echo.feature') -Destination "$workspace/features/echo.feature"
+Invoke-DemoTada 'init' @('init','--acceptance') | Out-Null
+Copy-Item -LiteralPath (Join-Path $repository 'examples/Echo/echo.feature') -Destination "$workspace/specifications/functional/echo.feature"
 Copy-Item -LiteralPath (Join-Path $repository 'examples/Echo/EchoBindings.cs') -Destination "$workspace/tests/Acceptance/Bindings.cs"
-New-Item -ItemType Directory -Path "$workspace/Api" -Force | Out-Null
-Copy-Item -LiteralPath (Join-Path $repository 'examples/Echo/Api/Echo.Api.csproj') -Destination "$workspace/Api/Echo.Api.csproj"
-$programPath = Join-Path $workspace 'Api/Program.cs'
+New-Item -ItemType Directory -Path "$workspace/src/Api" -Force | Out-Null
+Copy-Item -LiteralPath (Join-Path $repository 'examples/Echo/Api/Echo.Api.csproj') -Destination "$workspace/src/Api/Echo.Api.csproj"
+$programPath = Join-Path $workspace 'src/Api/Program.cs'
 [IO.File]::WriteAllText($programPath, 'var builder = WebApplication.CreateBuilder(args); var app = builder.Build(); app.MapPost("/echo", () => Results.StatusCode(501)); app.Run();')
 $acceptancePath = Join-Path $workspace 'tests/Acceptance/Acceptance.csproj'
-$acceptanceProject = [IO.File]::ReadAllText($acceptancePath).Replace('</Project>', '<ItemGroup><ProjectReference Include="../../Api/Echo.Api.csproj" ReferenceOutputAssembly="false" Private="false" OutputItemType="TadaSutOutput" /></ItemGroup></Project>')
+$acceptanceProject = [IO.File]::ReadAllText($acceptancePath).Replace('</Project>', '<ItemGroup><ProjectReference Include="../../src/Api/Echo.Api.csproj" ReferenceOutputAssembly="false" Private="false" OutputItemType="TadaSutOutput" /></ItemGroup></Project>')
 [IO.File]::WriteAllText($acceptancePath, $acceptanceProject)
 $configPath = Join-Path $workspace 'tada.json'
 $config = Get-Content -LiteralPath $configPath -Raw | ConvertFrom-Json
-$config.execution | Add-Member -NotePropertyName sutProject -NotePropertyValue 'Api/Echo.Api.csproj' -Force
+$config.execution | Add-Member -NotePropertyName sutProject -NotePropertyValue 'src/Api/Echo.Api.csproj' -Force
 $config.execution | Add-Member -NotePropertyName sutAssembly -NotePropertyValue 'Echo.Api.dll' -Force
-$config | Add-Member -NotePropertyName implementationRoots -NotePropertyValue @('Api') -Force
+$config | Add-Member -NotePropertyName implementationRoots -NotePropertyValue @('src') -Force
 [IO.File]::WriteAllText($configPath, ($config | ConvertTo-Json -Depth 8))
 
 Push-Location $workspace

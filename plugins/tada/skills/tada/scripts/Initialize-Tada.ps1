@@ -1,6 +1,7 @@
 param(
     [string]$Repository = (Get-Location).Path,
-    [string]$Dotnet = 'dotnet'
+    [string]$Dotnet = 'dotnet',
+    [ValidateSet('existing', 'recommended')][string]$Layout
 )
 
 $ErrorActionPreference = 'Stop'
@@ -56,7 +57,9 @@ try {
         if ($LASTEXITCODE) { throw 'TADA local tool installation or restore failed.' }
     }
     finally { if (Test-Path -LiteralPath $configuration) { Remove-Item -LiteralPath $configuration } }
-    & $Dotnet tool run tada init
+    $initArguments = @('init')
+    if ($Layout) { $initArguments += @('--layout', $Layout) }
+    & $Dotnet tool run tada @initArguments
     if ($LASTEXITCODE) { throw 'TADA project preparation failed.' }
 }
 finally {

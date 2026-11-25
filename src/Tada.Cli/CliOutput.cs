@@ -161,9 +161,11 @@ public static class CliOutput
         else if (value.TryGetProperty("created", out var created))
         {
             text.AppendLine("TADA project prepared. Use the host plugin controls to enable or disable automatic workflow selection.");
+            text.AppendLine($"Layout: {value.GetProperty("layout").GetString()}");
+            foreach (var path in value.GetProperty("discovered").EnumerateArray()) text.AppendLine("  Discovered: " + path.GetString());
             foreach (var path in created.EnumerateArray()) text.AppendLine("  Created: " + path.GetString());
             if (value.TryGetProperty("updated", out var updated))
-                foreach (var path in updated.EnumerateArray()) text.AppendLine("  Migrated legacy guidance in: " + path.GetString());
+                foreach (var path in updated.EnumerateArray()) text.AppendLine("  Updated: " + path.GetString());
             text.AppendLine(value.GetProperty("next").GetString());
             text.AppendLine("If .gitattributes already existed, review line-ending rules for exact-byte oracle inputs.");
         }

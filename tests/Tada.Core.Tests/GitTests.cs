@@ -9,7 +9,7 @@ public sealed class GitTests
     public async Task ApprovedSnapshotAndCurrentOracleSurviveGitRoundTripWithAutoCrlf()
     {
         using var project = new CoreTests.Project();
-        File.WriteAllText(Path.Combine(project.Root, ".gitattributes"), "* -text\n");
+        File.WriteAllText(Path.Join(project.Root, ".gitattributes"), "* -text\n");
         Onboarding.Initialise(project.Root);
         string assertion = Path.Combine(project.Root, "acceptance", "Assertion.cs");
         File.WriteAllText(assertion, "// preserve CRLF literal and source bytes\r\nclass Example { string Value = \"hello world\"; }\r\n");

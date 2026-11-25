@@ -78,11 +78,18 @@ public static partial class Enforcement
     private static void Validate(EnforcementLedger ledger, string source)
     {
         var suites = ledger.ProtectedSuites ?? [];
-        if (ledger.SchemaVersion is not (1 or 2) || (ledger.SchemaVersion == 1 && (ledger.Baseline == null || ledger.ProtectedSuites != null)) ||
-            (ledger.Baseline == null && suites.Length == 0) || (ledger.Baseline != null && !Digest().IsMatch(ledger.Baseline)) ||
-            suites.Any(id => id == null || !Digest().IsMatch(id)) || suites.Distinct(StringComparer.Ordinal).Count() != suites.Length ||
-            ledger.Active.Any(id => id == null) || ledger.Candidates.Any(c => c == null))
+        bool validSchema = ledger.SchemaVersion switch
+        {
+            1 => ledger.Baseline != null && ledger.ProtectedSuites == null,
+            2 => ledger.Baseline != null || suites.Length > 0,
+            _ => false
+        };
+        if (!validSchema || (ledger.Baseline != null && !Digest().IsMatch(ledger.Baseline)))
             throw new TadaException($"Unsupported enforcement ledger: {source}");
+        if (suites.Any(id => id == null || !Digest().IsMatch(id)) || suites.Distinct(StringComparer.Ordinal).Count() != suites.Length)
+            throw new TadaException("Protected suites require unique baseline digests.");
+        if (ledger.Active.Any(id => id == null) || ledger.Candidates.Any(candidate => candidate == null))
+            throw new TadaException("Enforcement entries cannot be null.");
         var ids = ledger.Active.Concat(ledger.Candidates.Select(c => c.Scenario)).ToArray();
         if (ids.Any(id => !Id().IsMatch(id)) || ids.Distinct(StringComparer.Ordinal).Count() != ids.Length)
             throw new TadaException("Enforcement entries need unique scenario identities, each either active or candidate.");
@@ -153,10 +160,30 @@ public static partial class Enforcement
         }
 
         PlanVerification? plan = null;
-        if (runId != null && Guid.TryParseExact(runId, "N", out _) && Directory.Exists(Path.Combine(store.Repository.State, "plan-runs", runId)))
+        bool checkFailed = false;
+        CheckAssessment[] supporting = [];
+        if (runId != null && Guid.TryParseExact(runId, "N", out _) && Directory.Exists(Path.Join(store.Repository.State, "plan-runs", runId)))
         {
             plan = new PlanEngine(store).Verify(runId);
-            preconditions.AddRange(plan.Reasons.Where(reason => reason.Code == "plan-integrity"));
+            preconditions.AddRange(plan.Reasons.Where(reason => reason.Code is "plan-integrity" or "no-checks-unestablished"));
+            supporting = plan.Checks.Where(check => check.Purpose == "supporting").ToArray();
+            foreach (var check in supporting)
+            {
+                var proof = check.Result;
+                if (proof.Outcome is "PASS" or "FAIL")
+                {
+                    try
+                    {
+                        store.CheckCurrent(proof.Baseline);
+                        engine.CheckCurrentImplementation(proof.RunId, proof.Baseline, store.Read(proof.Baseline));
+                    }
+                    catch (Exception error) when (error is TadaException or IOException or System.Text.Json.JsonException or UnauthorizedAccessException)
+                    {
+                        proof = proof with { Outcome = "INDETERMINATE", Reasons = [new Reason("supporting-check-stale", error.Message)] };
+                    }
+                }
+                RecordCheck(check.Id, proof, "supporting-check-unverified");
+            }
         }
         Verification? run = null;
         string[] earlier = [];
@@ -174,7 +201,6 @@ public static partial class Enforcement
         }
 
         var states = new List<ObligationState>();
-        bool suiteFailed = false;
         foreach (var (id, suite) in suites)
         {
             int before = preconditions.Count;
@@ -195,18 +221,15 @@ public static partial class Enforcement
             if (proof.Outcome is "PASS" or "FAIL" &&
                 CheckImplementation(childRun, suite.Baseline, suite.Inventory, "protected-suite-stale") is { } stale)
                 proof = proof with { Outcome = "INDETERMINATE", Reasons = [stale] };
-            suiteFailed |= proof.Outcome == "FAIL";
-            if (proof.Outcome != "PASS" && proof.Reasons.Length == 0)
-                preconditions.Add(new Reason("protected-suite-unverified", "This mandatory suite lacks verified passing evidence.", id));
-            preconditions.AddRange(proof.Reasons.Select(reason => new Reason(reason.Code,
-                reason.CaseId == null ? reason.Detail : $"{reason.CaseId}: {reason.Detail}", id)));
+            RecordCheck(id, proof, "protected-suite-unverified");
             states.Add(new ObligationState(id, "active", proof.Outcome switch { "PASS" => "satisfied", "FAIL" => "failed", _ => "unverified" },
                 proof.Outcome == "PASS" ? "Verified PASS." : proof.Reasons.FirstOrDefault()?.Detail ?? proof.Outcome));
         }
 
         var result = Evaluate(new GateInputs(ledger, baseLedger, inventory?.ExpectedCases.Select(c => c.ScenarioId).ToArray() ?? [],
             run, earlier, gaps, lineage, amended, changes.ToArray(), preconditions.ToArray(), today));
-        string outcome = suiteFailed ? "FAIL" : result.Outcome == "NO_CHECKS" && suites.Count > 0 ? "PASS" : result.Outcome;
+        string outcome = checkFailed ? "FAIL" : result.Outcome;
+        if (outcome == "NO_CHECKS" && (suites.Count > 0 || supporting.Length > 0)) outcome = "PASS";
         return result with
         {
             Outcome = outcome,
@@ -214,6 +237,15 @@ public static partial class Enforcement
             BaseBaseline = baseRequested ? result.BaseBaseline : "not-compared",
             Obligations = [.. result.Obligations, .. states]
         };
+
+        void RecordCheck(string id, Verification proof, string unverifiedCode)
+        {
+            checkFailed |= proof.Outcome == "FAIL";
+            if (proof.Outcome != "PASS" && proof.Reasons.Length == 0)
+                preconditions.Add(new Reason(unverifiedCode, "This check lacks verified passing evidence.", id));
+            preconditions.AddRange(proof.Reasons.Select(reason => new Reason(reason.Code,
+                reason.CaseId == null ? reason.Detail : $"{reason.CaseId}: {reason.Detail}", id)));
+        }
 
         string? SelectedRun(string baseline, string purpose)
         {

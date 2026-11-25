@@ -59,7 +59,7 @@ The file is part of the captured oracle. Changing it requires a new baseline rev
 | Key | Required | Default | Meaning |
 | --- | --- | --- | --- |
 | `schemaVersion` | Yes | `1` from `init --acceptance` | `1` for a single application under test. `2` for `execution.services`. |
-| `oracleRoots` | Yes | `["features", "tests/Acceptance"]` | Folders captured byte for byte as the protected agreement: features, bindings, fixtures, observers and shared assertion inputs. |
+| `oracleRoots` | Yes | `["specifications/functional", "tests/Acceptance"]` | Folders captured byte for byte as the protected agreement: features, bindings, fixtures, observers and shared assertion inputs. |
 | `implementationRoots` | No | none | Application source folders. They are identified separately from the oracle, so implementation changes never count as acceptance changes. |
 | `requirementPrefix` | No | `REQ_` | Gherkin tag prefix for requirement IDs, such as `@REQ_ORDER_LIMIT`. |
 | `scenarioPrefix` | No | `AC_` | Gherkin tag prefix for scenario IDs, such as `@AC_ORDER_LIMIT_01`. |

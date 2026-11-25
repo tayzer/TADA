@@ -330,8 +330,8 @@ public sealed class RunEngine(BaselineStore store, string dotnet = "dotnet", Act
                 var discovery = record.Commands.Single(item => item.Arguments.Contains("--list-tests"));
                 if (inventory.ProtectedSuite != null)
                 {
-                    string harness = Path.Combine(directory, "harness");
-                    string assembly = Path.Combine(harness, inventory.Execution.Assembly);
+                    string harness = Path.Join(directory, "harness");
+                    string assembly = Path.Join(harness, inventory.Execution.Assembly);
                     if (discovery.Started < record.Started || discovery.Finished < discovery.Started || discovery.FileName != command.FileName ||
                         !discovery.Arguments.SequenceEqual([assembly, "--list-tests", "--no-ansi"]) ||
                         !command.Arguments.SequenceEqual([assembly, "--progress", "off", "--no-ansi", "--report-trx",
@@ -412,7 +412,7 @@ public sealed class RunEngine(BaselineStore store, string dotnet = "dotnet", Act
 
     internal void CheckCurrentImplementation(string id, string baseline, Inventory inventory)
     {
-        var record = Data.Read<RunRecord>(Path.Combine(RunDirectory(id), "run.json"));
+        var record = Data.Read<RunRecord>(Path.Join(RunDirectory(id), "run.json"));
         if (record.Id != id || record.Baseline != baseline || record.Implementation != Implementation(store.Configuration(baseline, inventory), inventory))
             throw new TadaException("Required run does not match the current implementation.");
     }

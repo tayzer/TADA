@@ -10,7 +10,7 @@ public sealed class PlanTests
     public void IndependentProtectedSuiteUsesExistingContractAndRequiresApproval()
     {
         using var project = new CoreTests.Project();
-        string contract = Path.Combine(project.Root, "openapi.yaml");
+        string contract = Path.Join(project.Root, "openapi.yaml");
         File.WriteAllText(contract, "openapi: 3.1.0\n");
         string suiteFile = WriteProtectedSuite(project, "http", "contract", ["openapi.yaml"]);
         string baseline = project.Store.PrepareProtected(suiteFile);
@@ -21,7 +21,7 @@ public sealed class PlanTests
         Assert.IsTrue(project.Store.Read(baseline).Files.Any(file => file.Path == "openapi.yaml"));
         Assert.ThrowsExactly<TadaException>(() => project.Store.Approved(baseline));
         project.Store.Approve(project.Store.Review(baseline).Id, "isolated protected-suite control");
-        File.AppendAllText(Path.Combine(project.Root, "tada.json"), "\n");
+        File.AppendAllText(Path.Join(project.Root, "tada.json"), "\n");
         project.Store.CheckCurrent(baseline);
         File.AppendAllText(contract, "# unapproved change\n");
         Assert.ThrowsExactly<TadaException>(() => project.Store.CheckCurrent(baseline));
@@ -34,7 +34,7 @@ public sealed class PlanTests
         string source = WriteProtectedSuite(project, "latency", "fitness", [], "MedianBudget", "TailBudget");
         string original = project.Store.PrepareProtected(source);
         project.Store.Approve(project.Store.Review(original).Id, "isolated protected-suite replacement control");
-        string path = Path.Combine(project.Root, source);
+        string path = Path.Join(project.Root, source);
         var definition = Data.Read<ProtectedSuiteDefinition>(path);
         File.Delete(path);
         Data.WriteNew(path, definition with { RequiredTests = ["MedianBudget"] });
@@ -51,7 +51,7 @@ public sealed class PlanTests
     private static string WriteProtectedSuite(CoreTests.Project project, string id, string kind, string[] roots, params string[] requiredTests)
     {
         string source = id + ".verification.json";
-        Data.WriteNew(Path.Combine(project.Root, source), new ProtectedSuiteDefinition(1, id, kind,
+        Data.WriteNew(Path.Join(project.Root, source), new ProtectedSuiteDefinition(1, id, kind,
             new Config(1, ["acceptance", .. roots], new Execution("acceptance/Acceptance.csproj", "Acceptance.dll", "native.trx"),
                 ImplementationRoots: ["features"],
                 Obligations: roots.Length == 0 ? null : [new ObligationRoot(kind, roots)]),
@@ -118,6 +118,26 @@ public sealed class PlanTests
         var prepared = Prepare(project, Chore() with { Categories = ["feat"], BusinessChange = true, Checks = [check] });
         Assert.AreEqual(baseline, prepared.Inventory.Checks.Single().Baseline);
         Assert.ThrowsExactly<TadaException>(() => project.Store.Approved(baseline));
+    }
+
+    [TestMethod]
+    public void GateRetainsGapFromSelectedSupportingCheckWithOnlyPendingAcceptance()
+    {
+        using var project = new CoreTests.Project();
+        string baseline = project.Store.Prepare();
+        project.Store.Approve(project.Store.Review(baseline).Id, "isolated supporting gate control");
+        var ledger = new EnforcementLedger(1, baseline, [], [new Candidate("AC_ONE", "2026-11-25", "Pending acceptance")]);
+        Data.WriteNew(Path.Join(project.Store.Repository.State, "enforcement.json"), ledger);
+        var prepared = Prepare(project, Supporting(project));
+        string id = Guid.NewGuid().ToString("N");
+        var started = DateTimeOffset.UtcNow;
+        Data.WriteNew(Path.Join(project.Store.Repository.StateDirectory("plan-runs", id), "run.json"),
+            new PlanRun(id, prepared.Plan, started, started, [new CheckRun("service", null)], []));
+
+        var gate = Enforcement.Assess(project.Store, new RunEngine(project.Store), id, true, ledger, new DateOnly(2026, 11, 25));
+
+        Assert.AreEqual("INDETERMINATE", gate.Outcome);
+        Assert.IsTrue(gate.Reasons.Any(reason => reason.Code == "not-executed" && reason.CaseId == "service"));
     }
 
     [TestMethod]

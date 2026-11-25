@@ -66,7 +66,7 @@ public sealed partial class Repository
         var selectedRoots = config.OracleRoots.Concat((config.BuildTaskContracts ?? []).SelectMany(contract => contract.InputRoots.Prepend(contract.Origin))).Distinct(StringComparer.Ordinal).ToArray();
         foreach (var selected in selectedRoots)
         {
-            var full = Path.Combine(Root, selected);
+            var full = Path.Join(Root, selected);
             if (File.Exists(full)) paths.Add(Relative(Resolve(selected)));
             else Visit(Resolve(selected, true));
         }

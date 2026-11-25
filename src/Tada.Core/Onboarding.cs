@@ -17,11 +17,11 @@ public static class Onboarding
         var repository = new Repository(root);
         root = repository.Root;
         var discovered = Discover(repository);
-        string preferencePath = Path.Combine(root, LayoutPath);
+        string preferencePath = Path.Join(root, LayoutPath);
         var prior = File.Exists(preferencePath) ? Data.Read<LayoutPreference>(repository.Resolve(LayoutPath)) : null;
         if (prior != null && (prior.SchemaVersion != 1 || prior.Layout is not ("existing" or "recommended")))
             throw new TadaException($"Unsupported layout preference: {LayoutPath}");
-        string config = Path.Combine(root, "tada.json");
+        string config = Path.Join(root, "tada.json");
         bool configured = File.Exists(config);
         bool greenfield = prior?.Greenfield ?? (!configured && discovered.Length == 0);
         var preference = new LayoutPreference(1, layout ?? prior?.Layout ?? (greenfield ? "recommended" : "existing"), greenfield);
@@ -44,7 +44,7 @@ public static class Onboarding
             if (preference.Layout != "recommended")
                 throw new TadaException("Scaffolding uses recommended directories. Use --layout recommended or configure the existing harness in tada.json.");
             var harness = AcceptanceFiles();
-            string directory = Path.Combine(root, Acceptance);
+            string directory = Path.Join(root, Acceptance);
             if (Directory.Exists(directory))
             {
                 repository.Resolve(Acceptance, directory: true);
@@ -66,43 +66,46 @@ public static class Onboarding
         // Publish the layout before optional scaffolding so a retry retains the original selection.
         if (prior != preference)
         {
-            string stage = Path.Combine(repository.StateDirectory("scratch"), Guid.NewGuid().ToString("N") + ".json");
-            try
-            {
-                Data.WriteNew(stage, preference);
-                File.Move(stage, preferencePath, overwrite: prior != null);
-            }
-            finally { if (File.Exists(stage)) File.Delete(stage); }
+            PublishFile(preferencePath, stage => Data.WriteNew(stage, preference), overwrite: prior != null);
             (prior == null ? created : updated).Add(LayoutPath);
         }
         foreach (var (relative, content) in files)
         {
-            string path = Path.Combine(root, relative);
+            string path = Path.Join(root, relative);
             if (File.Exists(path)) continue;
             int separator = relative.LastIndexOf('/');
             if (separator >= 0) EnsureDirectory(relative[..separator]);
-            using (var stream = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.None))
-            using (var writer = new StreamWriter(stream, new System.Text.UTF8Encoding(false)))
-                writer.Write(content + "\n");
+            PublishFile(path, stage => File.WriteAllText(stage, content + "\n"));
             created.Add(relative);
         }
         if (acceptance && !configured)
         {
             EnsureDirectory(Functional);
-            Data.WriteNew(config, new Config(1, [Functional, Acceptance],
-                new Execution(Acceptance + "/Acceptance.csproj", "Acceptance.dll", "tada-messages.ndjson")));
+            PublishFile(config, stage => Data.WriteNew(stage, new Config(1, [Functional, Acceptance],
+                new Execution(Acceptance + "/Acceptance.csproj", "Acceptance.dll", "tada-messages.ndjson"))));
             created.Add("tada.json");
         }
         foreach (string entry in new[] { "AGENTS.md", "AGENTS.override.md" })
             if (File.Exists(Path.Combine(root, entry)) && RemoveLegacyGuidance(entry)) updated.Add(entry);
         return new Initialisation(created.ToArray(), updated.ToArray(), preference.Layout, discovered);
 
+        void PublishFile(string destination, Action<string> write, bool overwrite = false)
+        {
+            string stage = Path.Join(repository.StateDirectory("scratch"), Guid.NewGuid().ToString("N") + ".tmp");
+            try
+            {
+                write(stage);
+                File.Move(stage, destination, overwrite);
+            }
+            finally { if (File.Exists(stage)) File.Delete(stage); }
+        }
+
         void EnsureDirectory(string relative)
         {
             string current = root;
             foreach (string component in relative.Split('/'))
             {
-                current = Path.Combine(current, component);
+                current = Path.Join(current, component);
                 if (!Directory.Exists(current)) Directory.CreateDirectory(current);
                 Repository.NoLink(current);
             }
@@ -215,12 +218,12 @@ public static class Onboarding
                 string extension = Path.GetExtension(name);
                 string[] segments = relative.Split('/');
                 if (extension is ".feature" or ".csproj" or ".fsproj" or ".vbproj" or ".sln" or ".slnx" ||
-                    name is "tada.json" or "reqnroll.json" || name.EndsWith(".verification.json", StringComparison.Ordinal) ||
+                    name is "tada.json" or "reqnroll.json" or "cmakelists.txt" || name.EndsWith(".verification.json", StringComparison.Ordinal) ||
                     name.StartsWith("openapi", StringComparison.Ordinal) || name.StartsWith("swagger", StringComparison.Ordinal) ||
                     (!name.StartsWith("readme", StringComparison.Ordinal) && segments.SkipLast(1).Any(segment => segment.ToLowerInvariant() is
                         "features" or "spec" or "specs" or "specifications" or "contracts" or "interfaces")))
                     found.Add(relative);
-                else if (extension is ".cs" or ".py" or ".go" or ".rs" or ".java" or ".ts" or ".tsx" or ".js" or ".jsx" or ".php" or ".swift" or ".kt" ||
+                else if (extension is ".c" or ".cc" or ".cpp" or ".cxx" or ".h" or ".hpp" or ".cs" or ".py" or ".go" or ".rs" or ".java" or ".ts" or ".tsx" or ".js" or ".jsx" or ".php" or ".swift" or ".kt" ||
                     (!name.StartsWith("readme", StringComparison.Ordinal) && segments.SkipLast(1).Any(segment => segment.ToLowerInvariant() is
                         "test" or "tests" or "checks" or "fitness" or "src")))
                     found.Add(segments.Length == 1 ? relative : segments[0] + "/");

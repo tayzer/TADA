@@ -108,6 +108,8 @@ try {
         [IO.File]::AppendAllText($report, '<tampered/>')
         $tampered = Tada -Arguments @('verify','--run',$passing.runId) -ExpectedExit 2
         if ($tampered.outcome -ne 'INDETERMINATE') { throw 'Tampered supporting evidence was accepted.' }
+        $blocked = Tada -Arguments @('gate','--run',$passing.runId) -ExpectedExit 2
+        if (!($blocked.reasons | Where-Object caseId -eq 'services')) { throw 'The gate discarded the supporting evidence gap.' }
     }
     finally { [IO.File]::WriteAllBytes($report, $originalReport) }
     # A real implementation defect must fail supporting tests and the business journey.
@@ -122,6 +124,10 @@ try {
         }
         if (!(($failed.checks | Where-Object id -eq 'journey').result.reasons | Where-Object code -eq 'requirement-failure')) {
             throw 'The compensation defect did not establish behavioural RED.'
+        }
+        $blocked = Tada -Arguments @('gate','--run',$failed.runId) -ExpectedExit 1
+        if (!($blocked.reasons | Where-Object { $_.caseId -eq 'services' -and $_.code -eq 'supporting-test-failure' })) {
+            throw 'The gate discarded the verified supporting failure.'
         }
     }
     finally { [IO.File]::WriteAllBytes($implementation, $originalImplementation) }

@@ -14,17 +14,33 @@ defaults:
   run:
     shell: pwsh
 concurrency:
-  group: tada-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  group: tada-validation-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 jobs:
+  version:
+    name: Release version
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Validate the selected SemVer bump
+        env:
+          BASE_COMMIT: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.event.before }}
+        run: |
+          $version = & ./scripts/Get-TadaReleaseVersion.ps1 -BaseCommit $env:BASE_COMMIT
+          "Release version: $version" >> $env:GITHUB_STEP_SUMMARY
   windows:
     name: Windows validation (${{ matrix.suite }})
+    needs: version
     strategy:
       fail-fast: false
       matrix:
         suite: [core, orders, multi-service, enforcement, onboarding, earlier-sdk]
     runs-on: windows-2025
-    timeout-minutes: 30
+    timeout-minutes: ${{ matrix.suite == 'multi-service' && 45 || 30 }}
     env:
       DOTNET_CLI_TELEMETRY_OPTOUT: '1'
       DOTNET_GENERATE_ASPNET_CERTIFICATE: 'false'
@@ -125,28 +141,11 @@ jobs:
           $version = [string]$properties.Project.PropertyGroup.Version
           $bundle = & ./scripts/New-ReleaseBundle.ps1 -Package ".artifacts/packages/Tada.Cli.$version.nupkg"
           pwsh -File scripts/Test-ReleaseBundle.ps1 -Archive $bundle.archive
-      # The release workflow publishes <base>.<run number> builds. Package one here so a
-      # version rule that only accepts the base version fails on the PR, not after merge.
-      - name: Package a stamped release build
-        if: matrix.suite == 'core'
-        run: |
-          [xml]$properties = Get-Content Directory.Build.props -Raw
-          $version = & ./scripts/Set-TadaVersion.ps1 -Version "$([string]$properties.Project.PropertyGroup.Version).$env:GITHUB_RUN_NUMBER"
-          dotnet pack src/Tada.Cli/Tada.Cli.csproj --no-restore --disable-build-servers -o .artifacts/stamped-packages
-          if ($LASTEXITCODE) { exit $LASTEXITCODE }
-          $package = ".artifacts/stamped-packages/Tada.Cli.$version.nupkg"
-          $plugin = & ./scripts/New-TadaPlugin.ps1 -Package $package
-          pwsh -File scripts/Test-TadaPlugin.ps1 -PluginRoot $plugin.pluginRoot -Archive $plugin.archive
-          if ($LASTEXITCODE) { exit $LASTEXITCODE }
-          $bundle = & ./scripts/New-ReleaseBundle.ps1 -Package $package
-          pwsh -File scripts/Test-ReleaseBundle.ps1 -Archive $bundle.archive
-          if ($LASTEXITCODE) { exit $LASTEXITCODE }
-          git checkout -- Directory.Build.props plugins/tada
       - name: Retain package and validation evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: windows-validation-${{ matrix.suite }}-${{ github.sha }}
+          name: windows-validation-${{ matrix.suite }}-${{ github.sha }}-attempt-${{ github.run_attempt }}
           if-no-files-found: error
           include-hidden-files: true
           retention-days: 14
@@ -175,14 +174,18 @@ jobs:
   required:
     name: PR checks
     if: always()
-    needs: [windows]
+    needs: [version, windows]
     runs-on: ubuntu-24.04
     timeout-minutes: 2
     steps:
       - name: Require successful validation
         env:
+          VERSION_RESULT: ${{ needs.version.result }}
           WINDOWS_RESULT: ${{ needs.windows.result }}
         run: |
+          if ($env:VERSION_RESULT -ne 'success') {
+            throw "Release version validation ended with $env:VERSION_RESULT."
+          }
           if ($env:WINDOWS_RESULT -ne 'success') {
             throw "Windows validation ended with $env:WINDOWS_RESULT."
           }

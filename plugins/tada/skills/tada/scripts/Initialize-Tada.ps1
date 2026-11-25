@@ -6,16 +6,19 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-# Each validated main build publishes 0.1.0-alpha.<n>[.<build>]. A project may move forward
-# within that line, never backward and never to a different release line.
+# Automatically upgrade alpha builds within the same major/minor line.
+# Older published builds can have a second numeric prerelease identifier.
 function Test-OlderAlpha([string]$Installed, [string]$Target) {
-    $pattern = '^0\.1\.0-alpha\.(\d+)(?:\.(\d+))?$'
+    $pattern = '^((?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*))\.(0|[1-9][0-9]*)-alpha\.([1-9][0-9]*)(?:\.([1-9][0-9]*))?$'
     $from = [regex]::Match($Installed, $pattern)
     $to = [regex]::Match($Target, $pattern)
-    if (!$from.Success -or !$to.Success) { return $false }
-    $fromKey = @([long]$from.Groups[1].Value, $(if ($from.Groups[2].Success) { [long]$from.Groups[2].Value } else { -1 }))
-    $toKey = @([long]$to.Groups[1].Value, $(if ($to.Groups[2].Success) { [long]$to.Groups[2].Value } else { -1 }))
-    return $fromKey[0] -lt $toKey[0] -or ($fromKey[0] -eq $toKey[0] -and $fromKey[1] -lt $toKey[1])
+    if (!$from.Success -or !$to.Success -or $from.Groups[1].Value -ne $to.Groups[1].Value) { return $false }
+    foreach ($index in 2..4) {
+        $fromPart = [long]$from.Groups[$index].Value
+        $toPart = [long]$to.Groups[$index].Value
+        if ($fromPart -ne $toPart) { return $fromPart -lt $toPart }
+    }
+    return $false
 }
 $skillDirectory = Split-Path $PSScriptRoot -Parent
 $skillsDirectory = Split-Path $skillDirectory -Parent

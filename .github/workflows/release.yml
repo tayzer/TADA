@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
     inputs:
       commit:
-        description: 'Commit on main to republish (defaults to the head of main). It must have passed PR validation.'
+        description: 'Full SHA of a validated main commit to retry. Defaults to the head of main.'
         required: false
 permissions:
   contents: read
@@ -27,12 +27,13 @@ jobs:
   package:
     name: Package and publish the release
     if: >-
-      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') ||
       (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
     runs-on: windows-2025
     timeout-minutes: 30
     permissions:
       contents: write
+      actions: read
     outputs:
       tag: ${{ steps.version.outputs.tag }}
     env:
@@ -52,13 +53,14 @@ jobs:
           TRIGGER_RUN_URL: ${{ github.event.workflow_run.html_url }}
           TRIGGER_RUN_NUMBER: ${{ github.event.workflow_run.run_number }}
         run: |
+          if ($env:SOURCE_SHA -cnotmatch '^[0-9a-f]{40}$') { throw 'Supply the full commit SHA.' }
           git merge-base --is-ancestor $env:SOURCE_SHA origin/main
           if ($LASTEXITCODE) { throw "$env:SOURCE_SHA is not on main." }
-          # The build number is the validation run number, so each validated push gets its own version.
+          # The run number is retained for retrying releases that predate exact SemVer selection.
           if ($env:TRIGGER_RUN_URL) { $url = $env:TRIGGER_RUN_URL; $number = $env:TRIGGER_RUN_NUMBER }
           else {
-            $runs = @(gh run list --repo $env:GITHUB_REPOSITORY --workflow ci.yml --commit $env:SOURCE_SHA --event push --status success --json url,number --limit 1 | ConvertFrom-Json)
-            if (-not $runs) { throw "$env:SOURCE_SHA has no successful PR validation run on main." }
+            $runs = @(gh run list --repo $env:GITHUB_REPOSITORY --workflow ci.yml --branch main --commit $env:SOURCE_SHA --event push --status success --json url,number --limit 1 | ConvertFrom-Json)
+            if ($LASTEXITCODE -or -not $runs) { throw "$env:SOURCE_SHA has no successful PR validation run on main." }
             $url = $runs[0].url; $number = $runs[0].number
           }
           "VALIDATION_RUN=$url" >> $env:GITHUB_ENV
@@ -69,16 +71,22 @@ jobs:
       # No actions/cache here: this job can write releases, so it must not restore a cache
       # that other workflows could have written. The build downloads its checksum-pinned
       # native toolchain afresh.
-      - name: Give this build its unique version
+      - name: Resolve the validated release version
         id: version
         run: |
-          [xml]$properties = Get-Content Directory.Build.props -Raw
-          $base = [string]$properties.Project.PropertyGroup.Version
-          foreach ($manifest in @('plugin.json', '.codex-plugin/plugin.json', '.claude-plugin/plugin.json', '.cursor-plugin/plugin.json')) {
-            $declared = (Get-Content -LiteralPath "plugins/tada/$manifest" -Raw | ConvertFrom-Json).version
-            if ($declared -ne $base) { throw "plugins/tada/$manifest declares $declared, not $base." }
+          if (Test-Path -LiteralPath scripts/Get-TadaReleaseVersion.ps1) {
+            $version = & ./scripts/Get-TadaReleaseVersion.ps1
           }
-          $version = & ./scripts/Set-TadaVersion.ps1 -Version "$base.$env:BUILD_NUMBER"
+          else {
+            # Historical commits keep their original release identity on replay.
+            [xml]$properties = Get-Content Directory.Build.props -Raw
+            $base = [string]$properties.Project.PropertyGroup.Version
+            foreach ($manifest in @('plugin.json', '.codex-plugin/plugin.json', '.claude-plugin/plugin.json', '.cursor-plugin/plugin.json')) {
+              $declared = (Get-Content -LiteralPath "plugins/tada/$manifest" -Raw | ConvertFrom-Json).version
+              if ($declared -cne $base) { throw "plugins/tada/$manifest declares '$declared'. Expected '$base'." }
+            }
+            $version = & ./scripts/Set-TadaVersion.ps1 -Version "$base.$env:BUILD_NUMBER"
+          }
           "version=$version" >> $env:GITHUB_OUTPUT
           "tag=v$version" >> $env:GITHUB_OUTPUT
           "Publishing **$version** from ``$env:SOURCE_SHA``." >> $env:GITHUB_STEP_SUMMARY
@@ -94,7 +102,10 @@ jobs:
           $tagged = gh api "repos/$env:GITHUB_REPOSITORY/commits/$env:TAG" --jq .sha
           if ($LASTEXITCODE -or $tagged -ne $env:SOURCE_SHA) { throw "Release $env:TAG exists for commit $tagged, not $env:SOURCE_SHA." }
           $assets = @(gh release view $env:TAG --repo $env:GITHUB_REPOSITORY --json assets --jq '.assets[].name')
-          foreach ($required in @('SHA256SUMS', 'release-manifest.json', "TADA-marketplace-$($env:TAG.Substring(1)).zip")) {
+          if ($LASTEXITCODE) { throw "Cannot inspect assets for $env:TAG." }
+          $version = $env:TAG.Substring(1)
+          foreach ($required in @('SHA256SUMS', 'release-manifest.json', "Tada.Cli.$version.nupkg",
+              "TADA-$version-win-x64.zip", "TADA-plugin-$version.zip", "TADA-marketplace-$version.zip")) {
             if ($assets -notcontains $required) { throw "Release $env:TAG exists but lacks $required. Inspect it before republishing." }
           }
           "exists=true" >> $env:GITHUB_OUTPUT

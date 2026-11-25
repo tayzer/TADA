@@ -42,7 +42,9 @@ try {
         $checks.Add([pscustomobject]@{ operation=$Arguments[0]; expectedExit=$ExpectedExit; result=$result })
         return $result
     }
-    Tada @('init') | Out-Null
+    $initial = Tada @('init')
+    if ($initial.layout -ne 'recommended' -or (Test-Path -LiteralPath tests)) { throw 'Greenfield init should persist the recommended layout and defer suites.' }
+    Tada @('init','--acceptance') | Out-Null
     $resolvedSdk = & $Dotnet --version
     if ($LASTEXITCODE -or ($SdkVersion -and $resolvedSdk -ne $SdkVersion)) { throw 'Application SDK selection failed.' }
     $hooks=Join-Path $workspace '.tada/git-control-hooks'
@@ -53,39 +55,39 @@ try {
         return $output
     }
     ControlGit @('init','--quiet','--initial-branch=main',"--template=$hooks") | Out-Host
-    Copy-Item -LiteralPath (Join-Path $repository 'examples/Echo/echo.feature') -Destination features/echo.feature
+    Copy-Item -LiteralPath (Join-Path $repository 'examples/Echo/echo.feature') -Destination specifications/functional/echo.feature
     Copy-Item -LiteralPath (Join-Path $repository 'examples/Echo/EchoBindings.cs') -Destination tests/Acceptance/Bindings.cs
-    New-Item -ItemType Directory -Path Api -Force | Out-Null
+    New-Item -ItemType Directory -Path src/Api -Force | Out-Null
     # New API starting state: transport is available, but the business endpoint is not implemented.
-    [IO.File]::WriteAllText((Join-Path $workspace 'Api/Program.cs'), 'var builder = WebApplication.CreateBuilder(args); var app = builder.Build(); app.MapPost("/echo", () => Results.StatusCode(501)); app.Run();', [Text.UTF8Encoding]::new($false))
-    Copy-Item -LiteralPath (Join-Path $repository 'examples/Echo/Api/Echo.Api.csproj') -Destination Api/Echo.Api.csproj
+    [IO.File]::WriteAllText((Join-Path $workspace 'src/Api/Program.cs'), 'var builder = WebApplication.CreateBuilder(args); var app = builder.Build(); app.MapPost("/echo", () => Results.StatusCode(501)); app.Run();', [Text.UTF8Encoding]::new($false))
+    Copy-Item -LiteralPath (Join-Path $repository 'examples/Echo/Api/Echo.Api.csproj') -Destination src/Api/Echo.Api.csproj
     # A separate implementation library exercises the evaluated ProjectReference graph without
     # sharing business-rule code with the acceptance harness.
-    New-Item -ItemType Directory -Path Domain -Force | Out-Null
-    [IO.File]::WriteAllText((Join-Path $workspace 'Domain/Echo.Domain.csproj'), '<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net10.0</TargetFramework><RestorePackagesWithLockFile>true</RestorePackagesWithLockFile></PropertyGroup></Project>')
-    [IO.File]::WriteAllText((Join-Path $workspace 'Domain/EchoText.cs'), 'public static class EchoText { public static string Keep(string text) => text; }')
-    $apiProject = [IO.File]::ReadAllText((Join-Path $workspace 'Api/Echo.Api.csproj')).Replace('</Project>', '<ItemGroup><ProjectReference Include="../Domain/Echo.Domain.csproj" /></ItemGroup></Project>')
-    [IO.File]::WriteAllText((Join-Path $workspace 'Api/Echo.Api.csproj'), $apiProject)
+    New-Item -ItemType Directory -Path src/Domain -Force | Out-Null
+    [IO.File]::WriteAllText((Join-Path $workspace 'src/Domain/Echo.Domain.csproj'), '<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net10.0</TargetFramework><RestorePackagesWithLockFile>true</RestorePackagesWithLockFile></PropertyGroup></Project>')
+    [IO.File]::WriteAllText((Join-Path $workspace 'src/Domain/EchoText.cs'), 'public static class EchoText { public static string Keep(string text) => text; }')
+    $apiProject = [IO.File]::ReadAllText((Join-Path $workspace 'src/Api/Echo.Api.csproj')).Replace('</Project>', '<ItemGroup><ProjectReference Include="../Domain/Echo.Domain.csproj" /></ItemGroup></Project>')
+    [IO.File]::WriteAllText((Join-Path $workspace 'src/Api/Echo.Api.csproj'), $apiProject)
     $acceptancePath = Join-Path $workspace 'tests/Acceptance/Acceptance.csproj'
-    $acceptanceProject = [IO.File]::ReadAllText($acceptancePath).Replace('</Project>', '<ItemGroup><ProjectReference Include="../../Api/Echo.Api.csproj" ReferenceOutputAssembly="false" Private="false" OutputItemType="TadaSutOutput" /></ItemGroup></Project>')
+    $acceptanceProject = [IO.File]::ReadAllText($acceptancePath).Replace('</Project>', '<ItemGroup><ProjectReference Include="../../src/Api/Echo.Api.csproj" ReferenceOutputAssembly="false" Private="false" OutputItemType="TadaSutOutput" /></ItemGroup></Project>')
     [IO.File]::WriteAllText($acceptancePath, $acceptanceProject)
     $tadaConfig = Get-Content -Raw tada.json | ConvertFrom-Json
-    $tadaConfig.execution | Add-Member -NotePropertyName sutProject -NotePropertyValue 'Api/Echo.Api.csproj' -Force
+    $tadaConfig.execution | Add-Member -NotePropertyName sutProject -NotePropertyValue 'src/Api/Echo.Api.csproj' -Force
     $tadaConfig.execution | Add-Member -NotePropertyName sutAssembly -NotePropertyValue 'Echo.Api.dll' -Force
-    $tadaConfig | Add-Member -NotePropertyName implementationRoots -NotePropertyValue @('Api','Domain') -Force
+    $tadaConfig | Add-Member -NotePropertyName implementationRoots -NotePropertyValue @('src') -Force
     [IO.File]::WriteAllText((Join-Path $workspace 'tada.json'), ($tadaConfig | ConvertTo-Json -Depth 8), [Text.UTF8Encoding]::new($false))
     & $Dotnet restore tests/Acceptance/Acceptance.csproj -p:NuGetAudit=false --ignore-failed-sources | Out-Host
     if ($LASTEXITCODE -ne 0) { throw 'Harness restore failed.' }
-    & $Dotnet restore Api/Echo.Api.csproj -p:NuGetAudit=false --ignore-failed-sources | Out-Host
+    & $Dotnet restore src/Api/Echo.Api.csproj -p:NuGetAudit=false --ignore-failed-sources | Out-Host
     if ($LASTEXITCODE -ne 0) { throw 'API restore failed.' }
     $baseline = (Tada @('baseline','prepare')).baseline
     $review = Tada @('baseline','review','--baseline',$baseline)
     Tada @('baseline','approve','--review',$review.review.id,'--by','automated onboarding control; not human acceptance') | Out-Null
     $red = Tada -Arguments @('run','--baseline',$baseline,'--dotnet',$Dotnet) -ExpectedExit 1
     if ($red.outcome -ne 'FAIL' -or !($red.reasons | Where-Object code -eq 'requirement-failure')) { throw 'Starting RED was not a meaningful business assertion failure.' }
-    Copy-Item -LiteralPath (Join-Path $repository 'examples/Echo/Api/Program.cs') -Destination Api/Program.cs
-    $greenProgram = [IO.File]::ReadAllText((Join-Path $workspace 'Api/Program.cs')).Replace('message = request.Message', 'message = EchoText.Keep(request.Message)')
-    [IO.File]::WriteAllText((Join-Path $workspace 'Api/Program.cs'), $greenProgram, [Text.UTF8Encoding]::new($false))
+    Copy-Item -LiteralPath (Join-Path $repository 'examples/Echo/Api/Program.cs') -Destination src/Api/Program.cs
+    $greenProgram = [IO.File]::ReadAllText((Join-Path $workspace 'src/Api/Program.cs')).Replace('message = request.Message', 'message = EchoText.Keep(request.Message)')
+    [IO.File]::WriteAllText((Join-Path $workspace 'src/Api/Program.cs'), $greenProgram, [Text.UTF8Encoding]::new($false))
     $run = Tada @('run','--baseline',$baseline,'--dotnet',$Dotnet)
     $verified = Tada @('verify','--run',$run.runId)
     if ($verified.outcome -ne 'PASS' -or $verified.passedCases.Count -ne 2) { throw 'Second project did not establish both cases.' }
@@ -105,7 +107,7 @@ static IResult Echo(EchoRequest request) => string.IsNullOrWhiteSpace(request.Me
     : Results.Ok(new { message = EchoText.Keep(request.Message) });
 public sealed record EchoRequest(string Message);
 '@
-    [IO.File]::WriteAllText((Join-Path $workspace 'Api/Program.cs'), $refactoredProgram, [Text.UTF8Encoding]::new($false))
+    [IO.File]::WriteAllText((Join-Path $workspace 'src/Api/Program.cs'), $refactoredProgram, [Text.UTF8Encoding]::new($false))
     $refactorRun = Tada @('run','--baseline',$baseline,'--dotnet',$Dotnet)
     if ($refactorRun.outcome -ne 'PASS' -or $refactorRun.passedCases.Count -ne 2) { throw 'Refactor did not preserve the approved behaviour.' }
     function RunRecord($Result) { Get-Content -LiteralPath (Join-Path $workspace ".tada/runs/$($Result.runId)/run.json") -Raw | ConvertFrom-Json }
@@ -117,7 +119,7 @@ public sealed record EchoRequest(string Message);
     # Isolated implementation fault: mutable runtime state exposes a failure once, then lets
     # native assertions pass without changing the code. TADA must preserve the earlier failure.
     $historyMarker = Join-Path $workspace '.tada/history-fault-control'
-    $programPath = Join-Path $workspace 'Api/Program.cs'
+    $programPath = Join-Path $workspace 'src/Api/Program.cs'
     $originalProgram = [IO.File]::ReadAllBytes($programPath)
     try {
         $faultyProgram = $refactoredProgram.Replace('static IResult Echo(EchoRequest request) =>', 'static IResult Echo(EchoRequest request) => File.Exists(Path.Combine(Environment.GetEnvironmentVariable("TADA_REPOSITORY")!, ".tada", "history-fault-control")) ? Results.StatusCode(501) :')
@@ -148,13 +150,13 @@ public sealed record EchoRequest(string Message);
         if ((Get-FileHash -LiteralPath $capturedLogger -Algorithm SHA256).Hash -ne $loggerDigest) { throw 'Executed logger differs from the freshly installed package.' }
     }
     # A documentation chore uses its appropriate check rather than a new business feature.
-    $context = "# Current handoff`n`nGoal: echo API demonstration. Acceptance: features/echo.feature. Baseline: $baseline. Starting RED: $($red.runId), HTTP 501 detected by outcome assertions. Implemented endpoint GREEN: $($run.runId). Behaviour-preserving refactor GREEN: $($refactorRun.runId), current implementation passes both cases under the same approved oracle. Approvals are automated demo controls, not requester business acceptance. Next: requester acceptance and residual release gaps.`n"
+    $context = "# Current handoff`n`nGoal: echo API demonstration. Acceptance: specifications/functional/echo.feature. Baseline: $baseline. Starting RED: $($red.runId), HTTP 501 detected by outcome assertions. Implemented endpoint GREEN: $($run.runId). Behaviour-preserving refactor GREEN: $($refactorRun.runId), current implementation passes both cases under the same approved oracle. Approvals are automated demo controls, not requester business acceptance. Next: requester acceptance and residual release gaps.`n"
     [IO.File]::WriteAllText((Join-Path $workspace '.tada/context.md'), $context, [Text.UTF8Encoding]::new($false))
-    & $Dotnet build Api/Echo.Api.csproj --no-restore --disable-build-servers --warnaserror | Out-Host
+    & $Dotnet build src/Api/Echo.Api.csproj --no-restore --disable-build-servers --warnaserror | Out-Host
     if ($LASTEXITCODE -ne 0) { throw 'Maintenance build check failed.' }
     if (!(Select-String -LiteralPath .tada/context.md -SimpleMatch $run.runId)) { throw 'Context handoff lost run provenance.' }
     $manifest = if (Test-Path dotnet-tools.json) { 'dotnet-tools.json' } else { '.config/dotnet-tools.json' }
-    ControlGit @('add','--','.gitattributes','.gitignore','Directory.Build.props','Directory.Build.targets','global.json','NuGet.Config','tada.json',$manifest,'Api','Domain','features','tests/Acceptance','.tada/context.md','.tada/WORKFLOW.md','.tada/.gitattributes','.tada/baselines','.tada/snapshots','.tada/reviews','.tada/approvals') | Out-Host
+    ControlGit @('add','--','.gitattributes','.gitignore','Directory.Build.props','global.json','NuGet.Config','tada.json',$manifest,'src','specifications','tests/Acceptance','.tada/context.md','.tada/WORKFLOW.md','.tada/layout.json','.tada/.gitignore','.tada/.gitattributes','.tada/baselines','.tada/snapshots','.tada/reviews','.tada/approvals') | Out-Host
     ControlGit @('commit','--quiet','-m','test: preserve API workflow handoff') | Out-Host
     $contextCommit = (ControlGit @('rev-parse','HEAD') -join '').Trim()
     $persistedContext = (ControlGit @('show','HEAD:.tada/context.md')) -join "`n"

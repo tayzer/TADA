@@ -4,7 +4,7 @@ The Windows/.NET alpha supports the same acceptance scenarios through Visual Stu
 
 ## Project setup
 
-`tada init` generates `TadaAcceptance.cs`, `TadaRuntimeCheckpoint.cs` and `Tada.Acceptance.targets` under `tests/Acceptance`. When selecting the separate API, add this build-only reference to the acceptance project and match its path to `execution.sutProject` in `tada.json`.
+`tada init --acceptance` generates `TadaAcceptance.cs`, `TadaRuntimeCheckpoint.cs` and `Tada.Acceptance.targets` under `tests/Acceptance`. When selecting the separate API, add this build-only reference to the acceptance project and match its path to `execution.sutProject` in `tada.json`.
 
 ```xml
 <ItemGroup>

@@ -41,7 +41,7 @@ Commit the tool manifest, configuration, guidance and useful context. Depending 
 
 On Windows, run `git config core.longpaths true` inside the application repository before committing or checking out deep snapshot paths. This is a repository-local setting; the snapshot digest directories can exceed Git's default Windows path limit in a deeply nested workspace. Validation commands supply `-c core.longpaths=true` without changing global Git settings.
 
-`init` prepares the project for verification. Enable the [TADA plugin](plugin.md) through the host's normal controls to make the agent workflow available. Initialisation migrates recognised legacy generated agent guidance so the plugin toggle can govern automatic behaviour. Other existing instruction bytes and configuration are preserved. Edited legacy sections require reconciliation. The generated harness contains pending setup and awaits agreed business requirements.
+`init` discovers existing project and verification files and persists the layout preference in `.tada/layout.json`. A new project defaults to the recommended layout. Enable the [TADA plugin](plugin.md) to make the agent workflow available. Use `tada init --acceptance` when you need a new supported .NET acceptance project. Write agreed scenarios under `specifications/functional/` and their bindings in `tests/Acceptance/`. Initialisation preserves existing configuration and removes only recognised legacy generated agent guidance. Edited legacy sections require reconciliation. [Layout and incremental adoption](adaptive-verification.md)
 
 The CLI records its .NET host in newly generated context so the plugin can reuse a portable SDK. Recheck that host after moving machines. CLI installation and project preparation are distinct from host plugin activation.
 
@@ -65,7 +65,7 @@ Approved scenarios do not all have to pass immediately. `.tada/enforcement.json`
 
 ## Work with Codex or another agent
 
-TADA selects verification levels during discovery and supports [coordinated checks and several local services](multi-level-verification.md). Existing single-baseline commands remain available. Chores and refactors retain proportionate existing checks and can justify no new tests.
+TADA selects verification levels during discovery and supports [coordinated checks and several local services](multi-level-verification.md). Dedicated [protected contract and fitness suites](adaptive-verification.md#run-an-independent-protected-suite) can run independently from acceptance. Existing single-baseline commands remain available. Chores and refactors retain proportionate existing checks and can justify no new tests.
 
 Enable the installed TADA plugin in Codex, Claude Code or Cursor, start a fresh session in the application directory and ask for the project normally. The [plugin guide](plugin.md) gives each host's installation and toggle commands.
 

@@ -60,22 +60,22 @@ public sealed partial class Repository
 
     public string Relative(string full) => Path.GetRelativePath(Root, full).Replace('\\', '/');
 
-    public string[] CapturePaths(Config config)
+    public string[] CapturePaths(Config config, bool includePrimaryConfig = true)
     {
         var paths = new HashSet<string>(StringComparer.Ordinal);
         var selectedRoots = config.OracleRoots.Concat((config.BuildTaskContracts ?? []).SelectMany(contract => contract.InputRoots.Prepend(contract.Origin))).Distinct(StringComparer.Ordinal).ToArray();
         foreach (var selected in selectedRoots)
         {
-            var full = Path.Combine(Root, selected);
+            var full = Path.Join(Root, selected);
             if (File.Exists(full)) paths.Add(Relative(Resolve(selected)));
             else Visit(Resolve(selected, true));
         }
-        if (File.Exists(Path.Combine(Root, "tada.json"))) paths.Add("tada.json");
+        if (includePrimaryConfig && File.Exists(Path.Join(Root, "tada.json"))) paths.Add("tada.json");
         foreach (string input in new[] { "global.json", "NuGet.Config", "dotnet-tools.json", ".config/dotnet-tools.json", "Directory.Build.props", "Directory.Build.targets", "Directory.Packages.props" })
             if (File.Exists(Path.Combine(Root, input))) paths.Add(input);
         foreach (var selected in selectedRoots.Append(config.Execution.Project))
         {
-            string? ancestor = Path.GetDirectoryName(Path.Combine(Root, selected));
+            string? ancestor = Path.GetDirectoryName(Path.Join(Root, selected));
             while (ancestor != null && ancestor.StartsWith(Root + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
             {
                 foreach (var name in new[] { "Directory.Build.props", "Directory.Build.targets", "Directory.Packages.props" })
@@ -104,7 +104,26 @@ public sealed partial class Repository
         }
     }
 
-    public Inventory Capture(Engineering? engineering = null)
+    public Inventory Capture(Engineering? engineering = null) => Capture(engineering, null);
+
+    internal Inventory CaptureProtected(string source)
+    {
+        byte[] bytes = File.ReadAllBytes(Resolve(source));
+        var definition = Data.Parse<ProtectedSuiteDefinition>(bytes, source);
+        if (definition.SchemaVersion != 1 || !Regex.IsMatch(definition.Id, @"\A[a-z][a-z0-9_-]*\z") ||
+            definition.Kind is not (Obligations.Contract or Obligations.Fitness) ||
+            definition.RequiredTests.Length == 0 || definition.RequiredTests.Any(string.IsNullOrWhiteSpace) ||
+            definition.RequiredTests.Distinct(StringComparer.Ordinal).Count() != definition.RequiredTests.Length ||
+            !definition.Configuration.Execution.MessagesFile.EndsWith(".trx", StringComparison.Ordinal) ||
+            definition.Configuration.ImplementationRoots is not { Length: > 0 })
+            throw new TadaException("A protected native suite needs a stable ID, contract or fitness kind, unique required MSTest names, a TRX filename and implementation roots.");
+        var inventory = Capture(definition.Selection(), definition.At(source));
+        if (inventory.Files.Single(file => file.Path == source).Digest != CanonicalJson.Digest(bytes))
+            throw new TadaException("Protected suite configuration changed during capture.");
+        return inventory;
+    }
+
+    private Inventory Capture(Engineering? engineering, ProtectedSuite? suite)
     {
         var config = engineering?.Configuration ?? Data.Read<Config>(Resolve("tada.json"));
         if (config.SchemaVersion is not (1 or 2) || config.OracleRoots.Length == 0) throw new TadaException("Unsupported or empty configuration.");
@@ -131,10 +150,17 @@ public sealed partial class Repository
                 throw new TadaException("Services require unique safe IDs, distinct projects and assembly filenames.");
             Resolve(service.Project);
         }
-        var inputs = CapturePaths(config).Select(path => new FileInput(path,
+        var paths = CapturePaths(config, includePrimaryConfig: suite == null);
+        if (suite != null)
+        {
+            if (paths.Any(path => path != suite.Source && path.Equals(suite.Source, StringComparison.OrdinalIgnoreCase)))
+                throw new TadaException($"Case-colliding oracle path: {suite.Source}");
+            paths = paths.Append(suite.Source).Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToArray();
+        }
+        var inputs = paths.Select(path => new FileInput(path,
             [path.EndsWith(".feature", StringComparison.Ordinal) ? "specification" : "support"], CanonicalJson.FileDigest(Resolve(path)))).ToArray();
         if (!inputs.Any(f => f.Path == config.Execution.Project)) throw new TadaException("Harness project is outside the captured oracle.");
-        if (engineering == null) Obligations.Validate(config, inputs.Select(input => input.Path).ToArray());
+        if (engineering == null || suite != null) Obligations.Validate(config, paths);
         var cases = engineering == null ? Features.Read(this, inputs.Where(x => x.Roles.Contains("specification")), config)
             : engineering.RequiredTests.Select(id => new ExpectedCase(id, id, [], config.Execution.Project)).ToArray();
         if (cases.Length == 0) throw new TadaException("No acceptance cases. For a chore, use the maintenance workflow rather than inventing business scenarios.");
@@ -149,9 +175,9 @@ public sealed partial class Repository
             new ExternalInput("dotnet-sdk-policy", inputs.Single(f => f.Path == "global.json").Digest),
             new ExternalInput("nuget-locked-graph", inputs.Single(f => f.Path == lockPath).Digest)
         }.OrderBy(x => x.Id, StringComparer.Ordinal).ToArray();
-        return new Inventory(engineering != null || execution.Services != null ? 7 : 6,
+        return new Inventory(suite != null ? 8 : engineering != null || execution.Services != null ? 7 : 6,
             new Scope(requirements, cases.Select(x => x.ScenarioId).ToArray()), inputs, cases,
-            config.Execution, external, new Policy(BuildInputs: BuildInputs.Policy, RuntimeInputs: RuntimeInputs.Policy, BuildTasks: TaskJournal.Policy), engineering);
+            config.Execution, external, new Policy(BuildInputs: BuildInputs.Policy, RuntimeInputs: RuntimeInputs.Policy, BuildTasks: TaskJournal.Policy), engineering, suite);
     }
 
     [GeneratedRegex(@"^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(?:\.|$)", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]

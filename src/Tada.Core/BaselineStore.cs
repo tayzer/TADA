@@ -6,6 +6,7 @@ public sealed partial class BaselineStore(Repository repository)
 {
     public Repository Repository => repository;
     public string Prepare() => Publish(repository.Capture());
+    public string PrepareProtected(string file) => Publish(repository.CaptureProtected(file));
 
     internal string PrepareEngineering(Engineering engineering) => Publish(repository.Capture(engineering));
 
@@ -64,14 +65,30 @@ public sealed partial class BaselineStore(Repository repository)
     {
         var path = BaselinePath(baseline);
         var inventory = Data.Read<Inventory>(path);
-        if (inventory.SchemaVersion is not (1 or 2 or 3 or 4 or 5 or 6 or 7) || CanonicalJson.Identity(inventory) != baseline)
+        if (inventory.SchemaVersion is < 1 or > 8 || (inventory.SchemaVersion == 8) != (inventory.ProtectedSuite != null) ||
+            CanonicalJson.Identity(inventory) != baseline)
             throw new TadaException("Baseline identity does not match its content.");
         var snapshot = new Repository(Snapshot(baseline));
         foreach (var file in inventory.Files)
             if (CanonicalJson.FileDigest(snapshot.Resolve(file.Path)) != file.Digest)
                 throw new TadaException($"Captured baseline bytes changed: {file.Path}");
+        if (inventory.ProtectedSuite is { } suite)
+        {
+            if (!inventory.Files.Any(file => file.Path == suite.Source))
+                throw new TadaException("Protected suite configuration is absent from the baseline.");
+            var definition = Data.Read<ProtectedSuiteDefinition>(snapshot.Resolve(suite.Source));
+            if (suite != definition.At(suite.Source) ||
+                CanonicalJson.Identity(inventory.Engineering) != CanonicalJson.Identity(definition.Selection()) ||
+                CanonicalJson.Identity(inventory.Execution) != CanonicalJson.Identity(definition.Configuration.Execution) ||
+                !inventory.ExpectedCases.Select(item => item.CaseId).SequenceEqual(definition.RequiredTests) ||
+                !inventory.Scope.ScenarioIds.SequenceEqual(definition.RequiredTests))
+                throw new TadaException("Protected suite execution or authority differs from its captured configuration.");
+        }
         return inventory;
     }
+
+    internal Config Configuration(string baseline, Inventory inventory) =>
+        inventory.Engineering?.Configuration ?? Data.Read<Config>(new Repository(Snapshot(baseline)).Resolve("tada.json"));
 
     public string Snapshot(string baseline)
     {
@@ -94,7 +111,7 @@ public sealed partial class BaselineStore(Repository repository)
         var review = Data.Read<Review>(RecordPath("reviews", reviewId));
         if (review.Id != reviewId) throw new TadaException("Review identity mismatch.");
         var inventory = Read(review.Baseline);
-        if (inventory.Engineering != null) throw new TadaException("Supporting checks are captured by a verification plan and cannot receive business approval.");
+        if (!inventory.RequiresApproval) throw new TadaException("Supporting checks are captured by a verification plan and cannot receive protected approval.");
         CheckCurrent(review.Baseline);
         if (replaces != null)
         {
@@ -102,6 +119,8 @@ public sealed partial class BaselineStore(Repository repository)
             if (review.ComparedTo != replaces) throw new TadaException("Review the replacement with --against the revision being replaced before approval.");
             var previous = Read(replaces);
             Approved(replaces);
+            if (previous.ProtectedSuite?.Id != inventory.ProtectedSuite?.Id || previous.ProtectedSuite?.Kind != inventory.ProtectedSuite?.Kind)
+                throw new TadaException("A replacement cannot change the protected suite's identity or kind.");
             if (previous.Scope.ScenarioIds.Except(inventory.Scope.ScenarioIds).Any() ||
                 previous.Scope.RequirementIds.Except(inventory.Scope.RequirementIds).Any())
                 throw new TadaException("Replacement would drop obligations. Partial removal is unsupported; obtain an explicit scoped amendment.");
@@ -114,7 +133,7 @@ public sealed partial class BaselineStore(Repository repository)
 
     public Approval Approved(string baseline)
     {
-        if (Read(baseline).Engineering != null) throw new TadaException("Supporting checks are not business acceptance baselines.");
+        if (!Read(baseline).RequiresApproval) throw new TadaException("Supporting checks do not carry protected approval.");
         var approvals = Approvals();
         if (approvals.Any(a => a.Replaces == baseline)) throw new TadaException("Baseline has been explicitly superseded.");
         var approval = approvals.Where(a => a.Baseline == baseline).OrderBy(a => a.Created).FirstOrDefault()
@@ -166,7 +185,8 @@ public sealed partial class BaselineStore(Repository repository)
     public void CheckCurrent(string baseline)
     {
         var inventory = Read(baseline);
-        if (CanonicalJson.Identity(repository.Capture(inventory.Engineering)) != baseline)
+        var current = inventory.ProtectedSuite is { } suite ? repository.CaptureProtected(suite.Source) : repository.Capture(inventory.Engineering);
+        if (CanonicalJson.Identity(current) != baseline)
             throw new TadaException("Oracle inputs changed or the selected file set differs. Prepare, review and approve a new revision.");
     }
 

@@ -68,23 +68,30 @@ public static class Obligations
     {
         var from = store.Read(fromId);
         var to = store.Read(toId);
-        var fromConfig = Data.Read<Config>(new Repository(store.Snapshot(fromId)).Resolve("tada.json"));
-        var toConfig = Data.Read<Config>(new Repository(store.Snapshot(toId)).Resolve("tada.json"));
+        var fromConfig = store.Configuration(fromId, from);
+        var toConfig = store.Configuration(toId, to);
         var changes = new List<ProtectedChange>();
         foreach (var file in to.Files)
         {
-            string kind = Kind(file.Path, toConfig);
+            string kind = Classification(file.Path, to, toConfig);
             var prior = from.Files.FirstOrDefault(previous => previous.Path == file.Path);
             if (prior == null) changes.Add(new ProtectedChange(kind, file.Path, "added", Describe(kind)));
-            else if (prior.Digest != file.Digest) changes.Add(new ProtectedChange(kind, file.Path, "changed", Describe(kind)));
-            else if (Kind(prior.Path, fromConfig) is var previousKind && previousKind != kind)
+            else if (Classification(prior.Path, from, fromConfig) is var previousKind && previousKind != kind)
                 changes.Add(new ProtectedChange(previousKind, file.Path, "reclassified", $"Reclassified from {previousKind} to {kind}."));
+            else if (prior.Digest != file.Digest) changes.Add(new ProtectedChange(kind, file.Path, "changed", Describe(kind)));
         }
         foreach (var removed in from.Files.Where(previous => to.Files.All(file => file.Path != previous.Path)))
         {
-            string kind = Kind(removed.Path, fromConfig);
+            string kind = Classification(removed.Path, from, fromConfig);
             changes.Add(new ProtectedChange(kind, removed.Path, "removed", Describe(kind)));
         }
         return changes.OrderBy(change => change.Kind, StringComparer.Ordinal).ThenBy(change => change.Subject, StringComparer.Ordinal).ToArray();
+
+        static string Classification(string path, Inventory inventory, Config config)
+        {
+            string kind = Kind(path, config);
+            if (path == inventory.ProtectedSuite?.Source) return VerificationConfiguration;
+            return kind == ExecutableInterpretation ? inventory.ProtectedSuite?.Kind ?? kind : kind;
+        }
     }
 }

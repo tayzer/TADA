@@ -2,91 +2,114 @@ namespace Tada;
 
 public static class Onboarding
 {
-    public sealed record Initialisation(string[] Created, string[] Updated);
+    public sealed record Initialisation(string[] Created, string[] Updated, string Layout, string[] Discovered);
 
-    public static Initialisation Initialise(string root, string? dotnetHost = null)
+    private const string LayoutPath = ".tada/layout.json";
+    private const string Functional = "specifications/functional";
+    private const string Acceptance = "tests/Acceptance";
+    private sealed record LayoutPreference(int SchemaVersion, string Layout, bool Greenfield);
+
+    public static Initialisation Initialise(string root, string? dotnetHost = null, string? layout = null, bool acceptance = false)
     {
+        if (layout is not (null or "existing" or "recommended"))
+            throw new TadaException("Choose --layout existing or --layout recommended.");
         Directory.CreateDirectory(root);
         var repository = new Repository(root);
+        root = repository.Root;
+        var discovered = Discover(repository);
+        string preferencePath = Path.Join(root, LayoutPath);
+        var prior = File.Exists(preferencePath) ? Data.Read<LayoutPreference>(repository.Resolve(LayoutPath)) : null;
+        if (prior != null && (prior.SchemaVersion != 1 || prior.Layout is not ("existing" or "recommended")))
+            throw new TadaException($"Unsupported layout preference: {LayoutPath}");
+        string config = Path.Join(root, "tada.json");
+        bool configured = File.Exists(config);
+        bool greenfield = prior?.Greenfield ?? (!configured && discovered.Length == 0);
+        var preference = new LayoutPreference(1, layout ?? prior?.Layout ?? (greenfield ? "recommended" : "existing"), greenfield);
         var files = new Dictionary<string, string>
         {
             [".tada/WORKFLOW.md"] = Workflow,
             [".tada/context.md"] = "# Project context\n\nCurrent-work handoff for the next session: objective and branch, authoritative links, implementation and verification state, open questions, next action and links to durable knowledge. Replace finished work instead of appending history; lasting facts belong in their canonical documents. This is not a functional specification. No work is in progress yet.\n"
                 + (dotnetHost == null ? "" : $"\n## Local SDK host\n\nInitialisation used `{dotnetHost}`. Recheck this path and the stable .NET 10.0 SDK selected by this repository's `global.json` before use, especially after moving machines. Use this host for SDK/tool commands and pass the same host through `--dotnet` to `tada run`. TADA records the resolved SDK and observed toolchain identities for each run. This is an environment note, not business authority.\n"),
-            ["global.json"] = "{\"sdk\":{\"version\":\"10.0.100\",\"rollForward\":\"latestFeature\",\"allowPrerelease\":false},\"test\":{\"runner\":\"Microsoft.Testing.Platform\"}}\n",
-            ["NuGet.Config"] = "<configuration><packageSources><clear/><add key=\"nuget.org\" value=\"https://api.nuget.org/v3/index.json\"/></packageSources></configuration>\n",
-            [".gitattributes"] = "# Approval identities use exact file bytes. Keep Git from rewriting line endings.\n* -text\n",
-            [".tada/.gitattributes"] = "# Captured approval/evidence bytes must survive every checkout unchanged.\n* -text\n",
-            ["Directory.Build.props"] = "<Project><PropertyGroup><RestorePackagesWithLockFile>true</RestorePackagesWithLockFile></PropertyGroup></Project>\n",
-            ["Directory.Build.targets"] = "<Project/>\n",
-            [".gitignore"] = "**/bin/\n**/obj/\n.tada/runs/\n.tada/plan-runs/\n.tada/scratch/\n",
-            ["tests/Acceptance/Acceptance.csproj"] = """
-                <Project Sdk="MSTest.Sdk/4.5.2">
-                  <PropertyGroup>
-                    <TargetFramework>net10.0</TargetFramework><OutputType>Exe</OutputType>
-                    <ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable>
-                    <EnableMSTestRunner>true</EnableMSTestRunner><UseVSTest>false</UseVSTest>
-                    <TestingExtensionsProfile>None</TestingExtensionsProfile>
-                    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
-                    <ReqnrollUseIntermediateOutputPathForCodeBehind>true</ReqnrollUseIntermediateOutputPathForCodeBehind>
-                  </PropertyGroup>
-                  <ItemGroup>
-                    <PackageReference Include="Reqnroll.MSTest" Version="[3.3.4]"/>
-                    <PackageReference Include="Reqnroll" Version="[3.3.4]"/>
-                    <PackageReference Include="Reqnroll.Tools.MsBuild.Generation" Version="[3.3.4]"/>
-                    <None Update="reqnroll.json" CopyToOutputDirectory="PreserveNewest"/>
-                    <ReqnrollFeatureFile Include="../../features/**/*.feature" Link="Features/%(RecursiveDir)%(Filename)%(Extension)"/>
-                  </ItemGroup>
-                  <Import Project="Tada.Acceptance.targets" />
-                </Project>
-                """,
-            ["tests/Acceptance/reqnroll.json"] = "{\"formatters\":{\"message\":{\"outputFilePath\":\"tada-messages.ndjson\"}}}\n",
-            ["tests/Acceptance/Bindings.cs"] = """
-                using Microsoft.VisualStudio.TestTools.UnitTesting;
-                using Reqnroll;
-
-                [assembly: DoNotParallelize]
-
-                // Replace this candidate binding with reviewed setup, HTTP observations and assertions.
-                // Missing implementation is not a meaningful behavioural RED.
-                [Binding]
-                public sealed class AcceptanceBindings
-                {
-                    [Given("the agreed acceptance setup exists")]
-                    public void Setup() => throw new PendingStepException();
-                }
-                """,
-            ["tests/Acceptance/TadaRuntimeCheckpoint.cs"] = RuntimeCheckpoint,
-            ["tests/Acceptance/TadaAcceptance.cs"] = Template("TadaAcceptance.cs.txt"),
-            ["tests/Acceptance/Tada.Acceptance.targets"] = Template("Tada.Acceptance.targets"),
-            ["features/README.md"] = "# Business acceptance\n\nWrite human-agreed `.feature` scenarios here. Tag requirements `@REQ_NAME` and ordinary scenarios `@AC_NAME`. TADA deliberately creates no invented business requirements. The tool rejects missing cases rather than treating an empty suite as success.\n"
+            [".tada/.gitattributes"] = "# Captured approval/evidence bytes must survive every checkout unchanged.\n* -text",
+            [".tada/.gitignore"] = "/runs/\n/plan-runs/\n/scratch/"
         };
-        var created = new List<string>();
-        foreach (var pair in files)
+        if (greenfield)
         {
-            string path = Path.Combine(root, pair.Key);
-            if (File.Exists(path)) continue;
-            string? parent = Path.GetDirectoryName(path);
-            Directory.CreateDirectory(parent!);
-            // Check each existing segment after creation, before writing any content.
-            if (!string.Equals(Path.TrimEndingDirectorySeparator(parent!), repository.Root, StringComparison.OrdinalIgnoreCase))
-                repository.Resolve(Path.GetRelativePath(root, parent!).Replace('\\', '/'), directory: true);
-            using (var stream = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.None))
-            using (var writer = new StreamWriter(stream, new System.Text.UTF8Encoding(false)))
-                writer.Write(pair.Value + "\n");
-            created.Add(pair.Key);
+            files.Add(".gitattributes", "# Approval identities use exact file bytes. Keep Git from rewriting line endings.\n* -text");
+            files.Add(".gitignore", "**/bin/\n**/obj/");
         }
-        string config = Path.Combine(root, "tada.json");
-        if (!File.Exists(config))
+
+        if (acceptance && !configured)
         {
-            Data.WriteNew(config, new Config(1, ["features", "tests/Acceptance"],
-                new Execution("tests/Acceptance/Acceptance.csproj", "Acceptance.dll", "tada-messages.ndjson")));
+            if (preference.Layout != "recommended")
+                throw new TadaException("Scaffolding uses recommended directories. Use --layout recommended or configure the existing harness in tada.json.");
+            var harness = AcceptanceFiles();
+            string directory = Path.Join(root, Acceptance);
+            if (Directory.Exists(directory))
+            {
+                repository.Resolve(Acceptance, directory: true);
+                if (Directory.EnumerateFileSystemEntries(directory).Any(item =>
+                    !harness.TryGetValue(repository.Relative(item), out var template) ||
+                    File.ReadAllText(repository.Resolve(repository.Relative(item))) != template + "\n"))
+                    throw new TadaException($"{Acceptance} already contains verification infrastructure. Configure that harness in tada.json or choose a different directory manually.");
+            }
+            foreach (var entry in harness) files.Add(entry.Key, entry.Value);
+            if (greenfield)
+            {
+                files.Add("global.json", "{\"sdk\":{\"version\":\"10.0.100\",\"rollForward\":\"latestFeature\",\"allowPrerelease\":false},\"test\":{\"runner\":\"Microsoft.Testing.Platform\"}}");
+                files.Add("NuGet.Config", "<configuration><packageSources><clear/><add key=\"nuget.org\" value=\"https://api.nuget.org/v3/index.json\"/></packageSources></configuration>");
+                files.Add("Directory.Build.props", "<Project><PropertyGroup><RestorePackagesWithLockFile>true</RestorePackagesWithLockFile></PropertyGroup></Project>");
+            }
+        }
+        var created = new List<string>();
+        var updated = new List<string>();
+        // Publish the layout before optional scaffolding so a retry retains the original selection.
+        if (prior != preference)
+        {
+            PublishFile(preferencePath, stage => Data.WriteNew(stage, preference), overwrite: prior != null);
+            (prior == null ? created : updated).Add(LayoutPath);
+        }
+        foreach (var (relative, content) in files)
+        {
+            string path = Path.Join(root, relative);
+            if (File.Exists(path)) continue;
+            int separator = relative.LastIndexOf('/');
+            if (separator >= 0) EnsureDirectory(relative[..separator]);
+            PublishFile(path, stage => File.WriteAllText(stage, content + "\n"));
+            created.Add(relative);
+        }
+        if (acceptance && !configured)
+        {
+            EnsureDirectory(Functional);
+            PublishFile(config, stage => Data.WriteNew(stage, new Config(1, [Functional, Acceptance],
+                new Execution(Acceptance + "/Acceptance.csproj", "Acceptance.dll", "tada-messages.ndjson"))));
             created.Add("tada.json");
         }
-        var updated = new List<string>();
         foreach (string entry in new[] { "AGENTS.md", "AGENTS.override.md" })
             if (File.Exists(Path.Combine(root, entry)) && RemoveLegacyGuidance(entry)) updated.Add(entry);
-        return new Initialisation(created.ToArray(), updated.ToArray());
+        return new Initialisation(created.ToArray(), updated.ToArray(), preference.Layout, discovered);
+
+        void PublishFile(string destination, Action<string> write, bool overwrite = false)
+        {
+            string stage = Path.Join(repository.StateDirectory("scratch"), Guid.NewGuid().ToString("N") + ".tmp");
+            try
+            {
+                write(stage);
+                File.Move(stage, destination, overwrite);
+            }
+            finally { if (File.Exists(stage)) File.Delete(stage); }
+        }
+
+        void EnsureDirectory(string relative)
+        {
+            string current = root;
+            foreach (string component in relative.Split('/'))
+            {
+                current = Path.Join(current, component);
+                if (!Directory.Exists(current)) Directory.CreateDirectory(current);
+                Repository.NoLink(current);
+            }
+        }
 
         bool RemoveLegacyGuidance(string relative)
         {
@@ -144,6 +167,69 @@ public static class Onboarding
             finally { if (File.Exists(temporary)) File.Delete(temporary); }
             return true;
         }
+    }
+
+    private static Dictionary<string, string> AcceptanceFiles() => new()
+    {
+        ["tests/Acceptance/Acceptance.csproj"] = """
+            <Project Sdk="MSTest.Sdk/4.5.2">
+              <PropertyGroup>
+                <TargetFramework>net10.0</TargetFramework><OutputType>Exe</OutputType>
+                <ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable>
+                <EnableMSTestRunner>true</EnableMSTestRunner><UseVSTest>false</UseVSTest>
+                <TestingExtensionsProfile>None</TestingExtensionsProfile>
+                <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+                <ReqnrollUseIntermediateOutputPathForCodeBehind>true</ReqnrollUseIntermediateOutputPathForCodeBehind>
+              </PropertyGroup>
+              <ItemGroup>
+                <PackageReference Include="Reqnroll.MSTest" Version="[3.3.4]"/>
+                <PackageReference Include="Reqnroll" Version="[3.3.4]"/>
+                <PackageReference Include="Reqnroll.Tools.MsBuild.Generation" Version="[3.3.4]"/>
+                <None Update="reqnroll.json" CopyToOutputDirectory="PreserveNewest"/>
+                <ReqnrollFeatureFile Include="../../specifications/functional/**/*.feature" Link="Features/%(RecursiveDir)%(Filename)%(Extension)"/>
+              </ItemGroup>
+              <Import Project="Tada.Acceptance.targets" />
+            </Project>
+            """,
+        ["tests/Acceptance/reqnroll.json"] = "{\"formatters\":{\"message\":{\"outputFilePath\":\"tada-messages.ndjson\"}}}\n",
+        ["tests/Acceptance/TadaRuntimeCheckpoint.cs"] = RuntimeCheckpoint,
+        ["tests/Acceptance/TadaAcceptance.cs"] = Template("TadaAcceptance.cs.txt"),
+        ["tests/Acceptance/Tada.Acceptance.targets"] = Template("Tada.Acceptance.targets")
+    };
+
+    private static string[] Discover(Repository repository)
+    {
+        var found = new HashSet<string>(StringComparer.Ordinal);
+        var directories = new Stack<string>([repository.Root]);
+        while (directories.TryPop(out string? directory))
+        {
+            foreach (string path in Directory.EnumerateFileSystemEntries(directory))
+            {
+                var attributes = File.GetAttributes(path);
+                if (attributes.HasFlag(FileAttributes.ReparsePoint)) continue;
+                string name = Path.GetFileName(path).ToLowerInvariant();
+                if (attributes.HasFlag(FileAttributes.Directory))
+                {
+                    if (!name.StartsWith('.') && name is not ("bin" or "obj" or "node_modules" or "vendor" or "dist" or "target" or "testresults"))
+                        directories.Push(path);
+                    continue;
+                }
+                string relative = repository.Relative(path);
+                string extension = Path.GetExtension(name);
+                string[] segments = relative.Split('/');
+                if (extension is ".feature" or ".csproj" or ".fsproj" or ".vbproj" or ".sln" or ".slnx" ||
+                    name is "tada.json" or "reqnroll.json" or "cmakelists.txt" || name.EndsWith(".verification.json", StringComparison.Ordinal) ||
+                    name.StartsWith("openapi", StringComparison.Ordinal) || name.StartsWith("swagger", StringComparison.Ordinal) ||
+                    (!name.StartsWith("readme", StringComparison.Ordinal) && segments.SkipLast(1).Any(segment => segment.ToLowerInvariant() is
+                        "features" or "spec" or "specs" or "specifications" or "contracts" or "interfaces")))
+                    found.Add(relative);
+                else if (extension is ".c" or ".cc" or ".cpp" or ".cxx" or ".h" or ".hpp" or ".cs" or ".py" or ".go" or ".rs" or ".java" or ".ts" or ".tsx" or ".js" or ".jsx" or ".php" or ".swift" or ".kt" ||
+                    (!name.StartsWith("readme", StringComparison.Ordinal) && segments.SkipLast(1).Any(segment => segment.ToLowerInvariant() is
+                        "test" or "tests" or "checks" or "fitness" or "src")))
+                    found.Add(segments.Length == 1 ? relative : segments[0] + "/");
+            }
+        }
+        return found.Order(StringComparer.Ordinal).ToArray();
     }
 
     private const string LegacyEntryParagraph = "Read `.tada/WORKFLOW.md` and `.tada/context.md` before changing this repository. Gherkin defines business acceptance. Ask the human to agree acceptance-changing decisions; routine implementation choices are delegated.\n";
@@ -227,11 +313,11 @@ public static class Onboarding
         - Feature or business defect: discover examples with the human. Put agreed behaviour in Gherkin, not a competing Markdown specification. Tag explicit requirement IDs `@REQ_...` and each ordinary scenario `@AC_...`. Resolve ambiguity that changes acceptance. Do not approve on the human's behalf.
         - Chore, maintenance or behaviour-preserving refactor: state the objective and choose appropriate existing regression, build, format, compatibility or fitness checks. Do not invent a business scenario for ceremony. Reclassify if behaviour changes. Existing acceptance obligations still apply.
         - Quality goals need concrete workloads/thresholds or explicit human review criteria; undefined targets cannot yield a green claim. Discover non-functional requirements with the behaviour, not afterwards.
-        - Declare agreed contract and fitness files under `obligations` in `tada.json`, for example `[{ "kind": "contract", "roots": ["tests/Acceptance/contracts"] }]`. Roots must lie inside `oracleRoots`. Supporting unit tests stay outside the oracle and need no approval.
+        - Reuse existing authoritative contracts and executable thresholds. Classify their protected roots under `obligations`. Use `tada baseline prepare --file <suite-file>` for an independent protected MSTest project. Supporting engineering tests can remain outside the protected oracle.
 
         During initial discovery, record actual change categories (`feat`, `fix`, `refactor`, `chore`, including mixtures), objective, impacted services/interfaces/storage/journeys, existing coverage, gaps and selected verification levels. Branch labels are hints. Unit, service, producer/consumer contract and journey checks have distinct scopes. Choose levels by impact and risk and explain omissions. Refactors start with preservation checks and need characterisation when existing coverage is inadequate. Chores can require no test execution with an explicit reason and an appropriate evaluation of success. Human approval covers business expectations and executable acceptance. Supporting engineering checks are delegated.
 
-        Keep lightweight selections and results in context when existing tools suffice. Coordinated execution can use `.tada/verification-plan.json`, captured with `tada plan prepare --file .tada/verification-plan.json`, executed with `tada run --plan <digest>` and verified with `tada verify --run <id>`. The plan has schemaVersion 1, objective, categories, businessChange, impact, checks and omissions. Every check has a unique lowercase id, level (`unit`, `service`, `contract`, `journey`), purpose (`acceptance`, `supporting`), obligations and rationale. Acceptance checks reference a business baseline. Supporting checks contain engineering.configuration (the normal TADA configuration) and engineering.requiredTests (exact unique names printed by native MTP discovery). Their messagesFile is a `.trx` filename. EnableMicrosoftTestingExtensionsTrxReport must be true in the supporting MSTest project and its restored graph must be locked. Execution reconciles native discovery with every reported case and runs each selected project once. Selecting no checks needs noChecksReason and reports NO_CHECKS with exit 0, without a passing-test claim. Revisions identify previous and changeReason. Supporting snapshots cannot receive business approval. Changing shared acceptance inputs still invalidates the business baseline.
+        Keep lightweight selections and results in context when existing tools suffice. Coordinated execution can use `.tada/verification-plan.json`, captured with `tada plan prepare --file .tada/verification-plan.json`, executed with `tada run --plan <digest>` and verified with `tada verify --run <id>`. The plan has schemaVersion 1, objective, categories, businessChange, impact, checks and omissions. Every check has a unique lowercase id, level (`unit`, `service`, `contract`, `journey`, `fitness`), purpose (`acceptance`, `supporting`, `contract`, `fitness`), obligations and rationale. Acceptance checks reference a business baseline. Independent contract and fitness checks reference an approved native baseline and use its stable ID. Supporting checks contain engineering.configuration (the normal TADA configuration) and engineering.requiredTests (exact unique names printed by native MTP discovery). Their messagesFile is a `.trx` filename. EnableMicrosoftTestingExtensionsTrxReport must be true in the supporting MSTest project and its restored graph must be locked. Execution reconciles native discovery with every reported case and runs each selected project once. Selecting no checks needs noChecksReason and reports NO_CHECKS with exit 0, without a passing-test claim. Revisions identify previous and changeReason. Supporting snapshots cannot receive business approval. Changing shared acceptance inputs still invalidates the business baseline.
 
         For multiple local services, schema-2 tada.json replaces the legacy SUT pair with execution.services, each containing id, project and assembly. Match native build-only ProjectReferences with TadaServiceId. Access staged or captured assemblies using TadaAcceptance.Create().Services[id]. Each scenario owns readiness, ports, state, correlation and cleanup. Checkpoint every service before termination. Every configured service needs complete runtime observations. Ordinary supporting unit tests may reference selected implementation assemblies. Business acceptance retains its independent-assertion boundary. Bounded asynchronous assertions must distinguish an observed unmet deadline from unavailable observation. Results identify the exact local service combination and retain advisory L1 limits.
 
@@ -277,7 +363,7 @@ public static class Onboarding
 
         ## Bootstrap and maintenance
 
-        `tada init` prepares project scaffolding and records the invoking SDK host in new context. Enable or disable the TADA plugin through the host's plugin controls. Initialisation removes the exact legacy alpha.8 TADA block from root agent instructions so the plugin toggle can govern automatic behaviour. Edited legacy blocks require reconciliation. Existing baseline, review, approval and run records remain project knowledge for future work. Scenario Outlines are deliberately unsupported in the initial version.
+        `tada init` records the invoking SDK host in new context and saves the layout in `.tada/layout.json`. Inspect existing project files, oracle roots and CI. New projects use `specifications/functional/`, `specifications/non-functional/`, `specifications/contracts/`, `src/` and the appropriate projects under `tests/`. Existing projects reuse established conventions. `--layout recommended` opts into recommended paths for future work. Create only needed infrastructure. `--acceptance` scaffolds the supported .NET harness in a vacant `tests/Acceptance/`; configure existing harnesses in place. Enable or disable the TADA plugin through the host's plugin controls. Initialisation removes the exact legacy alpha.8 TADA block from root agent instructions so the plugin toggle can govern automatic behaviour. Edited legacy blocks require reconciliation. Existing baseline, review, approval and run records remain project knowledge for future work. Scenario Outlines are deliberately unsupported in the initial version.
 
         New projects disable Git line-ending conversion with `* -text` so captured bytes survive checkouts. Existing `.gitattributes` files are preserved: review equivalent rules for your selected oracle inputs. `.tada/.gitattributes` preserves captured records independently. Formatting changes still require review; never normalise bytes to carry approval forward.
 

@@ -30,6 +30,36 @@ public sealed class TaskJournalTests
     }
 
     [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void ProtectedBuildRequiresCapturedTaskFileInputsDuringCaptureAndReplay(bool oracleInput)
+    {
+        using var fixture = new Fixture();
+        var config = fixture.Config with { ImplementationRoots = ["task-data"] };
+        if (oracleInput) config = config with { OracleRoots = [.. config.OracleRoots, "task-data"] };
+        Data.WriteNew(Path.Join(fixture.Project.Root, "fitness.json"), new ProtectedSuiteDefinition(1, "fitness", "fitness",
+            config with { Execution = config.Execution with { MessagesFile = "report.trx" } }, ["Check"]));
+        var inventory = fixture.Project.Store.Read(fixture.Project.Store.PrepareProtected("fitness.json"));
+        fixture.Write("Copy", fixture.Input, parameter: "SourceFiles");
+
+        // Supporting captures permit implementation inputs. Replay must enforce the protected policy independently.
+        var supportingInputs = fixture.Audit(inventory with { ProtectedSuite = null }, config);
+        var replay = fixture.Record(supportingInputs);
+        if (oracleInput)
+        {
+            Assert.AreEqual("oracle", fixture.Audit(inventory, config).Single(input => input.Path == fixture.Input).Category);
+            TaskJournal.Verify(fixture.Run, inventory, config, replay);
+        }
+        else
+        {
+            StringAssert.Contains(Assert.ThrowsExactly<TadaException>(() => fixture.Audit(inventory, config)).Message,
+                "Protected verifier task used mutable implementation input");
+            StringAssert.Contains(Assert.ThrowsExactly<TadaException>(() => TaskJournal.Verify(fixture.Run, inventory, config, replay)).Message,
+                "Protected verifier task used mutable implementation input");
+        }
+    }
+
+    [TestMethod]
     public void OpaqueCustomCodeRequiresAnExactContract()
     {
         using var fixture = new Fixture();
@@ -129,13 +159,13 @@ public sealed class TaskJournalTests
             Save(Config with { BuildTaskContracts = [new BuildTaskContract("acceptance/Custom.targets", target, task, ["task-data"])] });
             Baseline = Project.Store.Prepare();
         }
-        public void Write(string task, string? input, bool complete = true)
+        public void Write(string task, string? input, bool complete = true, string parameter = "File")
         {
             DateTimeOffset time = DateTimeOffset.UtcNow.AddSeconds(-1);
             var start = new TaskEvent(1, 2, time, "task-start", "task-1", Path.Combine(Project.Root, "acceptance", "Acceptance.csproj"), Origin,
                 "Build", task, Assembly, CanonicalJson.FileDigest(Assembly), "", [], true);
             var rows = new List<TaskEvent> { start with { Sequence = 1, Kind = "logger-start", Key = "" }, start };
-            if (input != null) rows.Add(start with { Kind = "task-input", Parameter = "File", Values = [new TaskValue(input, input, CanonicalJson.FileDigest(input))] });
+            if (input != null) rows.Add(start with { Kind = "task-input", Parameter = parameter, Values = [new TaskValue(input, input, CanonicalJson.FileDigest(input))] });
             if (complete)
             {
                 rows.Add(start with { Kind = "task-finish" });
@@ -145,7 +175,20 @@ public sealed class TaskJournalTests
             File.WriteAllLines(path, rows.Select((item, index) => JsonSerializer.Serialize(item with { Sequence = index + 1 }, Data.Json).Replace("\r", "").Replace("\n", "")));
             Report = new TaskReport("build/control.tasks.ndjson", CanonicalJson.FileDigest(path), "harness", "build", time.AddSeconds(-1), time.AddSeconds(1));
         }
-        public BuildInput[] Audit() => TaskJournal.Audit(new Repository(Project.Root), Inventory, Config, Sdk, Run, Report!);
+        public BuildInput[] Audit(Inventory? inventory = null, Config? config = null) =>
+            TaskJournal.Audit(new Repository(Project.Root), inventory ?? Inventory, config ?? Config, Sdk, Run, Report!);
+
+        public RunRecord Record(BuildInput[] inputs)
+        {
+            var report = Report!;
+            string file = Path.Join(Run, TaskJournal.FileName);
+            Data.WriteNew(file, new TaskInputEvidence(1, TaskJournal.Policy, Project.Root, Sdk, [report], inputs));
+            string loggerArgument = "-logger:" + Path.GetFullPath(Path.Join(Run, TaskJournal.LoggerPath)) + ";" +
+                Path.GetFullPath(Path.Join(Run, report.Path));
+            var command = new CommandEvidence("dotnet", [loggerArgument], 0, false, report.Started, report.Finished, "", "");
+            return new RunRecord(Guid.Empty.ToString("N"), Baseline, "", report.Started, report.Finished, "", "", "",
+                new() { [TaskJournal.LoggerPath] = "fixture" }, [command], [], TaskInputsDigest: CanonicalJson.FileDigest(file));
+        }
         public void Dispose() => Project.Dispose();
     }
 }

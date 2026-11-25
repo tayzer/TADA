@@ -25,9 +25,9 @@ public sealed class PlanEngine(BaselineStore baselines, string dotnet = "dotnet"
             }
             progress?.Invoke($"Running {check.Id} ({check.Level}, {check.Purpose}).");
             var engine = new RunEngine(baselines, dotnet, progress);
-            var result = check.Purpose == "acceptance"
-                ? await engine.Run(check.Baseline, deadline.Token)
-                : await engine.RunSupporting(check.Baseline, plan, deadline.Token);
+            var result = check.Purpose == "supporting"
+                ? await engine.RunSupporting(check.Baseline, plan, deadline.Token)
+                : await engine.Run(check.Baseline, deadline.Token);
             checks.Add(new CheckRun(check.Id, result.RunId));
         }
         Data.WriteNew(Path.Combine(directory, "run.json"), new PlanRun(id, plan, started, DateTimeOffset.UtcNow, checks.ToArray(), gaps.ToArray()));

@@ -60,7 +60,8 @@ public static class TaskJournal
         IEnumerable<ProjectBuildInputs>? builds = null)
     {
         var oracle = inventory.Files.ToDictionary(file => Path.GetFullPath(repository.Resolve(file.Path)), file => file.Digest, StringComparer.OrdinalIgnoreCase);
-        var implementation = repository.CapturePaths(config with { OracleRoots = config.ImplementationRoots ?? [] }).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var implementation = repository.CapturePaths(config with { OracleRoots = config.ImplementationRoots ?? [] },
+            includePrimaryConfig: inventory.ProtectedSuite == null).ToHashSet(StringComparer.OrdinalIgnoreCase);
         var packageDirectories = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (string role in new[] { "harness", "sut" })
             if (Directory.Exists(Path.Combine(run, "build", role)))
@@ -73,13 +74,16 @@ public static class TaskJournal
         var result = new List<BuildInput>();
         var sutProjects = inventory.Policy.BuildInputs == BuildInputs.Policy
             ? (builds ?? []).Where(build => build.Role == "sut").Select(build => repository.Resolve(build.Project)).ToHashSet(StringComparer.OrdinalIgnoreCase) : [];
-        foreach (var item in Read(report, run))
+        foreach (var item in Read(report, run).Where(item => item.Kind is "task-start" or "task-input"))
         {
             string role = sutProjects.Contains(item.Project) ? "sut" : report.Role;
+            bool protectedProject = BuildInputs.IsProtectedProject(inventory, repository.Relative(item.Project), role);
             if (item.Kind == "task-start")
             {
                 var origin = Capture(item.Origin, "task-origin", null, role);
                 var assembly = Capture(item.Assembly, "task-assembly", item.AssemblyDigest, role);
+                CheckProtectedInput(protectedProject, origin);
+                CheckProtectedInput(protectedProject, assembly);
                 bool toolchain = Trusted(origin) && Trusted(assembly);
                 bool standard = assembly.Category == "sdk" && new[] { "Microsoft.Build.Tasks.Core.dll", "Microsoft.Build.dll", "Microsoft.Build.Tasks.CodeAnalysis.dll" }
                     .Contains(Path.GetFileName(item.Assembly), StringComparer.OrdinalIgnoreCase) && TaskRules.Standard(item.Name);
@@ -87,10 +91,11 @@ public static class TaskJournal
                 if (!toolchain && !standard && !HasContract(config, relative, item.Target, item.Name))
                     throw new TadaException($"Custom build task {relative} / {item.Target} / {item.Name} requires a reviewed buildTaskContracts entry and complete read-root declarations.");
             }
-            else if (item.Kind == "task-input" && TaskRules.Reads(item.Name, item.Parameter))
+            else if (TaskRules.Reads(item.Name, item.Parameter))
                 foreach (var value in item.Values)
                 {
-                    if (value.Path != null && value.Digest != null) Capture(value.Path, $"task-input:{item.Name}:{item.Parameter}", value.Digest, role);
+                    if (value.Path != null && value.Digest != null)
+                        CheckProtectedInput(protectedProject, Capture(value.Path, $"task-input:{item.Name}:{item.Parameter}", value.Digest, role));
                     else if (value.Path != null && !BuildInputs.Within(value.Path, Path.Combine(run, "build")))
                         throw new TadaException($"File input {item.Name}.{item.Parameter} has no pre-task identity: {value.Value}");
                 }
@@ -188,21 +193,30 @@ public static class TaskJournal
             if (report.Role is not ("harness" or "sut") || report.Operation is not ("restore" or "build") ||
                 !commands.Any(command => command.Arguments.Contains(argument) && command.Started == report.Started && command.Finished == report.Finished))
                 throw new TadaException("Task journal is not linked to its actual build command.");
-            foreach (var item in Read(report, run))
+            foreach (var item in Read(report, run).Where(item => item.Kind is "task-start" or "task-input"))
             {
+                string project = Path.GetRelativePath(evidence.RepositoryRoot, item.Project).Replace('\\', '/');
+                bool protectedProject = BuildInputs.IsProtectedProject(inventory, project, report.Role);
                 if (item.Kind == "task-start")
                 {
                     var origin = Input(item.Origin, null, "task-origin");
                     var assembly = Input(item.Assembly, item.AssemblyDigest, "task-assembly");
+                    CheckProtectedInput(protectedProject, origin);
+                    CheckProtectedInput(protectedProject, assembly);
                     bool trusted = origin.Category is "sdk" or "locked-package" && assembly.Category is "sdk" or "locked-package";
                     bool standard = assembly.Category == "sdk" && new[] { "Microsoft.Build.Tasks.Core.dll", "Microsoft.Build.dll", "Microsoft.Build.Tasks.CodeAnalysis.dll" }
                         .Contains(Path.GetFileName(item.Assembly), StringComparer.OrdinalIgnoreCase) && TaskRules.Standard(item.Name);
                     if (!trusted && !standard && !HasContract(config, Path.GetRelativePath(evidence.RepositoryRoot, item.Origin).Replace('\\', '/'), item.Target, item.Name))
                         throw new TadaException("Task journal contains undeclared custom code.");
                 }
-                else if (item.Kind == "task-input" && TaskRules.Reads(item.Name, item.Parameter))
-                    foreach (var value in item.Values.Where(value => value.Path != null && value.Digest != null))
-                        Input(value.Path!, value.Digest, $"task-input:{item.Name}:{item.Parameter}");
+                else if (TaskRules.Reads(item.Name, item.Parameter))
+                    foreach (var value in item.Values.Where(value => value.Path != null))
+                    {
+                        if (value.Digest != null)
+                            CheckProtectedInput(protectedProject, Input(value.Path!, value.Digest, $"task-input:{item.Name}:{item.Parameter}"));
+                        else if (protectedProject && !BuildInputs.Within(value.Path!, Path.Join(run, "build")))
+                            throw new TadaException($"File input {item.Name}.{item.Parameter} has no pre-task identity: {value.Value}");
+                    }
             }
         }
 
@@ -226,6 +240,12 @@ public static class TaskJournal
             }
             return input;
         }
+    }
+
+    private static void CheckProtectedInput(bool protectedProject, BuildInput input)
+    {
+        if (protectedProject && input.Category is "implementation" or "sut-reference")
+            throw new TadaException($"Protected verifier task used mutable implementation input: {input.Path}");
     }
 
     private static bool HasContract(Config config, string origin, string target, string task) => (config.BuildTaskContracts ?? []).Any(contract =>

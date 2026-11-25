@@ -98,7 +98,8 @@ public static class BuildInputs
             if (!Within(value, generated)) throw new TadaException($"{property} must remain inside this run's fresh build directory: {value}");
         }
         var oracle = inventory.Files.ToDictionary(file => Path.GetFullPath(repository.Resolve(file.Path)), file => file.Digest, StringComparer.OrdinalIgnoreCase);
-        var implementation = role == "sut" || inventory.Engineering != null ? repository.CapturePaths(config with { OracleRoots = config.ImplementationRoots ?? [] })
+        var implementation = role == "sut" || inventory.Engineering != null ? repository.CapturePaths(config with { OracleRoots = config.ImplementationRoots ?? [] },
+            includePrimaryConfig: inventory.ProtectedSuite == null)
             .ToHashSet(StringComparer.OrdinalIgnoreCase) : [];
         string assets = properties.GetProperty("ProjectAssetsFile").GetString()!;
         var packages = PackageDirectories(repository, project, assets);
@@ -143,7 +144,12 @@ public static class BuildInputs
                 category = "oracle";
                 if (File.Exists(path) && CanonicalJson.FileDigest(path) != approved) throw new TadaException($"Reviewed build input changed: {repository.Relative(path)}");
             }
-            else if (Within(path, repository.Root) && implementation.Contains(repository.Relative(path))) category = "implementation";
+            else if (Within(path, repository.Root) && implementation.Contains(repository.Relative(path)))
+            {
+                if (IsProtectedProject(inventory, project, role) && !pair.Value.SetEquals(["ProjectReference"]))
+                    throw new TadaException($"Protected verifier project {project} uses a mutable implementation input directly: {repository.Relative(path)}.");
+                category = "implementation";
+            }
             else throw new TadaException($"Unreviewed {role} build input: {path}. Include repository inputs in the appropriate selected roots; external/shared inputs are unsupported.");
             NoLinks(path);
             result.Add(new BuildInput(path, category, CanonicalJson.FileDigest(path), pair.Value.Order(StringComparer.Ordinal).ToArray()));
@@ -180,7 +186,7 @@ public static class BuildInputs
 
     public static void Verify(string run, Inventory inventory, string? digest)
     {
-        if (inventory.SchemaVersion is not (6 or 7) || !Supported(inventory.Policy.BuildInputs))
+        if (inventory.SchemaVersion is not (6 or 7 or 8) || !Supported(inventory.Policy.BuildInputs))
             throw new TadaException("This baseline predates the evaluated-build-input policy. Prepare, review and approve a new revision; historical inputs are not inferred.");
         string path = new Repository(run).Resolve(FileName);
         if (string.IsNullOrEmpty(digest) || CanonicalJson.FileDigest(path) != digest)
@@ -206,6 +212,9 @@ public static class BuildInputs
                     input.Digest.Length != 71 || !input.Digest.StartsWith("sha256:", StringComparison.Ordinal) ||
                     input.Digest[7..].Any(c => !char.IsAsciiHexDigitLower(c)))
                     throw new TadaException("Invalid captured build input.");
+            if (IsProtectedProject(inventory, project.Project, project.Role) && project.Before.Concat(project.After)
+                .Any(input => input.Category == "implementation" && !input.Uses.SequenceEqual(["ProjectReference"])))
+                throw new TadaException("Protected verifier build consumed a mutable implementation input directly.");
             CheckStable(project.Before, project.After);
             foreach (var reference in project.After.Where(input => input.Uses.Contains("ProjectReference")))
                 if (!evidence.Projects.Any(candidate => candidate.Role == (reference.Category == "sut-reference" ? "sut" : project.Role) && candidate.After.Any(input =>
@@ -241,6 +250,10 @@ public static class BuildInputs
             }
         }
     }
+
+    internal static bool IsProtectedProject(Inventory inventory, string project, string role) =>
+        inventory.ProtectedSuite != null && role == "harness" &&
+        inventory.Files.Any(file => file.Path.Equals(project, StringComparison.OrdinalIgnoreCase));
 
     internal static string[] PackageDirectories(Repository repository, string project, string assets)
     {

@@ -2,6 +2,10 @@
 
 Assessment date: 2026-11-11, against `main` at `943486f` (release `0.1.0-alpha.12`) and the [PR #5](https://github.com/tayzer/TADA/pull/5) branch at `c7e4683`. PR #5 merged into `main` during this work (`beace74`) and this change was reconciled with it. The North Star is recorded in [ADR 0043](../decisions/0043-adopt-the-tada-north-star.md).
 
+## Adaptive initialisation and protected suites, 2026-11-25
+
+[ADR 0049](../decisions/0049-adapt-initialisation-and-protect-native-suites.md) advances the protected-plan and gate work item below. Schema-8 baselines protect independently executed MSTest contract and fitness suites. Plans can run them together with acceptance and delegated checks. The gate consumes the coordinated run and compares mandatory suite coverage against the target branch. Base policy still requires independent human review. The earlier assessment below describes the state at its recorded date.
+
 ## Summary
 
 TADA's verifier was already strong. Exact-byte capture, approval bound to reviewed content, real runner execution, retained native evidence and distinct `PASS`, `FAIL` and `INDETERMINATE` results are all implemented and tested. The main gaps were elsewhere:

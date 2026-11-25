@@ -1,0 +1,13 @@
+# ADR 0049 — Adapt initialisation and protect native suites
+
+Status: Implemented locally under [ADR 0041](0041-authorise-autonomous-release-implementation.md). Date: 2026-11-25.
+
+[TADA's North Star](0043-adopt-the-tada-north-star.md) puts human attention on what success means. Initialisation now discovers existing infrastructure and persists a layout preference outside the oracle. A greenfield project defaults to the recommended directories and generates the .NET acceptance harness only when needed. Existing projects retain their files and configuration. An opt-in guides future work. Any change to effective verification inputs still follows baseline review and approval.
+
+Reuse the engineering capture and native MSTest/TRX verification introduced in [ADR 0042](0042-add-change-aware-multi-level-verification.md). A protected suite has an explicit stable ID and authority kind. Schema 8 binds the suite definition's exact bytes, its required discovery names and its oracle and runner inputs to the existing review and approval records. Each suite can be reviewed, amended and executed independently. Plans coordinate approved suites alongside Gherkin and delegated checks. Supporting snapshots cannot acquire protected authority. Existing schema-6 and schema-7 records retain their interpretation.
+
+Build capture distinguishes the protected verifier and its fixtures from mutable implementation projects. The supported MSTest adapter reconciles exact native discovery, complete TRX evidence and the witnessed execution. Failure history and runtime/build observation retain their current local L1 guarantees.
+
+The schema-2 enforcement ledger extends [ADR 0044](0044-separate-approval-authority-from-merge-enforcement.md) with mandatory independent suites. Gate assessment requires matching runs and current implementation identities. Base-branch comparison preserves suite membership, authority kinds and approved lineage. Removing a suite, changing its authority or dropping a required native test has no supported automated amendment path. Pending native obligations can be reviewed and approved before enrolment. Functional candidate behaviour is unchanged.
+
+[ADR 0045](0045-classify-protected-verification-obligations.md) continues to govern authority. The suite definition references existing artifacts. It does not restate the contract, threshold or business expectation. We use separate approvals where suites have independent executable oracles so that changing a fitness budget does not reapprove an unchanged functional harness. We defer adapters for external tools and any stronger approval or observation claim until demonstrated.

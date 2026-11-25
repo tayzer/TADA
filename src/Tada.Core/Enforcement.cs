@@ -12,8 +12,9 @@ public sealed record EnforcementPolicy(int? CandidateMaxDays = null);
 /// Records which approved scenarios are mandatory merge obligations. Approval authority stays in the
 /// baseline review/approval records; this ledger only records enforcement status for that approved revision.
 /// </summary>
-public sealed record EnforcementLedger(int SchemaVersion, string Baseline, string[] Active, Candidate[] Candidates,
-    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] EnforcementPolicy? Policy = null);
+public sealed record EnforcementLedger(int SchemaVersion, string? Baseline, string[] Active, Candidate[] Candidates,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] EnforcementPolicy? Policy = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string[]? ProtectedSuites = null);
 
 public sealed record ObligationState(string Scenario, string Enforcement, string State, string Detail,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? Since = null,
@@ -76,8 +77,19 @@ public static partial class Enforcement
 
     private static void Validate(EnforcementLedger ledger, string source)
     {
-        if (ledger.SchemaVersion != 1 || !Digest().IsMatch(ledger.Baseline) || ledger.Active.Any(id => id == null) || ledger.Candidates.Any(c => c == null))
+        var suites = ledger.ProtectedSuites ?? [];
+        bool validSchema = ledger.SchemaVersion switch
+        {
+            1 => ledger.Baseline != null && ledger.ProtectedSuites == null,
+            2 => ledger.Baseline != null || suites.Length > 0,
+            _ => false
+        };
+        if (!validSchema || (ledger.Baseline != null && !Digest().IsMatch(ledger.Baseline)))
             throw new TadaException($"Unsupported enforcement ledger: {source}");
+        if (suites.Any(id => id == null || !Digest().IsMatch(id)) || suites.Distinct(StringComparer.Ordinal).Count() != suites.Length)
+            throw new TadaException("Protected suites require unique baseline digests.");
+        if (ledger.Active.Any(id => id == null) || ledger.Candidates.Any(candidate => candidate == null))
+            throw new TadaException("Enforcement entries cannot be null.");
         var ids = ledger.Active.Concat(ledger.Candidates.Select(c => c.Scenario)).ToArray();
         if (ids.Any(id => !Id().IsMatch(id)) || ids.Distinct(StringComparer.Ordinal).Count() != ids.Length)
             throw new TadaException("Enforcement entries need unique scenario identities, each either active or candidate.");
@@ -96,26 +108,29 @@ public static partial class Enforcement
         EnforcementLedger? baseLedger, DateOnly today)
     {
         var ledger = Read(store.Repository);
-        var inventory = store.Read(ledger.Baseline);
         var preconditions = new List<Reason>();
-        try { store.Approved(ledger.Baseline); }
-        catch (TadaException error) { preconditions.Add(new Reason("unapproved-baseline", error.Message)); }
-        try { store.CheckCurrent(ledger.Baseline); }
-        catch (TadaException error) { preconditions.Add(new Reason("oracle-changed", error.Message)); }
+        Inventory? inventory = ledger.Baseline == null ? null : store.Read(ledger.Baseline);
+        if (inventory?.Engineering != null) throw new TadaException("The ledger's baseline is reserved for functional acceptance. List native baselines in protectedSuites.");
+        if (ledger.Baseline != null) CheckAuthority(ledger.Baseline);
+        var suites = ReadSuites(ledger);
 
         bool lineage = true;
         string[] amended = [];
-        ProtectedChange[] changes = [];
-        if (baseLedger != null && baseLedger.Baseline != ledger.Baseline)
+        var changes = new List<ProtectedChange>();
+        if (baseLedger?.Baseline is { } baseAcceptance && baseAcceptance != ledger.Baseline)
         {
+            lineage = false;
             try
             {
-                lineage = store.Supersedes(ledger.Baseline, baseLedger.Baseline);
-                changes = Obligations.Compare(store, baseLedger.Baseline, ledger.Baseline);
-                var before = Fingerprints(store, baseLedger.Baseline);
-                var after = Fingerprints(store, ledger.Baseline);
-                amended = before.Where(pair => after.TryGetValue(pair.Key, out var current) && current != pair.Value)
-                    .Select(pair => pair.Key).Order(StringComparer.Ordinal).ToArray();
+                if (ledger.Baseline is { } currentAcceptance)
+                {
+                    lineage = store.Supersedes(currentAcceptance, baseAcceptance);
+                    changes.AddRange(Obligations.Compare(store, baseAcceptance, currentAcceptance));
+                    var before = Fingerprints(store, baseAcceptance);
+                    var after = Fingerprints(store, currentAcceptance);
+                    amended = before.Where(pair => after.TryGetValue(pair.Key, out var current) && current != pair.Value)
+                        .Select(pair => pair.Key).Order(StringComparer.Ordinal).ToArray();
+                }
             }
             catch (Exception error) when (error is TadaException or IOException or System.Text.Json.JsonException)
             {
@@ -124,13 +139,152 @@ public static partial class Enforcement
             }
         }
 
+        if (baseRequested)
+        {
+            var baseSuites = baseLedger == null ? [] : ReadSuites(baseLedger);
+            foreach (var (id, before) in baseSuites)
+            {
+                if (!suites.TryGetValue(id, out var after) || after.Inventory.ProtectedSuite!.Kind != before.Inventory.ProtectedSuite!.Kind)
+                    preconditions.Add(new Reason("protected-suite-removed", "A mandatory suite cannot disappear or change authority kind.", id));
+                else if (after.Baseline != before.Baseline)
+                {
+                    if (!store.Supersedes(after.Baseline, before.Baseline) ||
+                        before.Inventory.Scope.ScenarioIds.Except(after.Inventory.Scope.ScenarioIds, StringComparer.Ordinal).Any())
+                        preconditions.Add(new Reason("unapproved-suite-lineage", "The replacement needs a compared, approved lineage preserving every required test.", id));
+                    changes.AddRange(Obligations.Compare(store, before.Baseline, after.Baseline));
+                }
+            }
+            foreach (var (id, suite) in suites.Where(pair => !baseSuites.ContainsKey(pair.Key)))
+                changes.Add(new ProtectedChange(suite.Inventory.ProtectedSuite!.Kind, id, "added",
+                    $"A mandatory native suite was enrolled at {suite.Baseline}. Review the captured oracle."));
+        }
+
+        PlanVerification? plan = null;
+        bool checkFailed = false;
+        CheckAssessment[] additionalChecks = [];
+        if (runId != null && Guid.TryParseExact(runId, "N", out _) && Directory.Exists(Path.Join(store.Repository.State, "plan-runs", runId)))
+        {
+            plan = new PlanEngine(store).Verify(runId);
+            preconditions.AddRange(plan.Reasons.Where(reason => reason.Code is "plan-integrity" or "no-checks-unestablished"));
+            var ledgerBaselines = suites.Values.Select(suite => suite.Baseline).ToHashSet(StringComparer.Ordinal);
+            if (ledger.Baseline != null) ledgerBaselines.Add(ledger.Baseline);
+            additionalChecks = plan.Checks.Where(check => !ledgerBaselines.Contains(check.Result.Baseline)).ToArray();
+            foreach (var check in additionalChecks)
+            {
+                var proof = check.Result;
+                if (proof.Outcome is "PASS" or "FAIL")
+                {
+                    try
+                    {
+                        if (check.Purpose != "supporting") store.Approved(proof.Baseline);
+                        store.CheckCurrent(proof.Baseline);
+                        engine.CheckCurrentImplementation(proof.RunId, proof.Baseline, store.Read(proof.Baseline));
+                    }
+                    catch (Exception error) when (error is TadaException or IOException or System.Text.Json.JsonException or UnauthorizedAccessException)
+                    {
+                        proof = proof with { Outcome = "INDETERMINATE", Reasons = [new Reason("plan-check-stale", error.Message)] };
+                    }
+                }
+                RecordCheck(check.Id, proof, "plan-check-unverified");
+            }
+        }
         Verification? run = null;
         string[] earlier = [];
         Reason[] gaps = [];
-        if (runId != null) (run, earlier, gaps) = engine.Evidence(runId);
-        var result = Evaluate(new GateInputs(ledger, baseLedger, inventory.ExpectedCases.Select(c => c.ScenarioId).ToArray(),
-            run, earlier, gaps, lineage, amended, changes, preconditions.ToArray(), today));
-        return baseRequested ? result : result with { BaseBaseline = "not-compared" };
+        if (ledger.Baseline != null && inventory != null && SelectedRun(ledger.Baseline, "acceptance") is { } acceptanceRun)
+        {
+            (run, earlier, gaps) = engine.Evidence(acceptanceRun);
+            if (run.Baseline == ledger.Baseline && (run.PassedCases.Length > 0 || run.Reasons.Any(reason => reason.Code == "requirement-failure")) &&
+                CheckImplementation(acceptanceRun, ledger.Baseline, inventory, "acceptance-run-stale") is { } stale)
+            {
+                run = run with { Outcome = "INDETERMINATE", PassedCases = [], Reasons = [stale] };
+                earlier = [];
+                gaps = [];
+            }
+        }
+
+        var states = new List<ObligationState>();
+        foreach (var (id, suite) in suites)
+        {
+            int before = preconditions.Count;
+            CheckAuthority(suite.Baseline, id);
+            if (preconditions.Count != before)
+            {
+                states.Add(new ObligationState(id, "active", "unverified", "Current protected authority could not be established."));
+                continue;
+            }
+            string? childRun = SelectedRun(suite.Baseline, suite.Inventory.ProtectedSuite!.Kind);
+            if (childRun == null)
+            {
+                preconditions.Add(new Reason("protected-suite-not-executed", "Supply a run with verified evidence for this mandatory suite.", id));
+                states.Add(new ObligationState(id, "active", "not-executed", "No matching protected run supplied."));
+                continue;
+            }
+            var proof = engine.Verify(childRun);
+            if (proof.Outcome is "PASS" or "FAIL" &&
+                CheckImplementation(childRun, suite.Baseline, suite.Inventory, "protected-suite-stale") is { } stale)
+                proof = proof with { Outcome = "INDETERMINATE", Reasons = [stale] };
+            RecordCheck(id, proof, "protected-suite-unverified");
+            states.Add(new ObligationState(id, "active", proof.Outcome switch { "PASS" => "satisfied", "FAIL" => "failed", _ => "unverified" },
+                proof.Outcome == "PASS" ? "Verified PASS." : proof.Reasons.FirstOrDefault()?.Detail ?? proof.Outcome));
+        }
+
+        var result = Evaluate(new GateInputs(ledger, baseLedger, inventory?.ExpectedCases.Select(c => c.ScenarioId).ToArray() ?? [],
+            run, earlier, gaps, lineage, amended, changes.ToArray(), preconditions.ToArray(), today));
+        string outcome = checkFailed ? "FAIL" : result.Outcome;
+        if (outcome == "NO_CHECKS" && (suites.Count > 0 || additionalChecks.Length > 0)) outcome = "PASS";
+        return result with
+        {
+            Outcome = outcome,
+            RunId = runId,
+            BaseBaseline = baseRequested ? result.BaseBaseline : "not-compared",
+            Obligations = [.. result.Obligations, .. states]
+        };
+
+        void RecordCheck(string id, Verification proof, string unverifiedCode)
+        {
+            checkFailed |= proof.Outcome == "FAIL";
+            if (proof.Outcome != "PASS" && proof.Reasons.Length == 0)
+                preconditions.Add(new Reason(unverifiedCode, "This check lacks verified passing evidence.", id));
+            preconditions.AddRange(proof.Reasons.Select(reason => new Reason(reason.Code,
+                reason.CaseId == null ? reason.Detail : $"{reason.CaseId}: {reason.Detail}", id)));
+        }
+
+        string? SelectedRun(string baseline, string purpose)
+        {
+            if (plan == null) return runId;
+            var matches = plan.Checks.Where(check => check.Purpose == purpose && check.Result.Baseline == baseline).ToArray();
+            return matches.Length == 1 && Guid.TryParseExact(matches[0].Result.RunId, "N", out _) &&
+                !matches[0].Result.Reasons.Any(reason => reason.Code == "check-integrity") ? matches[0].Result.RunId : null;
+        }
+
+        void CheckAuthority(string baseline, string? id = null)
+        {
+            try { store.Approved(baseline); }
+            catch (TadaException error) { preconditions.Add(new Reason("unapproved-baseline", error.Message, id)); }
+            try { store.CheckCurrent(baseline); }
+            catch (Exception error) when (error is TadaException or IOException or System.Text.Json.JsonException or UnauthorizedAccessException)
+            { preconditions.Add(new Reason("oracle-changed", error.Message, id)); }
+        }
+
+        Reason? CheckImplementation(string childRun, string baseline, Inventory selected, string code)
+        {
+            try { engine.CheckCurrentImplementation(childRun, baseline, selected); return null; }
+            catch (Exception error) when (error is TadaException or IOException or System.Text.Json.JsonException or UnauthorizedAccessException)
+            { return new Reason(code, error.Message); }
+        }
+
+        Dictionary<string, (string Baseline, Inventory Inventory)> ReadSuites(EnforcementLedger source)
+        {
+            var map = new Dictionary<string, (string, Inventory)>(StringComparer.Ordinal);
+            foreach (string baseline in source.ProtectedSuites ?? [])
+            {
+                var selected = store.Read(baseline);
+                if (selected.ProtectedSuite is not { } suite || !map.TryAdd(suite.Id, (baseline, selected)))
+                    throw new TadaException("Each protectedSuites entry must name a distinct native protected suite baseline.");
+            }
+            return map;
+        }
     }
 
     private static Dictionary<string, string> Fingerprints(BaselineStore store, string baseline)
@@ -261,7 +415,7 @@ public static partial class Enforcement
         if (changes.Count > 0)
             next.Add("Protected obligations changed. Obtain independent human review of these changes before merge; local approval records are L1 declarations.");
         string outcome = failed ? "FAIL" : reasons.Count > 0 ? "INDETERMINATE" : run == null ? "NO_CHECKS" : "PASS";
-        return new GateResult(outcome, "L1-advisory", ledger.Baseline, run?.RunId, baseLedger?.Baseline ?? NoBase,
+        return new GateResult(outcome, "L1-advisory", ledger.Baseline ?? NoBase, run?.RunId, baseLedger?.Baseline ?? NoBase,
             states.ToArray(), changes.ToArray(), reasons.ToArray(), next.Distinct().ToArray());
 
         ObligationState Pending(Candidate candidate, string state, string detail) =>

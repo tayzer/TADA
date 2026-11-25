@@ -32,8 +32,8 @@ Start a fresh chat in the application repository and describe the project or cha
 
 TADA contains one skill and no hooks or MCP servers. TADA itself sends no telemetry and contacts no TADA service. The .NET SDK it invokes follows your own .NET telemetry settings.
 
-- When a task first needs business verification, the agent runs `skills/tada/scripts/Initialize-Tada.ps1` with PowerShell 7. The script installs the `Tada.Cli` .NET tool, version-matched to this plugin, as a repository-local tool from the bundled `feed/` folder, never from a public feed. It then runs `tada init`.
-- `tada init` adds project files, such as `tada.json`, `.tada/`, `features/`, `tests/Acceptance/`, `global.json` and `NuGet.Config`. It never overwrites existing files. It removes only generated TADA instruction blocks left by earlier alphas.
+- When a task first needs protected verification, the agent runs `skills/tada/scripts/Initialize-Tada.ps1` with PowerShell 7. The script installs the `Tada.Cli` .NET tool, version-matched to this plugin, as a repository-local tool from the bundled `feed/` folder, never from a public feed. It then runs `tada init`.
+- `tada init` discovers existing project and verification files and records the chosen layout in `.tada/layout.json`. `tada init --acceptance` adds the supported .NET acceptance scaffold when needed. Existing projects keep their files and can opt into recommended paths for new work with `tada init --layout recommended`. Initialisation removes only recognised generated TADA instruction blocks from earlier alphas.
 - `tada run` restores and builds your project and its acceptance tests with `dotnet`. Restore downloads your project's own NuGet dependencies from nuget.org, as `NuGet.Config` specifies. It then runs the tests locally and stores evidence under `.tada/runs/`.
 - The bundled `feed/Tada.Cli.*.nupkg` is the compiled verifier, built from the public source in [tayzer/TADA](https://github.com/tayzer/TADA). Release checksums identify its exact bytes.
 

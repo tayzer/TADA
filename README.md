@@ -23,12 +23,12 @@ You ask your agent for something in plain words. With TADA enabled, the agent:
 
 1. **Investigates first.** It looks at the system you actually have and tells you what it verified, what it inferred and what it still doesn't know.
 2. **Asks the questions that matter.** It covers business rules, edge cases, compatibility and risks. It does not ask about routine engineering choices.
-3. **Writes the agreement down as Gherkin examples for you to approve.** The agent may propose them, but only you can approve them.
+3. **Uses an executable agreement you can review.** Business behaviour uses Gherkin. Existing contracts and fitness checks can express agreed obligations in their own formats.
 4. **Locks the approved expectations.** It captures them byte for byte, so the agent cannot quietly change a test to make it pass.
 5. **Implements in small steps.** It shows a genuine failing check first, then makes it pass.
 6. **Reports `PASS`, `FAIL` or `INDETERMINATE` from retained evidence.** A green test runner on its own is not a TADA pass.
 
-Chores and refactors take a lighter path. They reuse existing checks, and the agent does not invent business scenarios for ceremony.
+Chores and refactors reuse existing checks. New projects follow recommended paths, and established projects keep their conventions by default. [Layout and protected-suite guide](docs/adaptive-verification.md)
 
 The runnable Echo API demonstration captures the complete sequence. A reachable endpoint returning HTTP 501 produces `FAIL`. Implementing the agreed response produces `PASS` under the same baseline. Replacing a working status assertion with `Assert.IsTrue(true);` blocks a new run with `INDETERMINATE`. Editing the captured assertion makes `tada verify` report an integrity failure. Read the actual commands, JSON and exit codes in its transcript. [Run the demo and read the evidence](examples/Echo/README.md#run-the-short-demonstration)
 
@@ -42,7 +42,7 @@ The demonstration uses explicitly labelled automated control approval. Your appl
 | .NET SDK | Any stable .NET 10.0 SDK for your application. Building TADA itself uses the SDK pinned in [`global.json`](global.json). |
 | Git | Git for Windows |
 | Agent host | [Codex](https://developers.openai.com/codex), [Claude Code](https://code.claude.com/docs) or [Cursor](https://cursor.com/docs/plugins) |
-| Project type | C#/.NET API, with acceptance tests in Reqnroll and MSTest (generated for you) |
+| Recorded execution | Reqnroll/MSTest acceptance and dedicated MSTest/MTP contract or fitness suites on .NET |
 
 TADA is an early alpha. The [releases page](https://github.com/tayzer/TADA/releases) lists the latest build and what changed. Results are **local advisory (L1)**. See [Limits](#limits).
 
@@ -156,13 +156,13 @@ You can also download `TADA-<version>-win-x64.zip` and `SHA256SUMS` from the [re
 
    > Upgrade the logging package. No behaviour change.
 
-You do not need to mention TADA, Gherkin or any command. The first time a task needs business verification, the agent runs `tada init` in your repository. Before you approve anything, read what you are approving. The agent prints the approval command; **you** run it:
+You do not need to mention TADA, Gherkin or any command. The first time a task needs protected verification, the agent runs `tada init` in your repository. Before you approve anything, read what you are approving. The agent prints the approval command; **you** run it:
 
 ```powershell
 dotnet tool run tada baseline approve --review <review-id> --by "Your Name"
 ```
 
-The agent will never approve on your behalf. Commit the files under `.tada/`, `features/` and `tests/Acceptance/` along with your code. They are the agreement and its evidence.
+The agent will never approve on your behalf. Commit `.tada/` workflow state, approvals and the authoritative specs and checks alongside your code. New projects use `specifications/functional/` by default. Existing projects can keep `features/` or their established path.
 
 To continue the next day, start a fresh session and say something like *"carry on with the reading list API"*. The agent recovers its place from `.tada/context.md`.
 
@@ -227,7 +227,7 @@ Only the plugin is required. Everything else is added when a task needs it. Each
 | **Verification plan** | Coordinates acceptance, unit, contract and journey checks for a change | `tada plan prepare --file .tada/verification-plan.json` | Leave it out and run `tada run --baseline` directly |
 | **CI merge gate** | Blocks pull requests when active obligations fail | `tada gate --run <id> --base origin/main` in CI | Leave it out of CI |
 | **Knowledge augment mode** | Lets the agent propose short, evidence-backed knowledge records when a real gap exists. The default **reference** mode only reuses and updates your existing docs. | `.tada/knowledge.json` with `{ "schemaVersion": 1, "mode": "augment" }` | Delete the file to return to reference mode |
-| **Native test runs** | The same scenarios in Visual Studio Test Explorer and `dotnet test` | Generated by `tada init` | Optional; recorded TADA runs work without it |
+| **Native test runs** | The same scenarios in Visual Studio Test Explorer and `dotnet test` | Generated by `tada init --acceptance` | Optional; recorded TADA runs work without it |
 
 ## Commands
 
@@ -235,8 +235,8 @@ You rarely type these yourself, because the agent runs them. The one exception i
 
 | Command | What it does |
 | --- | --- |
-| `tada init` | Prepares the repository. It creates files but never overwrites existing ones. |
-| `tada baseline prepare` | Captures the current Gherkin, bindings and fixtures as an immutable baseline |
+| `tada init [--layout existing\|recommended] [--acceptance]` | Persists the layout preference. Use `--acceptance` to add a supported harness when needed |
+| `tada baseline prepare [--file <suite-definition>]` | Captures an immutable functional or independent protected-suite baseline |
 | `tada baseline review --baseline <digest> [--against <old>]` | Shows what you are about to approve, or what changed since an earlier baseline |
 | `tada baseline approve --review <id> --by <name> [--replaces <old>]` | **Human only.** Records approval of a reviewed baseline |
 | `tada run --baseline <digest> [--dotnet <path>]` | Restores and rebuilds from scratch, runs the scenarios once and keeps all evidence |
@@ -254,12 +254,12 @@ Run each one as `dotnet tool run tada …` inside the repository.
 
 ## Configuration
 
-`tada init` writes a working `tada.json`. You only edit it to add optional pieces.
+`tada init --acceptance` generates `tada.json` for a new harness. Established projects can configure their existing harness in place. [Layout and verification guide](docs/adaptive-verification.md)
 
 ```json
 {
   "schemaVersion": 1,
-  "oracleRoots": ["features", "tests/Acceptance"],
+  "oracleRoots": ["specifications/functional", "tests/Acceptance"],
   "implementationRoots": ["src"],
   "execution": {
     "project": "tests/Acceptance/Acceptance.csproj",
@@ -280,13 +280,14 @@ The [configuration reference](docs/configuration.md) lists every key with its de
 
 | Path | Purpose | Commit it? |
 | --- | --- | --- |
-| `features/*.feature` | The agreed business behaviour, in Gherkin | Yes |
+| `specifications/functional/*.feature` or legacy feature paths | The agreed business behaviour, in Gherkin | Yes |
 | `tests/Acceptance/` | Bindings and fixtures that run the features | Yes |
 | `tada.json` | Verifier configuration | Yes |
+| `.tada/layout.json` | Layout preference for future work | Yes |
 | `.tada/context.md` | Short handoff notes for the next session | Yes |
 | `.tada/WORKFLOW.md` | Detailed runner rules for the agent | Yes |
 | `.tada/` baselines, reviews and approvals | Immutable approval history | Yes. Never edit them by hand. |
-| `.tada/runs/`, `.tada/plan-runs/`, `.tada/scratch/` | Local run output | No. `init` adds them to `.gitignore`. |
+| `.tada/runs/`, `.tada/plan-runs/`, `.tada/scratch/` | Local run output | No. `init` adds them to `.tada/.gitignore`. |
 | `global.json`, `NuGet.Config`, `Directory.Build.*`, `.gitattributes` | SDK policy, locked restore and exact-byte checkouts | Yes. They are only created when missing. |
 
 On Windows, run `git config core.longpaths true` once in the repository, because snapshot paths can be deep.

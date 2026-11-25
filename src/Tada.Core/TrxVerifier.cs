@@ -3,11 +3,11 @@ using System.Xml.Linq;
 
 namespace Tada;
 
-/// <summary>Reconciles the pinned native runner's discovery and TRX results for supporting checks.</summary>
+/// <summary>Reconciles the pinned native runner's discovery and TRX results.</summary>
 public static class TrxVerifier
 {
     public static Verification Verify(string[] required, string baseline, string run, string report,
-        CommandEvidence discovery, CommandEvidence execution)
+        CommandEvidence discovery, CommandEvidence execution, bool protectedSuite = false)
     {
         var reasons = new List<Reason>();
         var passed = new List<string>();
@@ -25,6 +25,8 @@ public static class TrxVerifier
             string? discoverySummary = discoveryLines.SingleOrDefault(line => line.StartsWith("Test discovery summary:", StringComparison.Ordinal));
             if (discovered.Length == 0 || discovered.Distinct(StringComparer.Ordinal).Count() != discovered.Length || required.Except(discovered, StringComparer.Ordinal).Any())
                 throw new TadaException("Required native test names are missing or ambiguous in pinned MTP discovery.");
+            if (protectedSuite && discovered.Except(required, StringComparer.Ordinal).Any())
+                throw new TadaException("Native discovery includes tests outside the approved suite. Review the exact test set.");
             if (discoverySummary == null || !discoverySummary.StartsWith($"Test discovery summary: found {discovered.Length} test(s) - ", StringComparison.Ordinal))
                 throw new TadaException("Native discovery completion does not cover its selected test identities.");
             using var reader = XmlReader.Create(report, new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null });
@@ -68,10 +70,20 @@ public static class TrxVerifier
                 if (outcome == "Passed") passed.Add(name);
                 else if (outcome == "Failed")
                 {
-                    failed = true;
-                    reasons.Add(new Reason("supporting-test-failure", result.Descendants(ns + "Message").FirstOrDefault()?.Value ?? "Native supporting test failed.", name));
+                    string? detail = result.Descendants(ns + "ErrorInfo").SingleOrDefault()?.Element(ns + "Message")?.Value;
+                    bool assertion = detail != null && (detail.StartsWith("Assert.", StringComparison.Ordinal) ||
+                        detail.StartsWith("Assertion failed.", StringComparison.Ordinal));
+                    if (protectedSuite && (!assertion || execution.ExitCode != 2 || (string?)summary.Attribute("outcome") != "Failed"))
+                        reasons.Add(new Reason("protected-test-incomplete", detail ?? "No identified MSTest assertion failure.", name));
+                    else
+                    {
+                        failed = true;
+                        reasons.Add(new Reason(protectedSuite ? "protected-test-failure" : "supporting-test-failure",
+                            detail ?? "Native supporting test failed.", name));
+                    }
                 }
-                else reasons.Add(new Reason("supporting-test-incomplete", $"Required native test outcome was {outcome ?? "missing"}.", name));
+                else reasons.Add(new Reason(protectedSuite ? "protected-test-incomplete" : "supporting-test-incomplete",
+                    $"Required native test outcome was {outcome ?? "missing"}.", name));
             }
             if ((int?)counters.Attribute("passed") != passed.Count || (int?)counters.Attribute("failed") != results.Count(result => (string?)result.Attribute("outcome") == "Failed"))
                 throw new TadaException("Native TRX outcome counters disagree with their cases.");
@@ -83,7 +95,8 @@ public static class TrxVerifier
         }
         catch (Exception error) when (error is TadaException or IOException or XmlException or InvalidOperationException or ArgumentException or FormatException or OverflowException)
         {
-            return new Verification("INDETERMINATE", "L1-advisory", baseline, run, [], [new Reason("supporting-evidence", error.Message)]);
+            return new Verification("INDETERMINATE", "L1-advisory", baseline, run, [],
+                [new Reason(protectedSuite ? "protected-evidence" : "supporting-evidence", error.Message)]);
         }
         return new Verification(failed ? "FAIL" : reasons.Count > 0 ? "INDETERMINATE" : "PASS", "L1-advisory", baseline, run, passed.ToArray(), reasons.ToArray());
     }

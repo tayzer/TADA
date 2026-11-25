@@ -7,6 +7,59 @@ namespace Tada.Tests;
 public sealed class PlanTests
 {
     [TestMethod]
+    public void IndependentProtectedSuiteUsesExistingContractAndRequiresApproval()
+    {
+        using var project = new CoreTests.Project();
+        string contract = Path.Join(project.Root, "openapi.yaml");
+        File.WriteAllText(contract, "openapi: 3.1.0\n");
+        string suiteFile = WriteProtectedSuite(project, "http", "contract", ["openapi.yaml"]);
+        string baseline = project.Store.PrepareProtected(suiteFile);
+        var check = new PlannedCheck("http", "contract", "contract", ["OpenAPI response shape"], "Verify producer conformance.", baseline);
+        var prepared = Prepare(project, Chore() with { Checks = [check] });
+        Assert.AreEqual(baseline, prepared.Inventory.Checks.Single().Baseline);
+        Assert.IsFalse(project.Store.Read(baseline).Files.Any(file => file.Path == "tada.json"));
+        Assert.IsTrue(project.Store.Read(baseline).Files.Any(file => file.Path == "openapi.yaml"));
+        Assert.ThrowsExactly<TadaException>(() => project.Store.Approved(baseline));
+        project.Store.Approve(project.Store.Review(baseline).Id, "isolated protected-suite control");
+        File.AppendAllText(Path.Join(project.Root, "tada.json"), "\n");
+        project.Store.CheckCurrent(baseline);
+        File.AppendAllText(contract, "# unapproved change\n");
+        Assert.ThrowsExactly<TadaException>(() => project.Store.CheckCurrent(baseline));
+    }
+
+    [TestMethod]
+    public void ProtectedSuiteReplacementCannotDropTestsOrReclassifyAuthority()
+    {
+        using var project = new CoreTests.Project();
+        string source = WriteProtectedSuite(project, "latency", "fitness", [], "MedianBudget", "TailBudget");
+        string original = project.Store.PrepareProtected(source);
+        project.Store.Approve(project.Store.Review(original).Id, "isolated protected-suite replacement control");
+        string path = Path.Join(project.Root, source);
+        var definition = Data.Read<ProtectedSuiteDefinition>(path);
+        File.Delete(path);
+        Data.WriteNew(path, definition with { RequiredTests = ["MedianBudget"] });
+        string narrowed = project.Store.PrepareProtected(source);
+        Assert.ThrowsExactly<TadaException>(() => project.Store.Approve(project.Store.Review(narrowed, original).Id,
+            "isolated negative control", original));
+        File.Delete(path);
+        Data.WriteNew(path, definition with { Kind = "contract" });
+        string reclassified = project.Store.PrepareProtected(source);
+        Assert.ThrowsExactly<TadaException>(() => project.Store.Approve(project.Store.Review(reclassified, original).Id,
+            "isolated negative control", original));
+    }
+
+    private static string WriteProtectedSuite(CoreTests.Project project, string id, string kind, string[] roots, params string[] requiredTests)
+    {
+        string source = id + ".verification.json";
+        Data.WriteNew(Path.Join(project.Root, source), new ProtectedSuiteDefinition(1, id, kind,
+            new Config(1, ["acceptance", .. roots], new Execution("acceptance/Acceptance.csproj", "Acceptance.dll", "native.trx"),
+                ImplementationRoots: ["features"],
+                Obligations: roots.Length == 0 ? null : [new ObligationRoot(kind, roots)]),
+            requiredTests.Length == 0 ? ["VerifyContract"] : requiredTests));
+        return source;
+    }
+
+    [TestMethod]
     public void MissingChildMetadataDoesNotHideAnotherVerifiedFailure()
     {
         using var fixture = new HistoryTests.HistoryFixture();
@@ -65,6 +118,39 @@ public sealed class PlanTests
         var prepared = Prepare(project, Chore() with { Categories = ["feat"], BusinessChange = true, Checks = [check] });
         Assert.AreEqual(baseline, prepared.Inventory.Checks.Single().Baseline);
         Assert.ThrowsExactly<TadaException>(() => project.Store.Approved(baseline));
+    }
+
+    [TestMethod]
+    [DataRow("supporting")]
+    [DataRow("contract")]
+    [DataRow("fitness")]
+    public void GateRetainsGapFromSelectedCheckOutsideLedgerWithOnlyPendingAcceptance(string purpose)
+    {
+        using var project = new CoreTests.Project();
+        string baseline = project.Store.Prepare();
+        project.Store.Approve(project.Store.Review(baseline).Id, "isolated supporting gate control");
+        var ledger = new EnforcementLedger(1, baseline, [], [new Candidate("AC_ONE", "2026-11-25", "Pending acceptance")]);
+        Data.WriteNew(Path.Join(project.Store.Repository.State, "enforcement.json"), ledger);
+        var definition = Supporting(project);
+        if (purpose != "supporting")
+        {
+            string source = WriteProtectedSuite(project, "native", purpose, []);
+            string native = project.Store.PrepareProtected(source);
+            project.Store.Approve(project.Store.Review(native).Id, "isolated native plan gate control");
+            definition = definition with { Checks = [new PlannedCheck("native", purpose, purpose,
+                ["Protected expectation"], "Exercise a selected suite outside the ledger.", native)] };
+        }
+        var prepared = Prepare(project, definition);
+        string checkId = definition.Checks.Single().Id;
+        string id = Guid.NewGuid().ToString("N");
+        var started = DateTimeOffset.UtcNow;
+        Data.WriteNew(Path.Join(project.Store.Repository.StateDirectory("plan-runs", id), "run.json"),
+            new PlanRun(id, prepared.Plan, started, started, [new CheckRun(checkId, null)], []));
+
+        var gate = Enforcement.Assess(project.Store, new RunEngine(project.Store), id, true, ledger, new DateOnly(2026, 11, 25));
+
+        Assert.AreEqual("INDETERMINATE", gate.Outcome);
+        Assert.IsTrue(gate.Reasons.Any(reason => reason.Code == "not-executed" && reason.CaseId == checkId));
     }
 
     [TestMethod]
@@ -182,6 +268,31 @@ public sealed class PlanTests
         Assert.AreEqual("INDETERMINATE", TrxVerifier.Verify(["Check"], "baseline", "run", path, discovery, execution with { ExitCode = 2 }).Outcome);
     }
 
+    [TestMethod]
+    public void ProtectedTrxRequiresExactTestSetAndIdentifiedAssertionFailures()
+    {
+        using var project = new CoreTests.Project();
+        var (path, discovery, execution) = Trx(project, "Passed");
+        var unexpected = discovery with { Stdout = "  Check\n  Other\nTest discovery summary: found 2 test(s) - Checks.dll\n" };
+        Assert.AreEqual("protected-evidence", TrxVerifier.Verify(["Check"], "baseline", "run", path, unexpected, execution, true).Reasons.Single().Code);
+
+        (path, discovery, execution) = Trx(project, "NotExecuted");
+        Assert.AreEqual("INDETERMINATE", TrxVerifier.Verify(["Check"], "baseline", "run", path, discovery, execution, true).Outcome);
+
+        (path, discovery, execution) = Trx(project, "Failed");
+        Assert.AreEqual("INDETERMINATE", TrxVerifier.Verify(["Check"], "baseline", "run", path, discovery, execution, true).Outcome);
+        var document = XDocument.Load(path);
+        XNamespace ns = document.Root!.Name.Namespace;
+        document.Descendants(ns + "UnitTestResult").Single().Add(
+            new XElement(ns + "Output", new XElement(ns + "ErrorInfo", new XElement(ns + "Message", "Assert.IsTrue failed. Required threshold exceeded."))));
+        document.Save(path);
+        Assert.AreEqual("FAIL", TrxVerifier.Verify(["Check"], "baseline", "run", path, discovery, execution, true).Outcome);
+        Assert.AreEqual("INDETERMINATE", TrxVerifier.Verify(["Check"], "baseline", "run", path, discovery, execution with { ExitCode = 1 }, true).Outcome);
+        document.Descendants(ns + "Message").Single().Value = "Assertion failed. Expected value to be within the allocation budget.";
+        document.Save(path);
+        Assert.AreEqual("FAIL", TrxVerifier.Verify(["Check"], "baseline", "run", path, discovery, execution, true).Outcome);
+    }
+
     private static CheckAssessment Assessment(string id, string purpose, string outcome) => new(id, id, purpose,
         new Verification(outcome, "L1-advisory", "baseline", "run", [], []));
 
@@ -213,7 +324,7 @@ public sealed class PlanTests
               <Results><UnitTestResult testName="Check" testId="test" executionId="one" startTime="{now:O}" endTime="{now.AddMilliseconds(500):O}" outcome="{outcome}" /></Results>
               <TestDefinitions><UnitTest name="Check" id="test"><Execution id="one" /><TestMethod codeBase="{System.Security.SecurityElement.Escape(assembly)}" adapterTypeName="executor://MSTest.Sdk/4.5.2" /></UnitTest></TestDefinitions>
               <TestEntries><TestEntry testId="test" executionId="one" /></TestEntries>
-              <ResultSummary outcome="Completed"><Counters total="1" executed="1" passed="{(outcome == "Passed" ? 1 : 0)}" failed="{(outcome == "Failed" ? 1 : 0)}" /></ResultSummary>
+              <ResultSummary outcome="{(outcome == "Failed" ? "Failed" : "Completed")}"><Counters total="1" executed="1" passed="{(outcome == "Passed" ? 1 : 0)}" failed="{(outcome == "Failed" ? 1 : 0)}" /></ResultSummary>
             </TestRun>
             """);
         return (path, new CommandEvidence("dotnet", [assembly, "--list-tests"], 0, false, now.AddSeconds(-2), now.AddSeconds(-1), "  Check\n\nTest discovery summary: found 1 test(s) - Checks.dll\n  duration: 10ms\n", ""),

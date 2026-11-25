@@ -181,7 +181,15 @@ jobs:
           $notesFile = Join-Path $env:RUNNER_TEMP 'notes.md'
           [IO.File]::WriteAllText($notesFile, $notes, [Text.UTF8Encoding]::new($false))
           $assets = @(Get-ChildItem .artifacts/release -File | ForEach-Object FullName)
-          gh release create "v$env:VERSION" --target $env:SOURCE_SHA --title "TADA $env:VERSION" --notes-file $notesFile @assets
+          # A slower main validation can publish after a newer commit.
+          $published = @(gh api --paginate "repos/$env:GITHUB_REPOSITORY/releases?per_page=100" --jq '.[] | select(.draft == false and .prerelease == false) | .tag_name')
+          if ($LASTEXITCODE) { throw 'Cannot read published release versions.' }
+          $incoming = [version]$env:VERSION
+          $newer = $published | Where-Object {
+            $_ -match '^v[0-9]+\.[0-9]+\.[0-9]+$' -and [version]$_.Substring(1) -gt $incoming
+          } | Select-Object -First 1
+          $latest = if ($newer) { '--latest=false' } else { '--latest' }
+          gh release create "v$env:VERSION" --target $env:SOURCE_SHA --title "TADA $env:VERSION" --notes-file $notesFile $latest @assets
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
           Get-Content .artifacts/release/SHA256SUMS | ForEach-Object { "- ``$_``" } | Add-Content $env:GITHUB_STEP_SUMMARY
       - name: Retain release evidence

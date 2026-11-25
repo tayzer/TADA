@@ -22,7 +22,7 @@ flowchart LR
 3. It publishes a GitHub release tagged `v<version>`, with `release-manifest.json` (source commit, validation run, packaging run and asset hashes) and `SHA256SUMS`.
 4. The `marketplace` job downloads the published assets, runs `sha256sum --check`, confirms the version and pushes the marketplace content unchanged to `tayzer/tada-plugins`, with the same tag.
 
-Runs are serialised and queued, with up to 100 waiting, so every validated push is kept. Queue order is not guaranteed, so the marketplace job compares versions: an older build that finishes late receives its own tag in `tayzer/tada-plugins` but never replaces newer content on `main`.
+Runs are serialised and queued, with up to 100 waiting, so every validated push is kept. Queue order can differ from merge order. GitHub’s latest release and marketplace `main` advance by SemVer. An older build that finishes late is still available by its tag.
 
 ## Versions
 

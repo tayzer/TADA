@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "id": "echo-contract",
+  "kind": "contract",
+  "configuration": {
+    "schemaVersion": 1,
+    "oracleRoots": ["legacy/ContractChecks", "interfaces/openapi.json"],
+    "implementationRoots": ["legacy/Echo"],
+    "execution": {
+      "project": "legacy/ContractChecks/Legacy.Contract.csproj",
+      "assembly": "Legacy.Contract.dll",
+      "messagesFile": "contract.trx"
+    },
+    "obligations": [{ "kind": "contract", "roots": ["interfaces/openapi.json"] }]
+  },
+  "requiredTests": ["EchoResponseHasRequiredFields"]
+}

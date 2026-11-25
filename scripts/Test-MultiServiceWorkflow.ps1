@@ -61,6 +61,14 @@ try {
         $selected.execution.messagesFile = 'supporting.trx'
         return @{ configuration=$selected; requiredTests=$RequiredTests }
     }
+    $contract = Engineering 'ContractTests' 'Contract.Tests' @('ProducerOutcomeIsAcceptedByTheConsumer','ConsumerRejectsUnsupportedOutcomeVersion')
+    $contract.configuration | Add-Member -NotePropertyName obligations -NotePropertyValue @(@{kind='contract'; roots=@('ContractTests/payment-outcome.json')}) -Force
+    [IO.File]::WriteAllText((Join-Path $workspace 'contract.verification.json'), (@{
+        schemaVersion=1; id='contracts'; kind='contract'; configuration=$contract.configuration; requiredTests=$contract.requiredTests
+    } | ConvertTo-Json -Depth 20))
+    $contractBaseline = (Tada @('baseline','prepare','--file','contract.verification.json')).baseline
+    $contractReview = Tada @('baseline','review','--baseline',$contractBaseline)
+    Tada @('baseline','approve','--review',$contractReview.review.id,'--by','isolated multi-service contract control; not requester acceptance') | Out-Null
     $plan = [ordered]@{
         schemaVersion=1
         objective='Verify asynchronous ordering and its supporting boundaries.'
@@ -69,7 +77,7 @@ try {
         impact=@('Orders','Payments','Inventory','PaymentOutcome v1')
         checks=@(
             @{ id='services'; level='service'; purpose='supporting'; obligations=@('Reservation and payment idempotency'); rationale='Exercise service state through public HTTP outcomes.'; engineering=(Engineering 'ServiceTests' 'Service.Tests' @('ReservationAndReleaseAreIdempotent','RepeatedPaymentCreatesOneCharge')) },
-            @{ id='contracts'; level='contract'; purpose='supporting'; obligations=@('PaymentOutcome producer/consumer compatibility'); rationale='Check actual producer output and consumer acceptance against independent contract fixtures.'; engineering=(Engineering 'ContractTests' 'Contract.Tests' @('ProducerOutcomeIsAcceptedByTheConsumer','ConsumerRejectsUnsupportedOutcomeVersion')) },
+            @{ id='contracts'; level='contract'; purpose='contract'; obligations=@('PaymentOutcome producer/consumer compatibility'); rationale='Check actual producer output and consumer acceptance against approved contract fixtures.'; baseline=$contractBaseline },
             @{ id='journey'; level='journey'; purpose='acceptance'; obligations=@('REQ_ORDER_JOURNEY'); rationale='Verify completion, compensation and repeated delivery across the three services.'; baseline=$baseline }
         )
         omissions=@('No separate unit suite is selected for this integration control. Service rules are exercised through HTTP.')
@@ -84,6 +92,13 @@ try {
     if ($verified.outcome -ne 'PASS' -or $verified.checks.Count -ne 3) { throw 'The coordinated three-level run did not pass.' }
     foreach ($check in $verified.checks) {
         if ($check.result.outcome -ne 'PASS') { throw "Required check $($check.id) did not pass." }
+    }
+    [IO.File]::WriteAllText((Join-Path $workspace '.tada/enforcement.json'), (@{
+        schemaVersion=2; baseline=$baseline; active=$review.inventory.scope.scenarioIds; candidates=@(); protectedSuites=@($contractBaseline)
+    } | ConvertTo-Json -Depth 10))
+    $gate = Tada @('gate','--run',$passing.runId)
+    if ($gate.outcome -ne 'PASS' -or !(($gate.obligations | Where-Object scenario -eq 'contracts').state -eq 'satisfied')) {
+        throw 'The same plan must satisfy active functional and independent contract obligations.'
     }
     # Cached projections are replaceable. Verification must read the retained native reports.
     $serviceRun = ($passing.checks | Where-Object id -eq 'services').result.runId

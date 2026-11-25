@@ -87,7 +87,7 @@ Cursor discovers the shared skill from its `name` and `description`. **Customize
 
 ## Project preparation and migration
 
-While the plugin is enabled, its skill handles discovery and proportionate work from the user's ordinary request. When business verification needs setup, the packaged helper installs the matching repository-local tool and runs `tada init`. It records the SDK host in new project context. The user supplies the business request and acceptance decisions.
+While the plugin is enabled, its skill handles discovery and proportionate work from the user's ordinary request. When protected verification needs setup, the packaged helper installs the matching repository-local tool and runs `tada init`. It records the SDK host and discovers project files. The agent reuses existing specifications and test infrastructure, respects the saved layout and adds a harness only when needed. [Adaptive initialisation](adaptive-verification.md#choose-a-project-layout) The user supplies the business request and acceptance decisions.
 
 Application setup accepts stable .NET 10.0 SDKs and checks selection from the application directory. New application SDK policy permits patch and feature-band roll-forward within 10.0. Existing `global.json` bytes are preserved. TADA's own source build keeps the SDK pinned in its [`global.json`](../global.json) for reproducible development validation. The runner records the resolved SDK and observed toolchain identities. Changing an existing captured SDK policy requires a new reviewed and human-approved baseline.
 

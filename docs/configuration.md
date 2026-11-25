@@ -8,7 +8,8 @@ Settings live in three places:
 | --- | --- | --- |
 | Agent host settings | Whether the TADA workflow is active | You |
 | `tada.json` | What the verifier captures, builds and runs | The agent proposes changes. You approve them as part of a baseline. |
-| `.tada/enforcement.json` | Which approved scenarios must pass before merge | The agent proposes changes. You review them in the pull request. |
+| `.tada/layout.json` | Existing or recommended convention for future work | Discovered by `tada init` or chosen with `--layout`. |
+| `.tada/enforcement.json` | Which approved scenarios and native suites must pass before merge | The agent proposes changes. You review them in the pull request. |
 | `.tada/knowledge.json` | Whether the agent may propose new knowledge records | You |
 
 ## Host settings
@@ -49,7 +50,7 @@ Start a fresh session after changing any host setting. Running sessions keep the
 
 ## `tada.json`
 
-`tada init` creates this file in the repository root. Paths use forward slashes and are relative to the repository root.
+`tada init --acceptance` creates this file when scaffolding a new acceptance harness. Existing harnesses can configure it in place. Paths use forward slashes and are relative to the repository root.
 
 The file is part of the captured oracle. Changing it requires a new baseline review and human approval.
 
@@ -57,7 +58,7 @@ The file is part of the captured oracle. Changing it requires a new baseline rev
 
 | Key | Required | Default | Meaning |
 | --- | --- | --- | --- |
-| `schemaVersion` | Yes | `1` from `init` | `1` for a single application under test. `2` for `execution.services`. |
+| `schemaVersion` | Yes | `1` from `init --acceptance` | `1` for a single application under test. `2` for `execution.services`. |
 | `oracleRoots` | Yes | `["features", "tests/Acceptance"]` | Folders captured byte for byte as the protected agreement: features, bindings, fixtures, observers and shared assertion inputs. |
 | `implementationRoots` | No | none | Application source folders. They are identified separately from the oracle, so implementation changes never count as acceptance changes. |
 | `requirementPrefix` | No | `REQ_` | Gherkin tag prefix for requirement IDs, such as `@REQ_ORDER_LIMIT`. |
@@ -144,6 +145,10 @@ Builds are observed. Opaque custom MSBuild tasks, shell commands and file-readin
 ```
 
 For opaque project evaluation, use target `@evaluation` and task `property-functions`. A declaration is a trust contract, not a sandbox. Do not add broad entries just to silence a gap. See [build-task contracts](build-task-contracts.md).
+
+## Independent suite definition
+
+Use a suite definition file with `schemaVersion: 1`, `id`, `kind`, `configuration` and `requiredTests`. Its `configuration` uses the verifier keys above and names a native MSTest project with a `.trx` report. Its exact bytes join the oracle. The [protected-suite guide](adaptive-verification.md#run-an-independent-protected-suite) describes preparation, approval and amendable scope.
 
 ## `.tada/enforcement.json`
 

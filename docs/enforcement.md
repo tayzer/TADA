@@ -14,7 +14,7 @@ Approval never changes a verification result. A verification result never grants
 
 ## The enforcement ledger
 
-`.tada/enforcement.json` is committed with the project. It names one approved baseline and classifies every scenario in it.
+`.tada/enforcement.json` is committed with the project. It names an approved functional baseline and classifies its scenarios. Schema 2 can also name mandatory independent contract and fitness suites. See [protected-suite enforcement](adaptive-verification.md#require-a-suite-for-merge).
 
 ```json
 {

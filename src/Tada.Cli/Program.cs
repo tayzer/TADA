@@ -38,7 +38,7 @@ try
         TADA — Test-Assured Development Assistance (local advisory L1)
 
         tada init [--repo DIRECTORY] [--layout existing|recommended] [--acceptance]
-        tada baseline prepare [--repo DIRECTORY]
+        tada baseline prepare [--file PROTECTED-SUITE.json] [--repo DIRECTORY]
         tada baseline review --baseline sha256:... [--against sha256:...]
         tada baseline approve --review ID --by NAME [--replaces sha256:...]
         tada plan prepare --file .tada/verification-plan.json
@@ -86,7 +86,7 @@ try
             Print(new PlanStore(store).Prepare(Need("file")));
             return 0;
         case "baseline prepare":
-            Print(new { baseline = store.Prepare(), status = "DRAFT", next = "baseline review --baseline <digest>" });
+            Print(new { baseline = Maybe("file") is { } suite ? store.PrepareProtected(suite) : store.Prepare(), status = "DRAFT", next = "baseline review --baseline <digest>" });
             return 0;
         case "baseline review":
             string baseline = Need("baseline");
@@ -96,7 +96,8 @@ try
             Print(new
             {
                 review, inventory,
-                buildTaskContracts = Data.Read<Config>(new Repository(store.Snapshot(baseline)).Resolve("tada.json")).BuildTaskContracts ?? [],
+                buildTaskContracts = (inventory.Engineering?.Configuration ??
+                    Data.Read<Config>(new Repository(store.Snapshot(baseline)).Resolve("tada.json"))).BuildTaskContracts ?? [],
                 changedFiles = inventory.Files.Where(f => previous == null || !previous.Files.Any(p => p.Path == f.Path && p.Digest == f.Digest)).Select(f => f.Path),
                 removedFiles = previous?.Files.Where(p => !inventory.Files.Any(f => f.Path == p.Path)).Select(f => f.Path).ToArray() ?? [],
                 removedCaseIds = previous?.ExpectedCases.Where(p => !inventory.ExpectedCases.Any(c => c.CaseId == p.CaseId)).Select(c => c.CaseId).ToArray() ?? [],

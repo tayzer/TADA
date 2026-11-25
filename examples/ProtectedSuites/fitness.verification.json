@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "id": "echo-fitness",
+  "kind": "fitness",
+  "configuration": {
+    "schemaVersion": 1,
+    "oracleRoots": ["tests/Fitness"],
+    "implementationRoots": ["legacy/Echo"],
+    "execution": {
+      "project": "tests/Fitness/Echo.Fitness.csproj",
+      "assembly": "Echo.Fitness.dll",
+      "messagesFile": "fitness.trx"
+    },
+    "obligations": [{ "kind": "fitness", "roots": ["tests/Fitness/AllocationChecks.cs"] }]
+  },
+  "requiredTests": ["ScoreStaysWithinAllocationBudget"]
+}

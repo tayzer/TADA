@@ -89,6 +89,9 @@ jobs:
       - name: Multi-level and multi-service installed-package controls
         if: matrix.suite == 'multi-service'
         run: pwsh -File scripts/Test-MultiServiceWorkflow.ps1
+      - name: Adaptive brownfield setup and protected native suites
+        if: matrix.suite == 'multi-service'
+        run: pwsh -File scripts/Test-ProtectedSuites.ps1
       - name: Enforcement lifecycle controls
         if: matrix.suite == 'enforcement'
         run: pwsh -File scripts/Test-EnforcementWorkflow.ps1
@@ -165,6 +168,7 @@ jobs:
             .artifacts/**/supporting.trx
             .artifacts/alpha13-*.log
             .artifacts/multi-service/*/.tada/**
+            .artifacts/protected-suites/*/.tada/**
             .artifacts/orders-workflow/*/.tada/**
             .artifacts/onboarding/*/.tada/**
             !.artifacts/**/.tada/scratch/**

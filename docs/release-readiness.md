@@ -41,6 +41,8 @@ Unchecked means incomplete or not yet verified. The [earlier audit](architecture
 
 ## Current implementation increment
 
+The adaptive initialisation increment adds a persisted layout choice and lazy .NET acceptance scaffolding. Dedicated protected MSTest contract and fitness suites use immutable schema-8 baselines and the existing approval and evidence model. The runnable examples and validation commands are in the [adaptive verification guide](adaptive-verification.md). Host interaction, external runner adapters and independent team approval remain separate validation or implementation work.
+
 The [alpha.7 checkpoint](validation/increment-07.md) records 111 passing focused tests, 46 Orders controls and installed-package API development with unchanged-rerun identity and real failure-history controls. A private task-cache byte change produces a distinct environment; restored-cache evidence verifies offline. Cancellation and deadline controls terminate owned child processes and preserve diagnostics. Checked items describe bounded control demonstrations, not requester business approval or whole-release completion. The [alpha.6 checkpoint](validation/increment-06.md), [alpha.5 checkpoint](validation/increment-05.md) and earlier increments remain historical evidence.
 
 Alpha.8 corrects the activation/trial approach: `init` supplies default workflow instructions even when root agent instructions already exist, and a new context records the invoking SDK host. The [ordinary-request trial](validation/default-workflow-trial.md) supersedes the earlier coached starter prompt. Existing alpha.7 CI and scripted API controls remain evidence for their recorded source/package only; they do not prove spontaneous workflow adoption by an agent or certify alpha.8.

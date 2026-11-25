@@ -60,7 +60,8 @@ public static class TaskJournal
         IEnumerable<ProjectBuildInputs>? builds = null)
     {
         var oracle = inventory.Files.ToDictionary(file => Path.GetFullPath(repository.Resolve(file.Path)), file => file.Digest, StringComparer.OrdinalIgnoreCase);
-        var implementation = repository.CapturePaths(config with { OracleRoots = config.ImplementationRoots ?? [] }).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var implementation = repository.CapturePaths(config with { OracleRoots = config.ImplementationRoots ?? [] },
+            includePrimaryConfig: inventory.ProtectedSuite == null).ToHashSet(StringComparer.OrdinalIgnoreCase);
         var packageDirectories = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (string role in new[] { "harness", "sut" })
             if (Directory.Exists(Path.Combine(run, "build", role)))
@@ -80,6 +81,9 @@ public static class TaskJournal
             {
                 var origin = Capture(item.Origin, "task-origin", null, role);
                 var assembly = Capture(item.Assembly, "task-assembly", item.AssemblyDigest, role);
+                if (BuildInputs.IsProtectedProject(inventory, repository.Relative(item.Project), role) &&
+                    (origin.Category == "implementation" || assembly.Category == "implementation"))
+                    throw new TadaException("Protected verifier build tasks must use captured oracle or trusted toolchain code.");
                 bool toolchain = Trusted(origin) && Trusted(assembly);
                 bool standard = assembly.Category == "sdk" && new[] { "Microsoft.Build.Tasks.Core.dll", "Microsoft.Build.dll", "Microsoft.Build.Tasks.CodeAnalysis.dll" }
                     .Contains(Path.GetFileName(item.Assembly), StringComparer.OrdinalIgnoreCase) && TaskRules.Standard(item.Name);
@@ -194,6 +198,9 @@ public static class TaskJournal
                 {
                     var origin = Input(item.Origin, null, "task-origin");
                     var assembly = Input(item.Assembly, item.AssemblyDigest, "task-assembly");
+                    string project = Path.GetRelativePath(evidence.RepositoryRoot, item.Project).Replace('\\', '/');
+                    if (BuildInputs.IsProtectedProject(inventory, project, report.Role) && (origin.Category == "implementation" || assembly.Category == "implementation"))
+                        throw new TadaException("Protected verifier task journal used mutable implementation code.");
                     bool trusted = origin.Category is "sdk" or "locked-package" && assembly.Category is "sdk" or "locked-package";
                     bool standard = assembly.Category == "sdk" && new[] { "Microsoft.Build.Tasks.Core.dll", "Microsoft.Build.dll", "Microsoft.Build.Tasks.CodeAnalysis.dll" }
                         .Contains(Path.GetFileName(item.Assembly), StringComparer.OrdinalIgnoreCase) && TaskRules.Standard(item.Name);

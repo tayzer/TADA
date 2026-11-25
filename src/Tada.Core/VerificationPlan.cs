@@ -31,7 +31,7 @@ public sealed class PlanStore(BaselineStore baselines)
         if (previous != null && string.IsNullOrWhiteSpace(definition.ChangeReason))
             throw new TadaException("A revised plan needs a changeReason explaining additions, removals and changed checks.");
         var checks = definition.Checks.Select(check => new CapturedCheck(check.Id, check.Level, check.Purpose,
-            check.Purpose == "acceptance" ? Acceptance(check.Baseline!) : baselines.PrepareEngineering(check.Engineering!))).ToArray();
+            check.Purpose == "supporting" ? baselines.PrepareEngineering(check.Engineering!) : ProtectedBaseline(check))).ToArray();
         var inventory = new PlanInventory(1, definition, checks);
         string id = CanonicalJson.Identity(inventory);
         string path = Path(id);
@@ -53,11 +53,6 @@ public sealed class PlanStore(BaselineStore baselines)
             checks.Where(check => previous == null || !previous.Checks.Contains(check)).Select(check => check.Id).ToArray(),
             previous?.Checks.Where(check => !checks.Any(current => current.Id == check.Id)).Select(check => check.Id).ToArray() ?? []);
 
-        string Acceptance(string baseline)
-        {
-            if (baselines.Read(baseline).Engineering != null) throw new TadaException("An engineering snapshot cannot supply business acceptance.");
-            return baseline;
-        }
     }
 
     public PlanInventory Read(string id)
@@ -74,11 +69,22 @@ public sealed class PlanStore(BaselineStore baselines)
             if (captured == null) throw new TadaException("Captured check identity is missing.");
             var baseline = baselines.Read(captured.Baseline);
             if (captured.Id != check.Id || captured.Level != check.Level || captured.Purpose != check.Purpose ||
-                (check.Purpose == "acceptance" ? captured.Baseline != check.Baseline || baseline.Engineering != null
-                    : CanonicalJson.Identity(baseline.Engineering) != CanonicalJson.Identity(check.Engineering)))
+                (check.Purpose == "supporting"
+                    ? baseline.RequiresApproval || CanonicalJson.Identity(baseline.Engineering) != CanonicalJson.Identity(check.Engineering)
+                    : captured.Baseline != ProtectedBaseline(check, baseline)))
                 throw new TadaException("Captured check differs from the selected scope or purpose.");
         }
         return inventory;
+    }
+
+    private string ProtectedBaseline(PlannedCheck check, Inventory? inventory = null)
+    {
+        string baseline = check.Baseline!;
+        inventory ??= baselines.Read(baseline);
+        if (check.Purpose == "acceptance" ? inventory.Engineering != null
+            : inventory.ProtectedSuite is not { } suite || suite.Id != check.Id || suite.Kind != check.Purpose)
+            throw new TadaException($"Check {check.Id} must reference its matching protected baseline.");
+        return baseline;
     }
 
     private string Path(string id)
@@ -104,13 +110,13 @@ public sealed class PlanStore(BaselineStore baselines)
         foreach (var check in plan.Checks)
         {
             if (check == null || string.IsNullOrWhiteSpace(check.Id) || !Regex.IsMatch(check.Id, @"\A[a-z][a-z0-9_-]*\z") || !ids.Add(check.Id) ||
-                check.Level is not ("unit" or "service" or "contract" or "journey") ||
-                check.Purpose is not ("acceptance" or "supporting") || string.IsNullOrWhiteSpace(check.Rationale) ||
+                check.Level is not ("unit" or "service" or "contract" or "journey" or "fitness") ||
+                check.Purpose is not ("acceptance" or "supporting" or "contract" or "fitness") || string.IsNullOrWhiteSpace(check.Rationale) ||
                 check.Obligations.Length == 0 || check.Obligations.Any(string.IsNullOrWhiteSpace))
                 throw new TadaException("Checks require unique safe IDs, a level, purpose, obligations and selection rationale.");
-            if (check.Purpose == "acceptance")
+            if (check.Purpose != "supporting")
             {
-                if (check.Baseline == null || check.Engineering != null) throw new TadaException("Acceptance checks reference a business baseline.");
+                if (check.Baseline == null || check.Engineering != null) throw new TadaException("Protected checks reference a prepared baseline.");
             }
             else if (check.Baseline != null || check.Engineering == null || check.Engineering.RequiredTests.Length == 0 ||
                 check.Engineering.RequiredTests.Any(string.IsNullOrWhiteSpace) ||

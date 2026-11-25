@@ -1,6 +1,6 @@
 # Change-aware verification
 
-TADA selects verification levels during discovery and supports MSTest/MTP checks and named local .NET services. The validated scope is one Git repository on Windows x64 with a stable .NET 10.0 SDK, MSTest 4.5.2, MTP 2.5.2 and Reqnroll 3.3.4. Reports retain local advisory L1 limits.
+TADA selects verification levels during discovery and supports MSTest/MTP checks and named local .NET services. Approved independent contract and fitness suites use the same capture, plan and evidence workflow. The validated scope is one Git repository on Windows x64 with a stable .NET 10.0 SDK, MSTest 4.5.2, MTP 2.5.2 and Reqnroll 3.3.4. Reports retain local advisory L1 limits.
 
 ## Select evidence during discovery
 
@@ -8,7 +8,7 @@ Classify actual effects using `feat`, `fix`, `refactor`, `chore` or a mixture. R
 
 Features add missing coverage. Fixes reproduce the intended failing assertion with existing or new regression coverage. Refactors begin with passing preservation checks and add characterisation where coverage is inadequate. Chores use relevant existing checks and can justify no test execution. An evaluable objective and recorded reasoning still apply.
 
-Choose unit, service, contract and journey checks according to impact. Every level has its own scope. A contract check exercises the actual producer and consumer against independent captured expectations. A journey check establishes the combined business outcome. Technical checks can use ordinary MSTest without Gherkin. Gherkin remains the business authority.
+Choose unit, service, contract, fitness and journey checks according to impact. Every level has its own scope. A contract check exercises the actual producer and consumer against independent captured expectations. A journey check establishes the combined business outcome. Technical checks can use ordinary MSTest without Gherkin. Gherkin remains the business authority.
 
 Keep lightweight selections in `.tada/context.md` and execute existing tools directly when coordination adds no value. Installing or enabling TADA requires no application folder or verifier installation.
 
@@ -67,6 +67,10 @@ The plan inventory records selection and captured check identities under `.tada/
 
 Revisions identify `previous` and explain `changeReason`. Preparation reports changed and removed checks. Existing plans require explicit lineage for a changed selection. Commit useful plans, approvals and snapshots through normal review. Runtime records remain under ignored `.tada/runs/` and `.tada/plan-runs/` directories.
 
+## Protect independent obligations
+
+Use `purpose: "contract"` or `purpose: "fitness"`, the registered suite ID as the check ID and the approved suite digest as `baseline`. The check uses the suite's captured definition. The merge gate can consume the coordinated run and check mandatory suite coverage against the ledger and target branch. See [adaptive initialisation and protected suites](adaptive-verification.md#run-an-independent-protected-suite).
+
 ## Several owned services
 
 Schema-2 `tada.json` replaces the legacy `sutProject`/`sutAssembly` pair with `execution.services`. Each service has a unique lowercase ID, project and assembly filename. The verifier builds each service into a distinct `sut/<id>/` directory and captures the complete local combination. Implementation roots must include every selected service and shared implementation input.
@@ -81,11 +85,11 @@ Business deadlines belong in the agreed scenarios. Polling must retain the disti
 
 The coordinator runs suites serially, once, and continues independent suites after failures within the overall deadline. Native discovery and TRX results must agree. Missing, duplicated, ambiguous, skipped or stale cases block a passing supporting assessment. Exact native names must be unique within each selected project, including data rows. The adapter targets the pinned runner's discovery format.
 
-PASS requires every selected check to pass with complete evidence. FAIL reports a verified failed check, labelled with its acceptance or supporting purpose. Supporting failures establish no business-RED claim. INDETERMINATE identifies evidence, infrastructure or execution gaps. Verified failures remain visible alongside other suites' gaps. Offline verification re-reads native evidence and existing failure history. Cached projections supply no authority.
+PASS requires every selected check to pass with complete evidence. FAIL reports a verified failed check, labelled with its acceptance, contract, fitness or supporting purpose. Supporting failures establish no business-RED claim. INDETERMINATE identifies evidence, infrastructure or execution gaps. Verified failures remain visible alongside other suites' gaps. Offline verification re-reads native evidence and existing failure history. Cached projections supply no authority.
 
 An empty selection needs `noChecksReason` and reports NO_CHECKS with exit 0, recording its rationale without a passing-test claim. The no-check result does not establish business acceptance.
 
-Historical schema-6 records remain verifiable. New multi-service and supporting inventories use schema 7. Adopting multi-service acceptance changes captured inputs and requires a fresh human-approved baseline. Existing records and owner files are preserved.
+Historical schema-6 records remain verifiable. Multi-service acceptance and supporting inventories use schema 7. Independent protected suites use schema 8. Adopting multi-service acceptance changes captured inputs and requires a fresh human-approved baseline. Existing records and owner files are preserved.
 
 Container orchestration, remote deployments, cross-repository identities, other runners and protected independent assurance remain future work. The existing SDK/package trust and cooperative runtime-observation limits apply.
 

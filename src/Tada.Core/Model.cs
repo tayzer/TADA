@@ -16,6 +16,12 @@ public sealed record Execution(string Project, string Assembly, string MessagesF
 }
 public sealed record Service(string Id, string Project, string Assembly);
 public sealed record Engineering(Config Configuration, string[] RequiredTests);
+public sealed record ProtectedSuiteDefinition(int SchemaVersion, string Id, string Kind, Config Configuration, string[] RequiredTests)
+{
+    internal ProtectedSuite At(string source) => new(Id, Kind, source);
+    internal Engineering Selection() => new(Configuration, RequiredTests);
+}
+public sealed record ProtectedSuite(string Id, string Kind, string Source);
 public sealed record ExternalInput(string Id, string Digest);
 public sealed record Policy(string Assurance = "L1-advisory", bool AutomaticRetries = false,
     string MessagesProtocol = "30.1.0",
@@ -24,7 +30,12 @@ public sealed record Policy(string Assurance = "L1-advisory", bool AutomaticRetr
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? BuildTasks = null);
 public sealed record Inventory(int SchemaVersion, Scope Scope, FileInput[] Files, ExpectedCase[] ExpectedCases,
     Execution Execution, ExternalInput[] ExternalInputs, Policy Policy,
-    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] Engineering? Engineering = null);
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] Engineering? Engineering = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] ProtectedSuite? ProtectedSuite = null)
+{
+    [JsonIgnore]
+    public bool RequiresApproval => Engineering == null || ProtectedSuite != null;
+}
 public sealed record Config(int SchemaVersion, string[] OracleRoots, Execution Execution,
     string RequirementPrefix = "REQ_", string ScenarioPrefix = "AC_", string[]? ImplementationRoots = null,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] BuildTaskContract[]? BuildTaskContracts = null,

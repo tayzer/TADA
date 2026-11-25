@@ -67,7 +67,7 @@ public static class RuntimeInputs
 
     public static LoadedInput[] Verify(string run, Inventory inventory, RunRecord record, bool checkCurrent = false)
     {
-        if (inventory.SchemaVersion is not (6 or 7) || inventory.Policy.RuntimeInputs != Policy)
+        if (inventory.SchemaVersion is not (6 or 7 or 8) || inventory.Policy.RuntimeInputs != Policy)
             throw new TadaException("Baseline has no supported runtime-observation policy. Prepare, review and approve a new revision.");
         var repository = new Repository(run);
         string evidenceFile = repository.Resolve(FileName);

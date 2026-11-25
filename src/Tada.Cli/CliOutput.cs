@@ -128,7 +128,15 @@ public static class CliOutput
                     foreach (var root in contract.GetProperty("inputRoots").EnumerateArray()) text.AppendLine("    Read root: " + root.GetString());
                 }
             }
-            text.AppendLine("Business acceptance — captured source:");
+            var inventory = value.GetProperty("inventory");
+            if (inventory.TryGetProperty("protectedSuite", out var suite))
+            {
+                text.AppendLine($"Protected {suite.GetProperty("kind").GetString()} suite: {suite.GetProperty("id").GetString()}");
+                text.AppendLine($"Captured definition: {suite.GetProperty("source").GetString()}");
+                foreach (var item in inventory.GetProperty("expectedCases").EnumerateArray())
+                    text.AppendLine($"  Required native test: {item.GetProperty("caseId").GetString()}");
+            }
+            else text.AppendLine("Business acceptance — captured source:");
             foreach (var specification in value.GetProperty("specifications").EnumerateArray())
             {
                 text.AppendLine($"\n{specification.GetProperty("path").GetString()}");

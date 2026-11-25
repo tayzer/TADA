@@ -8,7 +8,7 @@ Every push to `main` that passes full validation is published automatically ([AD
 flowchart LR
     merge["Merge to main"] --> ci["PR validation on main<br/>(all Windows suites)"]
     ci -- "success" --> package["Release workflow<br/>read the reviewed SemVer,<br/>pack, package, run controls"]
-    package --> gh["GitHub prerelease<br/>nupkg, bundle, plugin ZIP,<br/>marketplace ZIP, manifest, SHA256SUMS"]
+    package --> gh["GitHub release<br/>nupkg, bundle, plugin ZIP,<br/>marketplace ZIP, manifest, SHA256SUMS"]
     gh --> market["Marketplace job verifies SHA256SUMS<br/>and pushes the exact marketplace ZIP<br/>to tayzer/tada-plugins, tagged"]
     market --> codex["Codex: marketplace upgrade"]
     market --> claude["Claude Code: marketplace update<br/>and Anthropic directory (tracks main)"]
@@ -19,31 +19,31 @@ flowchart LR
 
 1. It checks out the validated commit and confirms that the commit is on `main`. It reads the exact SemVer from `Directory.Build.props` and checks that all four plugin manifests agree.
 2. It packs the CLI, then builds and checks the plugin, the marketplace and the download bundle with the same controls as CI.
-3. It publishes a GitHub **prerelease** tagged `v<version>`, with `release-manifest.json` (source commit, validation run, packaging run and asset hashes) and `SHA256SUMS`.
+3. It publishes a GitHub release tagged `v<version>`, with `release-manifest.json` (source commit, validation run, packaging run and asset hashes) and `SHA256SUMS`.
 4. The `marketplace` job downloads the published assets, runs `sha256sum --check`, confirms the version and pushes the marketplace content unchanged to `tayzer/tada-plugins`, with the same tag.
 
 Runs are serialised and queued, with up to 100 waiting, so every validated push is kept. Queue order is not guaranteed, so the marketplace job compares versions: an older build that finishes late receives its own tag in `tayzer/tada-plugins` but never replaces newer content on `main`.
 
 ## Versions
 
-Choose one SemVer bump before completing each pull request. TADA currently publishes alpha previews, so all three choices use the `-alpha.1` suffix.
+Choose one SemVer bump before completing each pull request. New releases use `MAJOR.MINOR.PATCH`.
 
-| Change | Bump | Example from `0.2.0-alpha.1` |
+| Change | Bump | Example from `0.2.0` |
 | --- | --- | --- |
-| Compatible fixes, docs or maintenance | Patch | `0.2.1-alpha.1` |
-| Compatible features | Minor | `0.3.0-alpha.1` |
-| Breaking release | Major | `1.0.0-alpha.1` |
+| Compatible fixes, docs or maintenance | Patch | `0.2.1` |
+| Compatible features | Minor | `0.3.0` |
+| Breaking release | Major | `1.0.0` |
 
 Run the version setter and commit its five changes in the PR. For example, to select the patch above:
 
 ```powershell
-pwsh -File scripts/Set-TadaVersion.ps1 -Version 0.2.1-alpha.1
+pwsh -File scripts/Set-TadaVersion.ps1 -Version 0.2.1
 pwsh -File scripts/Get-TadaReleaseVersion.ps1 -BaseCommit origin/main
 ```
 
-The required `PR checks` result includes the version check. GitHub tests the proposed merge against its current base and reports the three allowed choices when the selection is invalid. If another PR lands first, bring the branch up to date and reselect the bump against the new base. The package, plugin manifests and GitHub tag all use the committed version. Older published previews retain their original run-number versions.
+The required `PR checks` result includes the version check. GitHub tests the proposed merge against its current base and reports the three allowed choices when the selection is invalid. If another PR lands first, bring the branch up to date and reselect the bump against the new base. The package, plugin manifests and GitHub tag all use the committed version. Historical alpha releases retain their prerelease tags and original versions.
 
-Plugin setup automatically upgrades to a newer alpha in the same major/minor line. To adopt a new major or minor, follow the CLI install instructions in the matching [download bundle](../README.md#cli-only-no-agent-workflow) and run `dotnet tool update` in the existing repository with the matching version and bundle feed configuration. A newer CLI changes the tool manifest captured by the acceptance oracle. The next baseline needs human review and approval.
+Plugin setup automatically upgrades to a newer release in the same major/minor line, including upgrades from historical alpha builds. To adopt a new major or minor, follow the CLI install instructions in the matching [download bundle](../README.md#cli-only-no-agent-workflow) and run `dotnet tool update` in the existing repository with the matching version and bundle feed configuration. A newer CLI changes the tool manifest captured by the acceptance oracle. The next baseline needs human review and approval.
 
 ## One-time setup (done)
 
@@ -61,8 +61,8 @@ To use a different marketplace repository, set the repository variable `MARKETPL
 ## Republishing and recovery
 
 - **Main validation timed out or failed:** inspect the failed suite and its retained evidence. Rerun failed jobs when the cause is transient. A successful retry of the original push validation triggers publication. If the cause requires a change, merge a fix and validate the new commit.
-- **A release run failed after validation passed:** retry **Release** from `main` with the full commit SHA. The workflow finds successful push validation for that SHA and reads its committed version. For older commits it preserves the original run-number scheme. An existing release for the same SHA must have all expected assets and checksums. The marketplace job reuses and verifies those published assets.
-- **A bad build was published:** merge a fix. The next build supersedes it in every marketplace. Do not move or delete published tags; delete the GitHub prerelease only if its assets must not be downloaded.
+- **A release run failed after validation passed:** retry **Release** from `main` with the full commit SHA. The workflow finds successful push validation for that SHA and reads its committed version. For historical alpha commits it resolves the original run-number version and can retry the marketplace push for an existing release. An existing release for the same SHA must have all expected assets and checksums. The marketplace job reuses and verifies those published assets.
+- **A bad build was published:** merge a fix. The next build supersedes it in every marketplace. Do not move or delete published tags; delete the GitHub release only if its assets must not be downloaded.
 - **Pause publishing:** disable the **Release** workflow under **Actions**. Validation keeps running on `main`.
 
 ## Public directories

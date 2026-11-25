@@ -6,14 +6,20 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-# Automatically upgrade alpha builds within the same major/minor line.
+# Automatically upgrade TADA within the same major/minor line.
 # Older published builds can have a second numeric prerelease identifier.
-function Test-OlderAlpha([string]$Installed, [string]$Target) {
-    $pattern = '^((?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*))\.(0|[1-9][0-9]*)-alpha\.([1-9][0-9]*)(?:\.([1-9][0-9]*))?$'
+function Test-OlderTadaVersion([string]$Installed, [string]$Target) {
+    $pattern = '^((?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*))\.(0|[1-9][0-9]*)(?:(-alpha)\.([1-9][0-9]*)(?:\.([1-9][0-9]*))?)?$'
     $from = [regex]::Match($Installed, $pattern)
     $to = [regex]::Match($Target, $pattern)
     if (!$from.Success -or !$to.Success -or $from.Groups[1].Value -ne $to.Groups[1].Value) { return $false }
-    foreach ($index in 2..4) {
+    $fromPatch = [long]$from.Groups[2].Value
+    $toPatch = [long]$to.Groups[2].Value
+    if ($fromPatch -ne $toPatch) { return $fromPatch -lt $toPatch }
+    $fromIsAlpha = $from.Groups[3].Success
+    $toIsAlpha = $to.Groups[3].Success
+    if ($fromIsAlpha -ne $toIsAlpha) { return $fromIsAlpha }
+    foreach ($index in 4..5) {
         $fromPart = [long]$from.Groups[$index].Value
         $toPart = [long]$to.Groups[$index].Value
         if ($fromPart -ne $toPart) { return $fromPart -lt $toPart }
@@ -52,7 +58,7 @@ try {
             & $Dotnet tool install Tada.Cli --version $manifest.version --configfile $configuration | Out-Host
         }
         else {
-            if ($installed[0].version -ne $manifest.version -and !(Test-OlderAlpha $installed[0].version $manifest.version)) {
+            if ($installed[0].version -ne $manifest.version -and !(Test-OlderTadaVersion $installed[0].version $manifest.version)) {
                 throw "This project selects Tada.Cli $($installed[0].version). Select a compatible TADA plugin for that version."
             }
             & $Dotnet tool update Tada.Cli --version $manifest.version --configfile $configuration | Out-Host

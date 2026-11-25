@@ -1,8 +1,8 @@
 # First release checklist
 
-## Published previews
+## Published releases
 
-Every validated main build publishes a preview. Its release record identifies the exact source, completed validation run, CLI bundle, shared plugin, marketplace, checksums and source manifest. Use that record to select matching artifacts. Requester experience checks retain their recorded scope. [Current releases and validation links](https://github.com/tayzer/TADA/releases)
+Every validated main build publishes a release. Its release record identifies the exact source, completed validation run, CLI bundle, shared plugin, marketplace, checksums and source manifest. Use that record to select matching artifacts. Requester experience checks retain their recorded scope. [Current releases and validation links](https://github.com/tayzer/TADA/releases)
 
 The available workflow includes the optional plans, supporting MSTest evidence and named local services described in [change-aware multi-level verification](multi-level-verification.md). Installation instructions live in the [README](../README.md#install).
 

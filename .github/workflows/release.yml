@@ -1,6 +1,6 @@
 name: Release
 # Every push to main that passes the full "PR validation" workflow is published (ADR 0048):
-# a GitHub prerelease with checked assets, then the exact marketplace bytes in the plugin
+# a GitHub release with checked assets, then the exact marketplace bytes in the plugin
 # marketplace repository for Codex, Claude Code and Cursor.
 on:
   workflow_run:
@@ -85,7 +85,7 @@ jobs:
               $declared = (Get-Content -LiteralPath "plugins/tada/$manifest" -Raw | ConvertFrom-Json).version
               if ($declared -cne $base) { throw "plugins/tada/$manifest declares '$declared'. Expected '$base'." }
             }
-            $version = & ./scripts/Set-TadaVersion.ps1 -Version "$base.$env:BUILD_NUMBER"
+            $version = "$base.$env:BUILD_NUMBER"
           }
           "version=$version" >> $env:GITHUB_OUTPUT
           "tag=v$version" >> $env:GITHUB_OUTPUT
@@ -96,14 +96,18 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ steps.version.outputs.tag }}
         run: |
-          # A prerelease can reuse an existing Git tag only when it identifies the validated source.
+          # A release can reuse an existing Git tag only when it identifies the validated source.
           $tagged = git rev-parse --quiet --verify "refs/tags/$($env:TAG)^{commit}"
           if ($LASTEXITCODE -eq 0 -and $tagged -ne $env:SOURCE_SHA) {
             throw "Tag $env:TAG points to $tagged. Expected $env:SOURCE_SHA."
           }
           # A rerun after a failed marketplace push must not rebuild or overwrite published assets.
           gh release view $env:TAG --repo $env:GITHUB_REPOSITORY --json tagName 2>$null | Out-Null
-          if ($LASTEXITCODE) { "exists=false" >> $env:GITHUB_OUTPUT; exit 0 }
+          if ($LASTEXITCODE) {
+            if ($env:TAG.Contains('-')) { throw "Historical prerelease $env:TAG is not available for replay." }
+            "exists=false" >> $env:GITHUB_OUTPUT
+            exit 0
+          }
           $tagged = gh api "repos/$env:GITHUB_REPOSITORY/commits/$env:TAG" --jq .sha
           if ($LASTEXITCODE -or $tagged -ne $env:SOURCE_SHA) { throw "Release $env:TAG exists for commit $tagged, not $env:SOURCE_SHA." }
           $assets = @(gh release view $env:TAG --repo $env:GITHUB_REPOSITORY --json assets --jq '.assets[].name')
@@ -161,7 +165,7 @@ jobs:
             "$((Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant())  $($_.Name)"
           }
           [IO.File]::WriteAllLines("$release/SHA256SUMS", [string[]]$sums, [Text.UTF8Encoding]::new($false))
-      - name: Publish the GitHub prerelease
+      - name: Publish the GitHub release
         if: steps.existing.outputs.exists != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
@@ -177,7 +181,7 @@ jobs:
           $notesFile = Join-Path $env:RUNNER_TEMP 'notes.md'
           [IO.File]::WriteAllText($notesFile, $notes, [Text.UTF8Encoding]::new($false))
           $assets = @(Get-ChildItem .artifacts/release -File | ForEach-Object FullName)
-          gh release create "v$env:VERSION" --target $env:SOURCE_SHA --prerelease --title "TADA $env:VERSION" --notes-file $notesFile @assets
+          gh release create "v$env:VERSION" --target $env:SOURCE_SHA --title "TADA $env:VERSION" --notes-file $notesFile @assets
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
           Get-Content .artifacts/release/SHA256SUMS | ForEach-Object { "- ``$_``" } | Add-Content $env:GITHUB_STEP_SUMMARY
       - name: Retain release evidence

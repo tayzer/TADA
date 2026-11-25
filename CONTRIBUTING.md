@@ -66,7 +66,7 @@ Accepted records in [`docs/decisions/`](docs/decisions/) are historical. Do not 
 - Use a conventional prefix in commit messages and pull request titles: `feat:`, `fix:`, `docs:`, `test:`, `ci:` or `chore:`.
 - Describe what you changed, why, and which tests or controls you ran.
 - Update the README or docs when user-visible behaviour changes.
-- Select and commit a [SemVer bump](docs/releasing.md#versions) before completing the PR. CI checks that the selected version advances from current `main`. Every validated merge to `main` publishes that prerelease automatically.
+- Select and commit a [SemVer bump](docs/releasing.md#versions) before completing the PR. CI checks that the selected version advances from current `main`. Every validated merge to `main` publishes that release automatically.
 
 ## Licence
 

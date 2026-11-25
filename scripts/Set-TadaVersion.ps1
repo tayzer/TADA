@@ -1,7 +1,7 @@
 param([Parameter(Mandatory)][ValidatePattern('^\d+\.\d+\.\d+(?:-[0-9A-Za-z.]+)?$')][string]$Version)
 
 # Stamps one version into the CLI build and every plugin manifest, changing nothing else.
-# Release automation uses it in its own checkout to give each published build a unique version.
+# Use it to select the release version in a pull request.
 $ErrorActionPreference = 'Stop'
 $repository = Split-Path $PSScriptRoot -Parent
 $encoding = [Text.UTF8Encoding]::new($false)

@@ -12,7 +12,7 @@ try {
     try { [xml]$metadata = $reader.ReadToEnd() } finally { $reader.Dispose() }
     $id = [string]$metadata.package.metadata.id
     $version = [string]$metadata.package.metadata.version
-    if ($id -ne 'Tada.Cli' -or $version -notmatch '^0\.1\.0-alpha\.[0-9]+(?:\.[0-9]+)?$') { throw 'Expected a versioned TADA development alpha package.' }
+    if ($id -ne 'Tada.Cli' -or $version -notmatch '^(?:0|[1-9][0-9]*)(?:\.(?:0|[1-9][0-9]*)){2}(?:-alpha\.[1-9][0-9]*(?:\.[1-9][0-9]*)?)?$') { throw 'Expected a versioned TADA package.' }
     if ($metadata.package.metadata.license.InnerText -ne 'MIT' -or $metadata.package.metadata.license.type -ne 'expression') { throw 'Package must declare its MIT licence.' }
     $expectedDlls = @('Cucumber.Messages.dll','Gherkin.dll','Tada.BuildLogger.dll','Tada.Cli.dll','Tada.Core.dll','Tada.RuntimeProbe.dll','tada_native_observer.dll') | Sort-Object
     $dlls = @($archive.Entries | Where-Object FullName -match '\.dll$' | ForEach-Object { $_.Name } | Sort-Object)
@@ -32,9 +32,9 @@ Copy-Item -LiteralPath (Join-Path $repository 'LICENSE') -Destination (Join-Path
 $guide = @'
 # Try TADA
 
-This alpha provides local advisory L1 acceptance verification.
+TADA provides local advisory L1 acceptance verification.
 Prerequisites are Windows x64, a stable .NET 10.0 SDK and Git for Windows. No C compiler or model API is required.
-Workspace paths may contain spaces; commas and semicolons are unsupported in this alpha.
+Workspace paths may contain spaces; commas and semicolons are unsupported.
 
 Extract the ZIP. From its extracted directory, create a separate application repository:
 
@@ -79,7 +79,7 @@ Plugin installation and activation: https://github.com/tayzer/AAATDD/blob/main/d
 [IO.File]::WriteAllText((Join-Path $payload 'README.md'), $guide.Replace('VERSION_PLACEHOLDER', $version), [Text.UTF8Encoding]::new($false))
 $assets = @('LICENSE','README.md','THIRD_PARTY_NOTICES.md',"feed/$packageName")
 $files = @($assets | Sort-Object | ForEach-Object { [pscustomobject]@{path=$_;sha256=(Get-FileHash -LiteralPath (Join-Path $payload $_) -Algorithm SHA256).Hash.ToLowerInvariant()} })
-$manifest = [ordered]@{schemaVersion=1;status='Alpha; local advisory L1';name='TADA';version=$version;package="feed/$packageName";supportedPlatform='Windows x64';dotnetSdk='stable 10.0 SDK, minimum 10.0.100';assurance='L1-advisory';files=$files}
+$manifest = [ordered]@{schemaVersion=1;status='Local advisory L1';name='TADA';version=$version;package="feed/$packageName";supportedPlatform='Windows x64';dotnetSdk='stable 10.0 SDK, minimum 10.0.100';assurance='L1-advisory';files=$files}
 [IO.File]::WriteAllText((Join-Path $payload 'manifest.json'), ($manifest | ConvertTo-Json -Depth 8), [Text.UTF8Encoding]::new($false))
 $checksums = @($files | ForEach-Object { "$($_.sha256)  $($_.path)" }) + @((Get-FileHash -LiteralPath (Join-Path $payload 'manifest.json')).Hash.ToLowerInvariant() + '  manifest.json')
 [IO.File]::WriteAllLines((Join-Path $payload 'SHA256SUMS'), $checksums, [Text.UTF8Encoding]::new($false))

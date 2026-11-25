@@ -2,7 +2,7 @@
 
 **Test-Assured Development Assistance.** Your coding agent agrees *what success means* with you before it writes code, then proves the result against that agreement. TADA works with Codex, Claude Code and Cursor.
 
-> **Published preview** — Codex, Claude Code and Cursor can install from the TADA marketplace or matching release ZIP below. Every validated main build publishes a new preview. [Current release and downloads](https://github.com/tayzer/TADA/releases)
+> **Published releases** — Codex, Claude Code and Cursor can install from the TADA marketplace or matching release ZIP below. Every validated main build publishes a new release. [Current release and downloads](https://github.com/tayzer/TADA/releases)
 > **Legacy Codex migration** — If your plugin ID is `tada@tada-development`, follow the migration steps under [Update or uninstall](#update-or-uninstall) to use `tada@tada`.
 
 [![Release](https://img.shields.io/github/v/release/tayzer/TADA?include_prereleases&label=release)](https://github.com/tayzer/TADA/releases)
@@ -44,7 +44,7 @@ The demonstration uses explicitly labelled automated control approval. Your appl
 | Agent host | [Codex](https://developers.openai.com/codex), [Claude Code](https://code.claude.com/docs) or [Cursor](https://cursor.com/docs/plugins) |
 | Recorded execution | Reqnroll/MSTest acceptance and dedicated MSTest/MTP contract or fitness suites on .NET |
 
-TADA is an early alpha. The [releases page](https://github.com/tayzer/TADA/releases) lists the latest build and what changed. Results are **local advisory (L1)**. See [Limits](#limits).
+TADA is in early development. The [releases page](https://github.com/tayzer/TADA/releases) lists the latest build and what changed. Results are **local advisory (L1)**. See [Limits](#limits).
 
 | Host | TADA marketplace | Release ZIP | Public directory |
 | --- | --- | --- | --- |
@@ -128,8 +128,12 @@ if ($LASTEXITCODE -eq 0) { codex plugin add tada@tada }
 Use this to drive approvals and verification yourself, or from a different agent or tool.
 
 ```powershell
-# Every TADA release is a prerelease, so take the newest one rather than GitHub's "latest".
-$release = (Invoke-RestMethod 'https://api.github.com/repos/tayzer/TADA/releases?per_page=1')[0]
+$releases = 'https://api.github.com/repos/tayzer/TADA/releases'
+try { $release = Invoke-RestMethod "$releases/latest" }
+catch {
+    if ([int]$_.Exception.Response.StatusCode -ne 404) { throw }
+    $release = (Invoke-RestMethod "${releases}?per_page=1")[0]
+}
 $zipName = "TADA-$($release.tag_name.TrimStart('v'))-win-x64.zip"
 $download = New-Item -ItemType Directory -Force (Join-Path $HOME "Downloads\tada-$($release.tag_name)")
 foreach ($name in $zipName, 'SHA256SUMS') {

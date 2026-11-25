@@ -74,9 +74,8 @@ public static class TaskJournal
         var result = new List<BuildInput>();
         var sutProjects = inventory.Policy.BuildInputs == BuildInputs.Policy
             ? (builds ?? []).Where(build => build.Role == "sut").Select(build => repository.Resolve(build.Project)).ToHashSet(StringComparer.OrdinalIgnoreCase) : [];
-        foreach (var item in Read(report, run))
+        foreach (var item in Read(report, run).Where(item => item.Kind is "task-start" or "task-input"))
         {
-            if (item.Kind is not ("task-start" or "task-input")) continue;
             string role = sutProjects.Contains(item.Project) ? "sut" : report.Role;
             bool protectedProject = BuildInputs.IsProtectedProject(inventory, repository.Relative(item.Project), role);
             if (item.Kind == "task-start")
@@ -194,9 +193,8 @@ public static class TaskJournal
             if (report.Role is not ("harness" or "sut") || report.Operation is not ("restore" or "build") ||
                 !commands.Any(command => command.Arguments.Contains(argument) && command.Started == report.Started && command.Finished == report.Finished))
                 throw new TadaException("Task journal is not linked to its actual build command.");
-            foreach (var item in Read(report, run))
+            foreach (var item in Read(report, run).Where(item => item.Kind is "task-start" or "task-input"))
             {
-                if (item.Kind is not ("task-start" or "task-input")) continue;
                 string project = Path.GetRelativePath(evidence.RepositoryRoot, item.Project).Replace('\\', '/');
                 bool protectedProject = BuildInputs.IsProtectedProject(inventory, project, report.Role);
                 if (item.Kind == "task-start")

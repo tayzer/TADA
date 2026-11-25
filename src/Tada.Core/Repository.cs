@@ -75,7 +75,7 @@ public sealed partial class Repository
             if (File.Exists(Path.Combine(Root, input))) paths.Add(input);
         foreach (var selected in selectedRoots.Append(config.Execution.Project))
         {
-            string? ancestor = Path.GetDirectoryName(Path.Combine(Root, selected));
+            string? ancestor = Path.GetDirectoryName(Path.Join(Root, selected));
             while (ancestor != null && ancestor.StartsWith(Root + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
             {
                 foreach (var name in new[] { "Directory.Build.props", "Directory.Build.targets", "Directory.Packages.props" })

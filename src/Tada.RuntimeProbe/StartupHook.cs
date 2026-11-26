@@ -109,8 +109,13 @@ namespace Tada.RuntimeProbe
                 var type = frame.GetMethod()?.DeclaringType;
                 if (type == null || type.Assembly == typeof(Observer).Assembly || type.Assembly == typeof(object).Assembly)
                     continue;
-                return type.FullName == "Castle.DynamicProxy.ModuleScope" && CastleProxy.IsGenerator(type.Assembly.FullName) &&
-                    !string.IsNullOrEmpty(type.Assembly.Location) ? type.Assembly : null;
+
+                var assembly = type.Assembly;
+                var token = assembly.GetName().GetPublicKeyToken();
+                var tokenHex = token == null ? "" : Convert.ToHexString(token).ToLowerInvariant();
+                return CastleProxy.IsGenerator(assembly.FullName) &&
+                    tokenHex == "407dd0808d44fbdc" &&
+                    !string.IsNullOrEmpty(assembly.Location) ? assembly : null;
             }
             return null;
         }

@@ -105,20 +105,17 @@ namespace Tada.RuntimeProbe
 
         private static Assembly? FindCastleGenerator()
         {
-            foreach (var type in (new StackTrace().GetFrames() ?? Array.Empty<StackFrame>())
-                .Select(frame => frame.GetMethod()?.DeclaringType))
-            {
-                if (type == null || type.Assembly == typeof(Observer).Assembly || type.Assembly == typeof(object).Assembly)
-                    continue;
+            var generator = (new StackTrace().GetFrames() ?? Array.Empty<StackFrame>())
+                .Select(frame => frame.GetMethod()?.DeclaringType?.Assembly)
+                .OfType<Assembly>()
+                .FirstOrDefault(assembly => assembly != typeof(Observer).Assembly && assembly != typeof(object).Assembly);
+            if (generator == null) return null;
 
-                var assembly = type.Assembly;
-                var token = assembly.GetName().GetPublicKeyToken();
-                var tokenHex = token == null ? "" : Convert.ToHexString(token).ToLowerInvariant();
-                return CastleProxy.IsGenerator(assembly.FullName) &&
-                    tokenHex == "407dd0808d44fbdc" &&
-                    !string.IsNullOrEmpty(assembly.Location) ? assembly : null;
-            }
-            return null;
+            var token = generator.GetName().GetPublicKeyToken();
+            var tokenHex = token == null ? "" : Convert.ToHexString(token).ToLowerInvariant();
+            return CastleProxy.IsGenerator(generator.FullName) &&
+                tokenHex == "407dd0808d44fbdc" &&
+                !string.IsNullOrEmpty(generator.Location) ? generator : null;
         }
 
         private static void Snapshot(bool final = false)

@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -21,6 +22,8 @@ namespace Tada.RuntimeProbe
         public const string Policy = "dotnet-loader-observation-v2";
         private static readonly object gate = new();
         private static readonly Dictionary<string, string> observed = new(StringComparer.OrdinalIgnoreCase);
+        private static readonly ConditionalWeakTable<Assembly, object> observedDynamic = new();
+        private static readonly object dynamicMarker = new();
         private static StreamWriter? writer;
         private static Timer? timer;
         private static string runId = "", directory = "";
@@ -40,13 +43,14 @@ namespace Tada.RuntimeProbe
             // event must not recursively load serializer/cryptography dependencies under that callback.
             _ = JsonSerializer.Serialize(new Observation(1, runId, 0, 0, 0, DateTimeOffset.UtcNow, "warmup", "", "", ""), json);
             _ = SHA256.HashData(Array.Empty<byte>());
+            _ = FindCastleGenerator();
             using var process = Process.GetCurrentProcess();
             pid = process.Id;
             started = process.StartTime.ToUniversalTime().Ticks;
             writer = new StreamWriter(new FileStream(Path.Combine(directory, $"{pid}-{Guid.NewGuid():N}.ndjson"),
                 FileMode.CreateNew, FileAccess.Write, FileShare.Read), new UTF8Encoding(false)) { AutoFlush = true };
             Write("start", Assembly.GetEntryAssembly()?.Location ?? "", "", Policy);
-            AppDomain.CurrentDomain.AssemblyLoad += (_, args) => RecordAssembly(args.LoadedAssembly);
+            AppDomain.CurrentDomain.AssemblyLoad += (_, args) => RecordAssembly(args.LoadedAssembly, fromLoadEvent: true);
             AppDomain.CurrentDomain.ProcessExit += (_, _) => Finish("exit");
             busy = true;
             try
@@ -62,7 +66,7 @@ namespace Tada.RuntimeProbe
             timer = new Timer(_ => Tick(), null, 50, 50);
         }
 
-        private static void RecordAssembly(Assembly assembly)
+        private static void RecordAssembly(Assembly assembly, bool fromLoadEvent = false, bool finalSnapshot = false)
         {
             lock (gate)
             {
@@ -71,7 +75,7 @@ namespace Tada.RuntimeProbe
                 try
                 {
                     if (assembly.IsDynamic)
-                        WriteOnce("dynamic-managed", assembly.FullName ?? "unnamed", "", assembly.FullName ?? "");
+                        RecordDynamicAssembly(assembly, fromLoadEvent, finalSnapshot);
                     else if (string.IsNullOrEmpty(assembly.Location))
                         WriteOnce("unlocated-managed", assembly.FullName ?? "unnamed", "", assembly.FullName ?? "");
                     else RecordFile("managed", assembly.Location, assembly.FullName ?? "");
@@ -81,9 +85,39 @@ namespace Tada.RuntimeProbe
             }
         }
 
-        private static void Snapshot()
+        private static void RecordDynamicAssembly(Assembly assembly, bool fromLoadEvent, bool finalSnapshot)
         {
-            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies()) RecordAssembly(assembly);
+            string identity = assembly.FullName ?? "unnamed";
+            bool castleProxy = CastleProxy.IsProxy(identity);
+            // A polling snapshot may see a proxy before its load callback acquires the lock.
+            // Only the load callback can identify the emitter. The final snapshot catches missing events.
+            if (castleProxy && !fromLoadEvent && !finalSnapshot) return;
+            if (!observedDynamic.TryAdd(assembly, dynamicMarker)) return;
+            if (castleProxy && fromLoadEvent && FindCastleGenerator() is { } generator)
+            {
+                string path = Path.GetFullPath(generator.Location);
+                RecordFile("managed", path, generator.FullName!);
+                Write(CastleProxy.Kind, path, observed["managed:" + path], identity);
+            }
+            else Write("dynamic-managed", identity, "", identity);
+        }
+
+        private static Assembly? FindCastleGenerator()
+        {
+            foreach (var frame in new StackTrace().GetFrames())
+            {
+                var type = frame.GetMethod()?.DeclaringType;
+                if (type == null || type.Assembly == typeof(Observer).Assembly || type.Assembly == typeof(object).Assembly)
+                    continue;
+                return type.FullName == "Castle.DynamicProxy.ModuleScope" && CastleProxy.IsGenerator(type.Assembly.FullName) &&
+                    !string.IsNullOrEmpty(type.Assembly.Location) ? type.Assembly : null;
+            }
+            return null;
+        }
+
+        private static void Snapshot(bool final = false)
+        {
+            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies()) RecordAssembly(assembly, finalSnapshot: final);
             lock (gate)
             {
                 if (closed || busy) return;
@@ -138,7 +172,7 @@ namespace Tada.RuntimeProbe
                     finally { busy = false; }
                     nativeStarted = false;
                 }
-                Snapshot();
+                Snapshot(final: true);
                 Write(kind, "", "", failed ? "incomplete" : "complete");
                 closed = true;
                 timer?.Dispose();

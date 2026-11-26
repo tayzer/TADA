@@ -54,6 +54,9 @@ $controlProject = Join-Path $workspace 'Acceptance/Orders.Acceptance.csproj'
 $controlXml = @'
   <ItemGroup>
     <ProjectReference Include="BuildInputControl/Bridge/InputBridge.csproj" />
+    <PackageReference Include="AutoFixture" Version="[4.18.1]" />
+    <PackageReference Include="AutoFixture.AutoMoq" Version="[4.18.1]" />
+    <PackageReference Include="Moq" Version="[4.20.72]" />
     <Content Include="BuildInputControl/settings.json" />
   </ItemGroup>
   <Target Name="ConsumeContentControl" AfterTargets="Build">
@@ -61,6 +64,37 @@ $controlXml = @'
   </Target>
 '@
 [IO.File]::WriteAllText($controlProject, [IO.File]::ReadAllText($controlProject).Replace('</Project>', $controlXml + '</Project>'))
+$fixtureControl = @'
+using AutoFixture;
+using AutoFixture.AutoMoq;
+using Moq;
+using Reqnroll;
+
+[Binding]
+public sealed class FixtureRuntimeControl
+{
+    [BeforeTestRun]
+    public static void ExerciseFixturesAndMocks()
+    {
+        var mock = new Mock<IFormatProvider>();
+        mock.Setup(provider => provider.GetFormat(typeof(string))).Returns("proxy-control");
+        if (!Equals(mock.Object.GetFormat(typeof(string)), "proxy-control"))
+            throw new InvalidOperationException("The Moq control did not execute through a proxy.");
+
+        var value = new Fixture().Create<string>();
+        if (string.IsNullOrWhiteSpace(value))
+            throw new InvalidOperationException("AutoFixture did not create a specimen.");
+
+        var fixtures = new Fixture().Customize(new AutoMoqCustomization());
+        var frozen = fixtures.Freeze<Mock<IFormatProvider>>();
+        frozen.Setup(provider => provider.GetFormat(typeof(string))).Returns(value);
+        if (!Equals(fixtures.Create<IFormatProvider>().GetFormat(typeof(string)), value))
+            throw new InvalidOperationException("AutoFixture.AutoMoq did not use the configured mock.");
+    }
+}
+'@
+$fixtureSource = Join-Path $workspace 'Acceptance/FixtureRuntimeControl.cs'
+[IO.File]::WriteAllText($fixtureSource, $fixtureControl)
 $restoreArguments = @('restore', $controlProject, '--use-lock-file', '--force-evaluate',
     '--configfile', (Join-Path $workspace 'NuGet.Config'), '-p:NuGetAudit=false',
     '-p:UseArtifactsOutput=true', "-p:ArtifactsPath=$workspace/.tada/control-restore")
@@ -83,9 +117,23 @@ Check 'correct Orders' 0 $positive
 $runId = $positive.Result.runId
 Check 'offline verification' 0 (Invoke-Tada @('verify','--run',$runId))
 $positiveDirectory = Join-Path $workspace ".tada/runs/$runId"
-$nativeInputs = @(Get-ChildItem (Join-Path $positiveDirectory 'runtime') -Filter '*.ndjson' -File | ForEach-Object {
-    [IO.File]::ReadLines($_.FullName) | ForEach-Object { $_ | ConvertFrom-Json } | Where-Object { $_.kind -eq 'native' -and $_.path -match '[/\\]e_sqlite3\.dll$' }
+$castle = Join-Path $positiveDirectory 'harness/Castle.Core.dll'
+$castleDigest = 'sha256:' + (Get-FileHash -LiteralPath $castle -Algorithm SHA256).Hash.ToLowerInvariant()
+$runtimeInputs = @(Get-ChildItem (Join-Path $positiveDirectory 'runtime') -Filter '*.ndjson' -File | ForEach-Object {
+    [IO.File]::ReadLines($_.FullName) | ForEach-Object { $_ | ConvertFrom-Json }
 })
+$proxyInputs = @($runtimeInputs | Where-Object {
+    $_.kind -eq 'castle-proxy' -and $_.identity -like 'DynamicProxyGenAssembly2,*' -and $_.path -eq $castle -and $_.digest -eq $castleDigest
+})
+if ($proxyInputs.Count -lt 1) { throw 'The Moq proxy has no retained Castle.Core generator evidence.' }
+foreach ($assembly in @('AutoFixture.dll', 'AutoFixture.AutoMoq.dll', 'Moq.dll')) {
+    $path = Join-Path $positiveDirectory "harness/$assembly"
+    if (!($runtimeInputs | Where-Object { $_.kind -eq 'managed' -and $_.path -eq $path })) {
+        throw "The observer did not record $assembly in the harness."
+    }
+}
+Check 'AutoFixture and Moq verify with captured proxy generator' 0 @{Code=0;Result=@{digest=$castleDigest;observations=$proxyInputs.Count}}
+$nativeInputs = @($runtimeInputs | Where-Object { $_.kind -eq 'native' -and $_.path -match '[/\\]e_sqlite3\.dll$' })
 if ($nativeInputs.Count -lt 3) { throw 'Observer did not identify native SQLite in the harness and both API processes.' }
 Check 'real native SQLite module identities captured' 0 @{Code=0;Result=@{observations=$nativeInputs.Count;processIds=@($nativeInputs.processId | Select-Object -Unique)}}
 $positiveRecord = Get-Content -Raw (Join-Path $positiveDirectory 'run.json') | ConvertFrom-Json
@@ -101,6 +149,26 @@ $afterReport = $harnessInputs.reports.PSObject.Properties.Name | Where-Object { 
 $rawAfter = Get-Content -Raw (Join-Path $positiveDirectory $afterReport) | ConvertFrom-Json
 if (@($rawAfter.Items.Content | Where-Object { $_.FullPath -eq $contentControl }).Count -ne 0) { throw 'Content control did not leave the evaluated item list.' }
 Check 'consumed content retains its verified file identity' 0 @{ Code=0; Result=@{ path=$contentControl } }
+
+# A same-named assembly emitted by the harness must stay unverifiable even after a real proxy loaded.
+try {
+    $lookalike = $fixtureControl.Insert($fixtureControl.LastIndexOf('    }', [StringComparison]::Ordinal), @'
+        System.Reflection.Emit.AssemblyBuilder.DefineDynamicAssembly(
+            new System.Reflection.AssemblyName("DynamicProxyGenAssembly2"), System.Reflection.Emit.AssemblyBuilderAccess.Run);
+
+'@)
+    [IO.File]::WriteAllText($fixtureSource, $lookalike)
+    $lookalikeBaseline = (Invoke-Tada @('baseline','prepare')).Result.baseline
+    $lookalikeReview = (Invoke-Tada @('baseline','review','--baseline',$lookalikeBaseline)).Result.review.id
+    Check 'same-named dynamic assembly control approval' 0 (Invoke-Tada @('baseline','approve','--review',$lookalikeReview,'--by','automated proxy provenance control; not human acceptance'))
+    $lookalikeRun = Invoke-Tada @('run','--baseline',$lookalikeBaseline,'--dotnet',$Dotnet)
+    Check 'same-named dynamic assembly blocks pass' 2 $lookalikeRun
+    if (!($lookalikeRun.Result.reasons | Where-Object { $_.detail.Contains('Unverifiable runtime input: dynamic-managed: DynamicProxyGenAssembly2,') })) {
+        throw 'The dynamic lookalike was not rejected by the runtime boundary.'
+    }
+    $lookalikeRecord = Get-Content -Raw (Join-Path $workspace ".tada/runs/$($lookalikeRun.Result.runId)/run.json") | ConvertFrom-Json
+    if ($lookalikeRecord.commands[-1].exitCode -ne 0) { throw 'The dynamic lookalike control did not leave native test execution successful.' }
+} finally { [IO.File]::WriteAllText($fixtureSource, $fixtureControl) }
 
 # Reviewed projects must not pull unselected oracle source/imports into an otherwise passing suite.
 $harnessProject = Join-Path $workspace 'Acceptance/Orders.Acceptance.csproj'

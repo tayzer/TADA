@@ -42,6 +42,18 @@ public sealed class RuntimeInputTests
     }
 
     [TestMethod]
+    [DataRow("dynamic-managed", "DynamicProxyGenAssembly2, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null")]
+    [DataRow("dynamic-managed", "OtherUnsignedAssembly, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null")]
+    [DataRow(CastleProxy.Kind, "DynamicProxyGenAssembly2, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null")]
+    public void DynamicAssemblyWithoutCapturedGeneratorCannotPass(string kind, string identity)
+    {
+        using var fixture = new HistoryTests.HistoryFixture();
+        string id = fixture.Run(0);
+        Rewrite(fixture.Directory(id), items => [.. items[..^1], items[1] with { Kind = kind, Identity = identity }, items[^1]]);
+        AssertBlocked(fixture, id, $"Unverifiable runtime input: {kind}: {identity}");
+    }
+
+    [TestMethod]
     public void UnidentifiedLoadedFileCannotPassThroughProducerClaims()
     {
         using var fixture = new HistoryTests.HistoryFixture();

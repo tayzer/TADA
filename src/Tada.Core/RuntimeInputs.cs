@@ -102,6 +102,7 @@ public static class RuntimeInputs
             bool sawEntry = false, sawProbe = false;
             bool loaderStarted = false, loaderStopped = false;
             int nativeLoads = 0;
+            var castleGenerators = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             foreach (string line in File.ReadLines(path))
             {
                 using var document = JsonDocument.Parse(line);
@@ -149,8 +150,13 @@ public static class RuntimeInputs
                         NoLinks(item.Path);
                         if (CanonicalJson.FileDigest(item.Path) != item.Digest) throw new TadaException($"Loaded runtime input changed: {item.Path}");
                     }
+                    if (category == "build-output" && item.Kind == "managed" && CastleProxy.IsGenerator(item.Identity))
+                        castleGenerators[item.Path] = item.Digest;
                     result.Add(new LoadedInput(item.ProcessId, item.Kind, item.Path, item.Digest, category));
                 }
+                else if (item.Kind == CastleProxy.Kind && CastleProxy.IsProxy(item.Identity) &&
+                    castleGenerators.TryGetValue(item.Path, out string? generatorDigest) && generatorDigest == item.Digest)
+                    result.Add(new LoadedInput(item.ProcessId, item.Kind, item.Path, item.Digest, "castle-generated"));
                 else if (item.Kind == "dynamic-managed" && item.Identity.StartsWith("Anonymously Hosted DynamicMethods Assembly,", StringComparison.Ordinal))
                     result.Add(new LoadedInput(item.ProcessId, item.Kind, item.Path, "", "clr-generated"));
                 else if (item.Kind is not ("start" or "exit" or "checkpoint"))

@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
@@ -104,9 +105,9 @@ namespace Tada.RuntimeProbe
 
         private static Assembly? FindCastleGenerator()
         {
-            foreach (var frame in new StackTrace().GetFrames())
+            foreach (var type in (new StackTrace().GetFrames() ?? Array.Empty<StackFrame>())
+                .Select(frame => frame.GetMethod()?.DeclaringType))
             {
-                var type = frame.GetMethod()?.DeclaringType;
                 if (type == null || type.Assembly == typeof(Observer).Assembly || type.Assembly == typeof(object).Assembly)
                     continue;
 

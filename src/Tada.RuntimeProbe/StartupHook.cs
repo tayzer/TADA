@@ -198,10 +198,12 @@ namespace Tada.RuntimeProbe
 
         private static void RecordFile(string kind, string path, string identity)
         {
-            path = Path.GetFullPath(path);
-            string key = kind + ":" + path;
-            if (kind != "native-loaded" && observed.ContainsKey(key)) return;
-            using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+            bool devicePath = kind is "native" or "native-loaded" && NativeModulePath.IsDevicePath(path);
+            string openPath = devicePath ? NativeModulePath.ToWin32DevicePath(path) : Path.GetFullPath(path);
+            if (!devicePath && kind != "native-loaded" && observed.ContainsKey(kind + ":" + openPath)) return;
+            using var stream = new FileStream(openPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+            path = devicePath ? NativeModulePath.GetDosPath(stream) : openPath;
+            if (devicePath && kind != "native-loaded" && observed.ContainsKey(kind + ":" + path)) return;
             string digest = "sha256:" + Convert.ToHexStringLower(SHA256.HashData(stream));
             if (kind == "native-loaded") Write(kind, path, digest, identity);
             else WriteOnce(kind, path, digest, identity);

@@ -1,7 +1,9 @@
 using System.Diagnostics;
 using System.Reflection.PortableExecutable;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 using System.Text;
+using Microsoft.Win32.SafeHandles;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Tada.RuntimeProbe;
 
@@ -11,6 +13,34 @@ namespace Tada.Tests;
 public sealed class NativeLoaderTests
 {
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate int Value();
+
+    [TestMethod]
+    [DataRow(true)]
+    [DataRow(false)]
+    public void NtDeviceModulePathResolvesToTheFileBeingHashed(bool systemModule)
+    {
+        string path = systemModule
+            ? Path.Combine(Environment.SystemDirectory, "kernel32.dll")
+            : Path.Combine(AppContext.BaseDirectory, "Fixtures", "tada_fixture.dll");
+        using var original = File.OpenHandle(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+        const uint volumeNameNt = 2;
+        var buffer = new StringBuilder(2048);
+        uint length = GetFinalPathNameByHandleW(original, buffer, (uint)buffer.Capacity, volumeNameNt);
+        Assert.IsTrue(length > 0 && length < buffer.Capacity, "Could not obtain the file's NT device path.");
+        string ntPath = buffer.ToString();
+        Assert.IsTrue(ntPath.StartsWith(@"\Device\", StringComparison.OrdinalIgnoreCase));
+        int volumeEnd = ntPath.IndexOf('\\', @"\Device\".Length);
+        Assert.IsTrue(volumeEnd >= 0);
+        // Windows hotpatch notifications can use lowercase device names and a doubled separator.
+        string reported = ntPath[..volumeEnd].ToLowerInvariant() + "\\" + ntPath[volumeEnd..];
+
+        Assert.IsTrue(NativeModulePath.IsDevicePath(reported));
+        Assert.IsFalse(NativeModulePath.IsDevicePath(path));
+        using var module = new FileStream(NativeModulePath.ToWin32DevicePath(reported), FileMode.Open, FileAccess.Read,
+            FileShare.ReadWrite | FileShare.Delete);
+        Assert.AreEqual(path, NativeModulePath.GetDosPath(module), ignoreCase: true);
+        Assert.AreEqual(CanonicalJson.FileDigest(path), "sha256:" + Convert.ToHexStringLower(SHA256.HashData(module)));
+    }
 
     [TestMethod]
     public void NativeLoadNotificationSurvivesImmediateUnloadBeforePolling()
@@ -74,4 +104,7 @@ public sealed class NativeLoaderTests
         }
         CollectionAssert.AreEqual(new[] { "KERNEL32.DLL" }, imports.ToArray());
     }
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, ExactSpelling = true, SetLastError = true)]
+    private static extern uint GetFinalPathNameByHandleW(SafeFileHandle file, StringBuilder path, uint capacity, uint flags);
 }

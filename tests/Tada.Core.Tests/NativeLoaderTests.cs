@@ -3,7 +3,6 @@ using System.Reflection.PortableExecutable;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
-using Microsoft.Win32.SafeHandles;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Tada.RuntimeProbe;
 
@@ -20,14 +19,10 @@ public sealed class NativeLoaderTests
     public void NtDeviceModulePathResolvesToTheFileBeingHashed(bool systemModule)
     {
         string path = systemModule
-            ? Path.Combine(Environment.SystemDirectory, "kernel32.dll")
-            : Path.Combine(AppContext.BaseDirectory, "Fixtures", "tada_fixture.dll");
-        using var original = File.OpenHandle(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
-        const uint volumeNameNt = 2;
-        var buffer = new StringBuilder(2048);
-        uint length = GetFinalPathNameByHandleW(original, buffer, (uint)buffer.Capacity, volumeNameNt);
-        Assert.IsTrue(length > 0 && length < buffer.Capacity, "Could not obtain the file's NT device path.");
-        string ntPath = buffer.ToString();
+            ? Path.Join(Environment.SystemDirectory, "kernel32.dll")
+            : Path.Join(AppContext.BaseDirectory, "Fixtures", "tada_fixture.dll");
+        using var original = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+        string ntPath = NativeModulePath.GetPathByHandle(original, NativeModulePath.VolumeName.Nt);
         Assert.IsTrue(ntPath.StartsWith(@"\Device\", StringComparison.OrdinalIgnoreCase));
         int volumeEnd = ntPath.IndexOf('\\', @"\Device\".Length);
         Assert.IsTrue(volumeEnd >= 0);
@@ -104,7 +99,4 @@ public sealed class NativeLoaderTests
         }
         CollectionAssert.AreEqual(new[] { "KERNEL32.DLL" }, imports.ToArray());
     }
-
-    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, ExactSpelling = true, SetLastError = true)]
-    private static extern uint GetFinalPathNameByHandleW(SafeFileHandle file, StringBuilder path, uint capacity, uint flags);
 }

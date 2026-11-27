@@ -3,23 +3,17 @@ param([Parameter(Mandatory)][string]$Package)
 $ErrorActionPreference = 'Stop'
 $repository = Split-Path $PSScriptRoot -Parent
 $source = Join-Path $repository 'plugins/tada'
+$version = & "$PSScriptRoot/Get-TadaReleaseVersion.ps1"
 $marketplaceName = 'tada'
 $marketplaceDescription = 'Test-Assured Development Assistance plugins for Codex, Claude Code and Cursor.'
 $manifest = Get-Content -LiteralPath (Join-Path $source 'plugin.json') -Raw | ConvertFrom-Json
-# Every host reads its own manifest from the same shared plugin folder.
-foreach ($hostManifest in @('.codex-plugin/plugin.json', '.claude-plugin/plugin.json', '.cursor-plugin/plugin.json')) {
-    $other = Get-Content -LiteralPath (Join-Path $source $hostManifest) -Raw | ConvertFrom-Json
-    if ($other.name -ne $manifest.name -or $other.version -ne $manifest.version) {
-        throw "$hostManifest must use the plugin name and version from plugin.json."
-    }
-}
 $packagePath = (Resolve-Path -LiteralPath $Package).Path
 $packageZip = [IO.Compression.ZipFile]::OpenRead($packagePath)
 try {
     $reader = [IO.StreamReader]::new($packageZip.GetEntry('Tada.Cli.nuspec').Open())
     try { [xml]$metadata = $reader.ReadToEnd() } finally { $reader.Dispose() }
-    if ($metadata.package.metadata.id -ne 'Tada.Cli' -or $metadata.package.metadata.version -ne $manifest.version) {
-        throw 'Plugin and verifier package identities must match.'
+    if ($metadata.package.metadata.id -ne 'Tada.Cli' -or $metadata.package.metadata.version -cne $version) {
+        throw "Expected verifier package Tada.Cli $version, found $($metadata.package.metadata.id) $($metadata.package.metadata.version)."
     }
 }
 finally { $packageZip.Dispose() }
@@ -29,8 +23,18 @@ $marketplaceRoot = Join-Path $output 'marketplace'
 $plugin = Join-Path $marketplaceRoot 'tada'
 New-Item -ItemType Directory -Path $marketplaceRoot -Force | Out-Null
 Copy-Item -LiteralPath $source -Destination $plugin -Recurse
+# Each host reads its own manifest. Stamp the copies shared by both archives.
+foreach ($relativePath in @('plugin.json', '.codex-plugin/plugin.json', '.claude-plugin/plugin.json', '.cursor-plugin/plugin.json')) {
+    $path = Join-Path $plugin $relativePath
+    $stagedManifest = Get-Content -LiteralPath $path -Raw | ConvertFrom-Json -AsHashtable
+    if ($stagedManifest.name -ne $manifest.name) {
+        throw "$relativePath must use the plugin name from plugin.json."
+    }
+    $stagedManifest['version'] = $version
+    $stagedManifest | ConvertTo-Json -Depth 30 | Set-Content -LiteralPath $path -Encoding utf8
+}
 New-Item -ItemType Directory -Path (Join-Path $plugin 'feed') | Out-Null
-Copy-Item -LiteralPath $packagePath -Destination (Join-Path $plugin "feed/Tada.Cli.$($manifest.version).nupkg")
+Copy-Item -LiteralPath $packagePath -Destination (Join-Path $plugin "feed/Tada.Cli.$version.nupkg")
 Copy-Item -LiteralPath (Join-Path $repository 'LICENSE') -Destination $plugin
 Copy-Item -LiteralPath (Join-Path $repository 'THIRD_PARTY_NOTICES.md') -Destination $plugin
 $catalogDirectory = Join-Path $marketplaceRoot '.agents/plugins'
@@ -73,16 +77,16 @@ $cursorCatalog | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $
 
 # The marketplace directory is published as the content of the Git marketplace repository.
 Copy-Item -LiteralPath (Join-Path $repository 'LICENSE') -Destination $marketplaceRoot
-$marketplaceGuide = (Get-Content -LiteralPath (Join-Path $PSScriptRoot 'marketplace/README.md') -Raw).Replace('VERSION_PLACEHOLDER', $manifest.version)
+$marketplaceGuide = (Get-Content -LiteralPath (Join-Path $PSScriptRoot 'marketplace/README.md') -Raw).Replace('VERSION_PLACEHOLDER', $version)
 [IO.File]::WriteAllText((Join-Path $marketplaceRoot 'README.md'), $marketplaceGuide, [Text.UTF8Encoding]::new($false))
 [IO.File]::WriteAllText((Join-Path $marketplaceRoot '.gitattributes'), "# Keep packaged plugin bytes identical to the audited release.`n* -text`n", [Text.UTF8Encoding]::new($false))
 
-$archive = Join-Path $output "TADA-plugin-$($manifest.version).zip"
+$archive = Join-Path $output "TADA-plugin-$version.zip"
 [IO.Compression.ZipFile]::CreateFromDirectory($plugin, $archive)
-$marketplaceArchive = Join-Path $output "TADA-marketplace-$($manifest.version).zip"
+$marketplaceArchive = Join-Path $output "TADA-marketplace-$version.zip"
 [IO.Compression.ZipFile]::CreateFromDirectory($marketplaceRoot, $marketplaceArchive)
 $result = [pscustomobject]@{
-    version = $manifest.version
+    version = $version
     sourceCommit = [string]$metadata.package.metadata.repository.commit
     marketplace = $marketplaceName
     archive = $archive

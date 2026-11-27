@@ -17,8 +17,8 @@ flowchart LR
 
 [`release.yml`](../.github/workflows/release.yml) starts when the **PR validation** workflow completes successfully for a push to `main`. It never runs for pull requests, merge-queue runs or failed validation.
 
-1. It checks out the validated commit and confirms that the commit is on `main`. It reads the exact SemVer from `Directory.Build.props` and checks that all four plugin manifests agree.
-2. It packs the CLI, then builds and checks the plugin, the marketplace and the download bundle with the same controls as CI.
+1. It checks out the validated commit, confirms that the commit is on `main` and reads the exact SemVer from `Directory.Build.props`.
+2. It packs the CLI and verifies the package version before stamping the four staged plugin manifests. It checks the plugin, marketplace and download bundle with the same controls as CI.
 3. It publishes a GitHub release tagged `v<version>`, with `release-manifest.json` (source commit, validation run, packaging run and asset hashes) and `SHA256SUMS`.
 4. The `marketplace` job downloads the published assets, runs `sha256sum --check`, confirms the version and pushes the marketplace content unchanged to `tayzer/tada-plugins`, with the same tag.
 
@@ -34,14 +34,14 @@ Choose one SemVer bump before completing each pull request. New releases use `MA
 | Compatible features | Minor | `0.3.0` |
 | Breaking release | Major | `1.0.0` |
 
-Run the version setter and commit its five changes in the PR. For example, to select the patch above:
+Run the version setter and commit the change to `Directory.Build.props`. The command below selects a patch from your local `origin/main`.
 
 ```powershell
-pwsh -File scripts/Set-TadaVersion.ps1 -Version 0.2.1
+pwsh -File scripts/Set-TadaVersion.ps1 -Bump patch
 pwsh -File scripts/Get-TadaReleaseVersion.ps1 -BaseCommit origin/main
 ```
 
-The required `PR checks` result includes the version check. GitHub tests the proposed merge against its current base and reports the three allowed choices when the selection is invalid. If another PR lands first, bring the branch up to date and reselect the bump against the new base. The package, plugin manifests and GitHub tag all use the committed version. Historical alpha releases retain their prerelease tags and original versions.
+The required `PR checks` result includes the version check. GitHub tests the proposed merge against its current base and reports the three allowed choices when the selection is invalid. If another PR lands first, fetch and bring the branch up to date, then rerun the setter with your chosen bump. The CLI package, generated plugin manifests and GitHub tag all use the committed version. Historical alpha releases retain their prerelease tags and original versions.
 
 Plugin setup automatically upgrades to a newer release in the same major/minor line, including upgrades from historical alpha builds. To adopt a new major or minor, follow the CLI install instructions in the matching [download bundle](../README.md#cli-only-no-agent-workflow) and run `dotnet tool update` in the existing repository with the matching version and bundle feed configuration. A newer CLI changes the tool manifest captured by the acceptance oracle. The next baseline needs human review and approval.
 

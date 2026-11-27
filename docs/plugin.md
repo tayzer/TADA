@@ -5,7 +5,7 @@
 
 TADA's plugin supplies the agent workflow. The `tada` CLI supplies project preparation, immutable baseline review and evidence verification. The CLI remains usable by other coding agents and local tooling.
 
-The local plugin lives in `plugins/tada`. Codex, Claude Code and Cursor share its skill, setup helper and matching verifier feed. The root `plugin.json` supplies the portable Codex manifest, `.claude-plugin/plugin.json` supplies Claude Code metadata and `.cursor-plugin/plugin.json` supplies Cursor metadata. Packaging refuses mismatched names or versions. Each host's plugin controls govern ordinary-request workflow selection. See the [Codex plugin documentation](https://developers.openai.com/plugins/build/plugins), [Claude Code manifest reference](https://code.claude.com/docs/en/plugins-reference) and [Cursor plugin reference](https://cursor.com/docs/plugins/building).
+The plugin source lives in `plugins/tada`. The root `plugin.json` supplies the portable Codex manifest. The host-specific directories supply metadata for Codex, Claude Code and Cursor. Packaging checks that the manifest names agree and the verifier package matches the version in `Directory.Build.props`. It adds that version to all four staged manifests and bundles the shared skill, setup helper and verifier feed. Each host's plugin controls govern ordinary-request workflow selection. See the [Codex plugin documentation](https://developers.openai.com/plugins/build/plugins), [Claude Code manifest reference](https://code.claude.com/docs/en/plugins-reference) and [Cursor plugin reference](https://cursor.com/docs/plugins/building).
 
 ## Prepare the local plugin
 
@@ -19,7 +19,7 @@ $plugin = & ./scripts/New-TadaPlugin.ps1 -Package $package
 pwsh -File scripts/Test-TadaPlugin.ps1 -PluginRoot $plugin.pluginRoot -Archive $plugin.archive
 ```
 
-The output contains a standalone plugin ZIP and a local marketplace directory. The marketplace directory includes `.agents/plugins/marketplace.json` for Codex, `.claude-plugin/marketplace.json` for Claude Code, `.cursor-plugin/marketplace.json` for Cursor, and one shared packaged `tada` folder. The plugin ZIP contains one plugin at its root, including all three plugin manifests, Codex and Claude Code marketplace catalogs that resolve the ZIP root, an installation README, the skill, setup helper, verifier feed and licence notices. Validation extracts that exact ZIP and prepares a disposable application from the extracted plugin.
+The output contains a standalone plugin ZIP and a local marketplace directory. The marketplace directory includes `.agents/plugins/marketplace.json` for Codex, `.claude-plugin/marketplace.json` for Claude Code, `.cursor-plugin/marketplace.json` for Cursor, and one shared packaged `tada` folder. The plugin ZIP contains one plugin at its root, including all four plugin manifests, Codex and Claude Code marketplace catalogs that resolve the ZIP root, an installation README, the skill, setup helper, verifier feed and licence notices. Validation extracts that exact ZIP and prepares a disposable application from the extracted plugin.
 
 The marketplace directory is also the published content of the [`tayzer/tada-plugins`](https://github.com/tayzer/tada-plugins) Git marketplace. The [release guide](releasing.md) describes how releases update it. The marketplace is named `tada`, so the plugin ID is `tada@tada`. Older Codex-only installations used `tada@tada-development`.
 

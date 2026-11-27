@@ -1,6 +1,5 @@
 {
   "name": "tada",
-  "version": "0.2.2",
   "description": "Test-Assured Development Assistance for everyday software development. The agent agrees executable Gherkin acceptance with you before implementing, protects the approved expectations byte for byte and reports PASS, FAIL or INDETERMINATE from retained evidence.",
   "author": {
     "name": "TADA contributors",

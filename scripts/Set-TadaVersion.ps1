@@ -1,20 +1,28 @@
-param([Parameter(Mandatory)][ValidatePattern('^\d+\.\d+\.\d+(?:-[0-9A-Za-z.]+)?$')][string]$Version)
+[CmdletBinding(DefaultParameterSetName = 'Version', PositionalBinding = $false)]
+param(
+    [Parameter(Mandatory, ParameterSetName = 'Bump')]
+    [ValidateSet('patch', 'minor', 'major')]
+    [string]$Bump,
 
-# Stamps one version into the CLI build and every plugin manifest, changing nothing else.
-# Use it to select the release version in a pull request.
+    [Parameter(ParameterSetName = 'Bump')]
+    [string]$BaseCommit = 'origin/main',
+
+    [Parameter(Mandatory, Position = 0, ParameterSetName = 'Version')]
+    [ValidatePattern('^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\z')]
+    [string]$Version
+)
+
+# Record the selected release version in the build properties for review in a pull request.
 $ErrorActionPreference = 'Stop'
 $repository = Split-Path $PSScriptRoot -Parent
-$encoding = [Text.UTF8Encoding]::new($false)
-
-function Set-Once([string]$Path, [string]$Pattern, [string]$Replacement) {
-    $text = [IO.File]::ReadAllText($Path)
-    $found = [regex]::Matches($text, $Pattern).Count
-    if ($found -ne 1) { throw "Expected exactly one version in $Path, found $found." }
-    [IO.File]::WriteAllText($Path, [regex]::Replace($text, $Pattern, $Replacement), $encoding)
+$path = Join-Path $repository 'Directory.Build.props'
+if ($Bump) {
+    $Version = & "$PSScriptRoot/Get-TadaReleaseVersion.ps1" -BaseCommit $BaseCommit -Bump $Bump
 }
 
-Set-Once (Join-Path $repository 'Directory.Build.props') '<Version>[^<]+</Version>' "<Version>$Version</Version>"
-foreach ($manifest in @('plugin.json', '.codex-plugin/plugin.json', '.claude-plugin/plugin.json', '.cursor-plugin/plugin.json')) {
-    Set-Once (Join-Path $repository "plugins/tada/$manifest") '"version":\s*"[^"]+"' "`"version`": `"$Version`""
-}
+$text = [IO.File]::ReadAllText($path)
+$pattern = '<Version>[^<]+</Version>'
+$found = [regex]::Matches($text, $pattern).Count
+if ($found -ne 1) { throw "Expected exactly one version in $path, found $found." }
+[IO.File]::WriteAllText($path, [regex]::Replace($text, $pattern, "<Version>$Version</Version>"), [Text.UTF8Encoding]::new($false))
 $Version

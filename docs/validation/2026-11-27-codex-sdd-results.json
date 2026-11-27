@@ -1,0 +1,3843 @@
+{
+  "schemaVersion": 1,
+  "batches": [
+    {
+      "label": "pilot-original",
+      "id": "codex-sdd-20261126-092941-6ca44702",
+      "suite": "codex-sdd",
+      "startedAt": "2026-11-26T09:29:41.6580369+00:00",
+      "seed": 1729,
+      "repeats": 1,
+      "manifestSha256": "8717717154cc6fac24e9a7d0915375b0ede46891733e85754e872f02d8e5fb27",
+      "retainedComparisonSha256": "1fd374493bda0327f45c9c284ff06575f7bdd7bdde51e22e906b283fb264c072",
+      "originBatchId": null,
+      "originManifestSha256": null,
+      "continuation": null,
+      "pins": {
+        "codex": "0.162.1",
+        "sdk": "10.0.403",
+        "model": "gpt-6.1-sol",
+        "effort": "medium",
+        "tada": "0.1.0-alpha.13.107",
+        "speckit": "1.4.0",
+        "openspec": "2.0.0",
+        "sandbox": "elevated workspace-write, offline, approval never",
+        "tada-sha256": "0578dd3f039f5610661217994569d0f43ffe125aa162ed9d2e1d5bc90fce3ad0",
+        "speckit-sha256": "b189181779417dfd1d7bb72ba35905f75576f80d3f89aef0210986578e11c056",
+        "openspec-sha256": "7d37074f5eb63a7f30c6a157d0957f0f0d2726b3c32ed9992fbe7be24ef5e325",
+        "fixture-sha256": "712958922cc4a607b00d2ba93e49ae42b6cf7426011fc828cef293aeed279aab",
+        "approval-receipt-sha256": "bde4d1141909b24e1fc17b9d4e3aaa3886c584a818f65ce0fe892d0de8308c07",
+        "codex-artifact-sha256": "dd13bdb162a184fa04039488b234a8258ef9b76f84e926c505d5742b19249a6a",
+        "http-evaluator-sha256": "179eab7d5c8476055ac3f2767bfbdd938a8411ed2f4153a81ca9953b7f308d26",
+        "cancel-base": "d3e4622b8a592cbb735bd3537f6a55c5beb70f8a",
+        "cancel-tada-baseline": "sha256:ff523c23da780a35752efcfd717aebec8b1389763cd17748a0ea62b72e74e210",
+        "resize-base": "ace86d8052445eb0284bcb0b4f7aa927114706e4",
+        "resize-tada-baseline": "sha256:274d1f9a378a20bb9994259b9f114b2a4d1057cd21d2578431178fb3ac289cf6"
+      },
+      "attempts": [
+        {
+          "id": "resize-plain-01",
+          "task": "resize",
+          "workflow": "plain",
+          "repeat": 1,
+          "status": "pass",
+          "hiddenChecks": {
+            "passed": 10,
+            "failed": 0,
+            "unknown": 0,
+            "scheduled": 10
+          },
+          "originalRegressions": {
+            "passed": 1,
+            "failed": 0,
+            "indeterminate": 0,
+            "observed": 1
+          },
+          "testQuality": {
+            "addedCases": 13,
+            "passingOnSubmission": 13,
+            "passingOnReference": 13,
+            "flaky": 0,
+            "fixtureErrors": 0,
+            "scoredFaults": 3,
+            "detectedFaults": 3
+          },
+          "followUpTestQuality": null,
+          "tadaL1": null,
+          "agentUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 3,
+            "toolCalls": 11,
+            "inputTokens": 219963,
+            "cachedInputTokens": 178048,
+            "uncachedInputTokens": 41915,
+            "outputTokens": 5604
+          },
+          "reviewerUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 1,
+            "toolCalls": 0,
+            "inputTokens": 13655,
+            "cachedInputTokens": 9984,
+            "uncachedInputTokens": 3671,
+            "outputTokens": 439
+          },
+          "codingSeconds": 172.1619098,
+          "elapsedSeconds": null,
+          "dispatch": [
+            {
+              "name": "implement",
+              "timedOut": false,
+              "exitCode": 0
+            }
+          ],
+          "reevaluated": false,
+          "reranCoding": false,
+          "handoffDatabaseSha256": null,
+          "openSpecArchiveStatus": null
+        },
+        {
+          "id": "cancel-speckit-01",
+          "task": "cancel",
+          "workflow": "speckit",
+          "repeat": 1,
+          "status": "build-failed",
+          "hiddenChecks": {
+            "passed": 0,
+            "failed": 0,
+            "unknown": 6,
+            "scheduled": 6
+          },
+          "originalRegressions": {
+            "passed": 0,
+            "failed": 0,
+            "indeterminate": 0,
+            "observed": 0
+          },
+          "testQuality": null,
+          "followUpTestQuality": null,
+          "tadaL1": null,
+          "agentUsage": {
+            "complete": true,
+            "turns": 4,
+            "messages": 18,
+            "toolCalls": 31,
+            "inputTokens": 4830729,
+            "cachedInputTokens": 4600448,
+            "uncachedInputTokens": 230281,
+            "outputTokens": 59855
+          },
+          "reviewerUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 1,
+            "toolCalls": 0,
+            "inputTokens": 13864,
+            "cachedInputTokens": 9984,
+            "uncachedInputTokens": 3880,
+            "outputTokens": 437
+          },
+          "codingSeconds": 849.8956624,
+          "elapsedSeconds": null,
+          "dispatch": [
+            {
+              "name": "specify",
+              "timedOut": false,
+              "exitCode": 0
+            },
+            {
+              "name": "plan",
+              "timedOut": false,
+              "exitCode": 0
+            },
+            {
+              "name": "tasks",
+              "timedOut": false,
+              "exitCode": 0
+            },
+            {
+              "name": "implement",
+              "timedOut": false,
+              "exitCode": 0
+            }
+          ],
+          "reevaluated": false,
+          "reranCoding": false,
+          "handoffDatabaseSha256": null,
+          "openSpecArchiveStatus": null
+        },
+        {
+          "id": "cancel-plain-01",
+          "task": "cancel",
+          "workflow": "plain",
+          "repeat": 1,
+          "status": "pass",
+          "hiddenChecks": {
+            "passed": 6,
+            "failed": 0,
+            "unknown": 0,
+            "scheduled": 6
+          },
+          "originalRegressions": {
+            "passed": 1,
+            "failed": 0,
+            "indeterminate": 0,
+            "observed": 1
+          },
+          "testQuality": {
+            "addedCases": 5,
+            "passingOnSubmission": 5,
+            "passingOnReference": 5,
+            "flaky": 0,
+            "fixtureErrors": 0,
+            "scoredFaults": 3,
+            "detectedFaults": 3
+          },
+          "followUpTestQuality": null,
+          "tadaL1": null,
+          "agentUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 3,
+            "toolCalls": 10,
+            "inputTokens": 194684,
+            "cachedInputTokens": 156288,
+            "uncachedInputTokens": 38396,
+            "outputTokens": 3683
+          },
+          "reviewerUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 1,
+            "toolCalls": 0,
+            "inputTokens": 13115,
+            "cachedInputTokens": 9984,
+            "uncachedInputTokens": 3131,
+            "outputTokens": 470
+          },
+          "codingSeconds": 121.6734754,
+          "elapsedSeconds": null,
+          "dispatch": [
+            {
+              "name": "implement",
+              "timedOut": false,
+              "exitCode": 0
+            }
+          ],
+          "reevaluated": false,
+          "reranCoding": false,
+          "handoffDatabaseSha256": null,
+          "openSpecArchiveStatus": null
+        },
+        {
+          "id": "resize-openspec-01",
+          "task": "resize",
+          "workflow": "openspec",
+          "repeat": 1,
+          "status": "integrity-failed",
+          "hiddenChecks": {
+            "passed": 0,
+            "failed": 0,
+            "unknown": 10,
+            "scheduled": 10
+          },
+          "originalRegressions": {
+            "passed": 0,
+            "failed": 0,
+            "indeterminate": 0,
+            "observed": 0
+          },
+          "testQuality": null,
+          "followUpTestQuality": null,
+          "tadaL1": null,
+          "agentUsage": {
+            "complete": true,
+            "turns": 2,
+            "messages": 4,
+            "toolCalls": 4,
+            "inputTokens": 249328,
+            "cachedInputTokens": 210048,
+            "uncachedInputTokens": 39280,
+            "outputTokens": 1144
+          },
+          "reviewerUsage": null,
+          "codingSeconds": 45.2741411,
+          "elapsedSeconds": null,
+          "dispatch": [
+            {
+              "name": "propose",
+              "timedOut": false,
+              "exitCode": 0
+            },
+            {
+              "name": "apply",
+              "timedOut": false,
+              "exitCode": 0
+            }
+          ],
+          "reevaluated": false,
+          "reranCoding": false,
+          "handoffDatabaseSha256": null,
+          "openSpecArchiveStatus": null
+        },
+        {
+          "id": "cancel-tada-01",
+          "task": "cancel",
+          "workflow": "tada",
+          "repeat": 1,
+          "status": "build-failed",
+          "hiddenChecks": {
+            "passed": 0,
+            "failed": 0,
+            "unknown": 6,
+            "scheduled": 6
+          },
+          "originalRegressions": {
+            "passed": 0,
+            "failed": 0,
+            "indeterminate": 0,
+            "observed": 0
+          },
+          "testQuality": null,
+          "followUpTestQuality": null,
+          "tadaL1": null,
+          "agentUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 6,
+            "toolCalls": 20,
+            "inputTokens": 554163,
+            "cachedInputTokens": 528384,
+            "uncachedInputTokens": 25779,
+            "outputTokens": 7339
+          },
+          "reviewerUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 1,
+            "toolCalls": 0,
+            "inputTokens": 13127,
+            "cachedInputTokens": 9984,
+            "uncachedInputTokens": 3143,
+            "outputTokens": 376
+          },
+          "codingSeconds": 255.7864951,
+          "elapsedSeconds": null,
+          "dispatch": [
+            {
+              "name": "implement",
+              "timedOut": false,
+              "exitCode": 0
+            }
+          ],
+          "reevaluated": false,
+          "reranCoding": false,
+          "handoffDatabaseSha256": null,
+          "openSpecArchiveStatus": null
+        },
+        {
+          "id": "cancel-openspec-01",
+          "task": "cancel",
+          "workflow": "openspec",
+          "repeat": 1,
+          "status": "integrity-failed",
+          "hiddenChecks": {
+            "passed": 0,
+            "failed": 0,
+            "unknown": 6,
+            "scheduled": 6
+          },
+          "originalRegressions": {
+            "passed": 0,
+            "failed": 0,
+            "indeterminate": 0,
+            "observed": 0
+          },
+          "testQuality": null,
+          "followUpTestQuality": null,
+          "tadaL1": null,
+          "agentUsage": {
+            "complete": true,
+            "turns": 2,
+            "messages": 4,
+            "toolCalls": 4,
+            "inputTokens": 227451,
+            "cachedInputTokens": 172544,
+            "uncachedInputTokens": 54907,
+            "outputTokens": 1275
+          },
+          "reviewerUsage": null,
+          "codingSeconds": 45.6635668,
+          "elapsedSeconds": null,
+          "dispatch": [
+            {
+              "name": "propose",
+              "timedOut": false,
+              "exitCode": 0
+            },
+            {
+              "name": "apply",
+              "timedOut": false,
+              "exitCode": 0
+            }
+          ],
+          "reevaluated": false,
+          "reranCoding": false,
+          "handoffDatabaseSha256": null,
+          "openSpecArchiveStatus": null
+        },
+        {
+          "id": "resize-tada-01",
+          "task": "resize",
+          "workflow": "tada",
+          "repeat": 1,
+          "status": "build-failed",
+          "hiddenChecks": {
+            "passed": 0,
+            "failed": 0,
+            "unknown": 10,
+            "scheduled": 10
+          },
+          "originalRegressions": {
+            "passed": 0,
+            "failed": 0,
+            "indeterminate": 0,
+            "observed": 0
+          },
+          "testQuality": null,
+          "followUpTestQuality": null,
+          "tadaL1": null,
+          "agentUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 5,
+            "toolCalls": 13,
+            "inputTokens": 394732,
+            "cachedInputTokens": 367104,
+            "uncachedInputTokens": 27628,
+            "outputTokens": 8027
+          },
+          "reviewerUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 2,
+            "toolCalls": 0,
+            "inputTokens": 14056,
+            "cachedInputTokens": 0,
+            "uncachedInputTokens": 14056,
+            "outputTokens": 622
+          },
+          "codingSeconds": 240.5271071,
+          "elapsedSeconds": null,
+          "dispatch": [
+            {
+              "name": "implement",
+              "timedOut": false,
+              "exitCode": 0
+            }
+          ],
+          "reevaluated": false,
+          "reranCoding": false,
+          "handoffDatabaseSha256": null,
+          "openSpecArchiveStatus": null
+        },
+        {
+          "id": "resize-speckit-01",
+          "task": "resize",
+          "workflow": "speckit",
+          "repeat": 1,
+          "status": "build-failed",
+          "hiddenChecks": {
+            "passed": 0,
+            "failed": 0,
+            "unknown": 10,
+            "scheduled": 10
+          },
+          "originalRegressions": {
+            "passed": 0,
+            "failed": 0,
+            "indeterminate": 0,
+            "observed": 0
+          },
+          "testQuality": null,
+          "followUpTestQuality": null,
+          "tadaL1": null,
+          "agentUsage": {
+            "complete": true,
+            "turns": 4,
+            "messages": 15,
+            "toolCalls": 26,
+            "inputTokens": 3712040,
+            "cachedInputTokens": 3491840,
+            "uncachedInputTokens": 220200,
+            "outputTokens": 48318
+          },
+          "reviewerUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 1,
+            "toolCalls": 0,
+            "inputTokens": 15060,
+            "cachedInputTokens": 0,
+            "uncachedInputTokens": 15060,
+            "outputTokens": 641
+          },
+          "codingSeconds": 681.9198895,
+          "elapsedSeconds": null,
+          "dispatch": [
+            {
+              "name": "specify",
+              "timedOut": false,
+              "exitCode": 0
+            },
+            {
+              "name": "plan",
+              "timedOut": false,
+              "exitCode": 0
+            },
+            {
+              "name": "tasks",
+              "timedOut": false,
+              "exitCode": 0
+            },
+            {
+              "name": "implement",
+              "timedOut": false,
+              "exitCode": 0
+            }
+          ],
+          "reevaluated": false,
+          "reranCoding": false,
+          "handoffDatabaseSha256": null,
+          "openSpecArchiveStatus": null
+        }
+      ],
+      "campaigns": []
+    },
+    {
+      "label": "pilot-recovery",
+      "id": "codex-sdd-20261126-103112-7fbb5e64",
+      "suite": "codex-sdd",
+      "startedAt": "2026-11-26T10:31:12.701235+00:00",
+      "seed": 1729,
+      "repeats": 1,
+      "manifestSha256": "2c1a22f1a82a43e5570c04e083b164313854cb44514f57e492b1362e14801b10",
+      "retainedComparisonSha256": "6975019210d5a77e03bfd5040a46b5f3308449e0fc18eda802fcbc07d4eacfc3",
+      "originBatchId": "codex-sdd-20261126-092941-6ca44702",
+      "originManifestSha256": "8717717154cc6fac24e9a7d0915375b0ede46891733e85754e872f02d8e5fb27",
+      "continuation": null,
+      "pins": {
+        "codex": "0.162.1",
+        "sdk": "10.0.403",
+        "model": "gpt-6.1-sol",
+        "effort": "medium",
+        "tada": "0.1.0-alpha.13.107",
+        "speckit": "1.4.0",
+        "openspec": "2.0.0",
+        "sandbox": "elevated workspace-write, offline, approval never",
+        "tada-sha256": "0578dd3f039f5610661217994569d0f43ffe125aa162ed9d2e1d5bc90fce3ad0",
+        "speckit-sha256": "b189181779417dfd1d7bb72ba35905f75576f80d3f89aef0210986578e11c056",
+        "openspec-sha256": "7d37074f5eb63a7f30c6a157d0957f0f0d2726b3c32ed9992fbe7be24ef5e325",
+        "fixture-sha256": "712958922cc4a607b00d2ba93e49ae42b6cf7426011fc828cef293aeed279aab",
+        "approval-receipt-sha256": "bde4d1141909b24e1fc17b9d4e3aaa3886c584a818f65ce0fe892d0de8308c07",
+        "codex-artifact-sha256": "dd13bdb162a184fa04039488b234a8258ef9b76f84e926c505d5742b19249a6a",
+        "http-evaluator-sha256": "179eab7d5c8476055ac3f2767bfbdd938a8411ed2f4153a81ca9953b7f308d26",
+        "cancel-base": "d3e4622b8a592cbb735bd3537f6a55c5beb70f8a",
+        "cancel-tada-baseline": "sha256:ff523c23da780a35752efcfd717aebec8b1389763cd17748a0ea62b72e74e210",
+        "resize-base": "ace86d8052445eb0284bcb0b4f7aa927114706e4",
+        "resize-tada-baseline": "sha256:274d1f9a378a20bb9994259b9f114b2a4d1057cd21d2578431178fb3ac289cf6",
+        "openspec-cli-sha256": "2d2039ec8ff6436227bb791fd69306dfde4d3e29b975981290192badd3a9991e",
+        "openspec-node-sha256": "c5ff4c736112dd483c750fd4149d30c8a116db1a49b8b3ec88be4b65e6c86c19"
+      },
+      "attempts": [
+        {
+          "id": "resize-plain-01",
+          "task": "resize",
+          "workflow": "plain",
+          "repeat": 1,
+          "status": "pass",
+          "hiddenChecks": {
+            "passed": 10,
+            "failed": 0,
+            "unknown": 0,
+            "scheduled": 10
+          },
+          "originalRegressions": {
+            "passed": 1,
+            "failed": 0,
+            "indeterminate": 0,
+            "observed": 1
+          },
+          "testQuality": {
+            "addedCases": 13,
+            "passingOnSubmission": 13,
+            "passingOnReference": 13,
+            "flaky": 0,
+            "fixtureErrors": 0,
+            "scoredFaults": 3,
+            "detectedFaults": 3
+          },
+          "followUpTestQuality": null,
+          "tadaL1": null,
+          "agentUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 3,
+            "toolCalls": 11,
+            "inputTokens": 219963,
+            "cachedInputTokens": 178048,
+            "uncachedInputTokens": 41915,
+            "outputTokens": 5604
+          },
+          "reviewerUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 1,
+            "toolCalls": 0,
+            "inputTokens": 13655,
+            "cachedInputTokens": 9984,
+            "uncachedInputTokens": 3671,
+            "outputTokens": 439
+          },
+          "codingSeconds": 172.1619098,
+          "elapsedSeconds": null,
+          "dispatch": [
+            {
+              "name": "implement",
+              "timedOut": false,
+              "exitCode": 0
+            }
+          ],
+          "reevaluated": false,
+          "reranCoding": false,
+          "handoffDatabaseSha256": null,
+          "openSpecArchiveStatus": null
+        },
+        {
+          "id": "cancel-speckit-01",
+          "task": "cancel",
+          "workflow": "speckit",
+          "repeat": 1,
+          "status": "pass",
+          "hiddenChecks": {
+            "passed": 6,
+            "failed": 0,
+            "unknown": 0,
+            "scheduled": 6
+          },
+          "originalRegressions": {
+            "passed": 1,
+            "failed": 0,
+            "indeterminate": 0,
+            "observed": 1
+          },
+          "testQuality": {
+            "addedCases": 10,
+            "passingOnSubmission": 10,
+            "passingOnReference": 10,
+            "flaky": 0,
+            "fixtureErrors": 0,
+            "scoredFaults": 3,
+            "detectedFaults": 3
+          },
+          "followUpTestQuality": null,
+          "tadaL1": null,
+          "agentUsage": {
+            "complete": true,
+            "turns": 4,
+            "messages": 18,
+            "toolCalls": 31,
+            "inputTokens": 4830729,
+            "cachedInputTokens": 4600448,
+            "uncachedInputTokens": 230281,
+            "outputTokens": 59855
+          },
+          "reviewerUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 1,
+            "toolCalls": 0,
+            "inputTokens": 13864,
+            "cachedInputTokens": 9984,
+            "uncachedInputTokens": 3880,
+            "outputTokens": 437
+          },
+          "codingSeconds": 849.8956624,
+          "elapsedSeconds": null,
+          "dispatch": [
+            {
+              "name": "specify",
+              "timedOut": false,
+              "exitCode": 0
+            },
+            {
+              "name": "plan",
+              "timedOut": false,
+              "exitCode": 0
+            },
+            {
+              "name": "tasks",
+              "timedOut": false,
+              "exitCode": 0
+            },
+            {
+              "name": "implement",
+              "timedOut": false,
+              "exitCode": 0
+            }
+          ],
+          "reevaluated": true,
+          "reranCoding": false,
+          "handoffDatabaseSha256": null,
+          "openSpecArchiveStatus": null
+        },
+        {
+          "id": "cancel-plain-01",
+          "task": "cancel",
+          "workflow": "plain",
+          "repeat": 1,
+          "status": "pass",
+          "hiddenChecks": {
+            "passed": 6,
+            "failed": 0,
+            "unknown": 0,
+            "scheduled": 6
+          },
+          "originalRegressions": {
+            "passed": 1,
+            "failed": 0,
+            "indeterminate": 0,
+            "observed": 1
+          },
+          "testQuality": {
+            "addedCases": 5,
+            "passingOnSubmission": 5,
+            "passingOnReference": 5,
+            "flaky": 0,
+            "fixtureErrors": 0,
+            "scoredFaults": 3,
+            "detectedFaults": 3
+          },
+          "followUpTestQuality": null,
+          "tadaL1": null,
+          "agentUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 3,
+            "toolCalls": 10,
+            "inputTokens": 194684,
+            "cachedInputTokens": 156288,
+            "uncachedInputTokens": 38396,
+            "outputTokens": 3683
+          },
+          "reviewerUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 1,
+            "toolCalls": 0,
+            "inputTokens": 13115,
+            "cachedInputTokens": 9984,
+            "uncachedInputTokens": 3131,
+            "outputTokens": 470
+          },
+          "codingSeconds": 121.6734754,
+          "elapsedSeconds": null,
+          "dispatch": [
+            {
+              "name": "implement",
+              "timedOut": false,
+              "exitCode": 0
+            }
+          ],
+          "reevaluated": false,
+          "reranCoding": false,
+          "handoffDatabaseSha256": null,
+          "openSpecArchiveStatus": null
+        },
+        {
+          "id": "resize-openspec-01",
+          "task": "resize",
+          "workflow": "openspec",
+          "repeat": 1,
+          "status": "pass",
+          "hiddenChecks": {
+            "passed": 10,
+            "failed": 0,
+            "unknown": 0,
+            "scheduled": 10
+          },
+          "originalRegressions": {
+            "passed": 1,
+            "failed": 0,
+            "indeterminate": 0,
+            "observed": 1
+          },
+          "testQuality": {
+            "addedCases": 19,
+            "passingOnSubmission": 19,
+            "passingOnReference": 19,
+            "flaky": 0,
+            "fixtureErrors": 0,
+            "scoredFaults": 3,
+            "detectedFaults": 3
+          },
+          "followUpTestQuality": null,
+          "tadaL1": null,
+          "agentUsage": {
+            "complete": true,
+            "turns": 2,
+            "messages": 10,
+            "toolCalls": 21,
+            "inputTokens": 1506914,
+            "cachedInputTokens": 1393664,
+            "uncachedInputTokens": 113250,
+            "outputTokens": 15648
+          },
+          "reviewerUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 1,
+            "toolCalls": 0,
+            "inputTokens": 14461,
+            "cachedInputTokens": 9984,
+            "uncachedInputTokens": 4477,
+            "outputTokens": 541
+          },
+          "codingSeconds": 341.3379528,
+          "elapsedSeconds": null,
+          "dispatch": [
+            {
+              "name": "propose",
+              "timedOut": false,
+              "exitCode": 0
+            },
+            {
+              "name": "apply",
+              "timedOut": false,
+              "exitCode": 0
+            }
+          ],
+          "reevaluated": false,
+          "reranCoding": true,
+          "handoffDatabaseSha256": null,
+          "openSpecArchiveStatus": null
+        },
+        {
+          "id": "cancel-tada-01",
+          "task": "cancel",
+          "workflow": "tada",
+          "repeat": 1,
+          "status": "pass",
+          "hiddenChecks": {
+            "passed": 6,
+            "failed": 0,
+            "unknown": 0,
+            "scheduled": 6
+          },
+          "originalRegressions": {
+            "passed": 1,
+            "failed": 0,
+            "indeterminate": 0,
+            "observed": 1
+          },
+          "testQuality": {
+            "addedCases": 5,
+            "passingOnSubmission": 5,
+            "passingOnReference": 5,
+            "flaky": 0,
+            "fixtureErrors": 0,
+            "scoredFaults": 3,
+            "detectedFaults": 3
+          },
+          "followUpTestQuality": null,
+          "tadaL1": {
+            "outcome": "PASS",
+            "baseline": "sha256:ff523c23da780a35752efcfd717aebec8b1389763cd17748a0ea62b72e74e210",
+            "runId": "e233592a96034d119f15d6f9337e924e"
+          },
+          "agentUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 6,
+            "toolCalls": 20,
+            "inputTokens": 554163,
+            "cachedInputTokens": 528384,
+            "uncachedInputTokens": 25779,
+            "outputTokens": 7339
+          },
+          "reviewerUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 1,
+            "toolCalls": 0,
+            "inputTokens": 13127,
+            "cachedInputTokens": 9984,
+            "uncachedInputTokens": 3143,
+            "outputTokens": 376
+          },
+          "codingSeconds": 255.7864951,
+          "elapsedSeconds": null,
+          "dispatch": [
+            {
+              "name": "implement",
+              "timedOut": false,
+              "exitCode": 0
+            }
+          ],
+          "reevaluated": true,
+          "reranCoding": false,
+          "handoffDatabaseSha256": null,
+          "openSpecArchiveStatus": null
+        },
+        {
+          "id": "cancel-openspec-01",
+          "task": "cancel",
+          "workflow": "openspec",
+          "repeat": 1,
+          "status": "pass",
+          "hiddenChecks": {
+            "passed": 6,
+            "failed": 0,
+            "unknown": 0,
+            "scheduled": 6
+          },
+          "originalRegressions": {
+            "passed": 1,
+            "failed": 0,
+            "indeterminate": 0,
+            "observed": 1
+          },
+          "testQuality": {
+            "addedCases": 7,
+            "passingOnSubmission": 7,
+            "passingOnReference": 7,
+            "flaky": 0,
+            "fixtureErrors": 0,
+            "scoredFaults": 3,
+            "detectedFaults": 3
+          },
+          "followUpTestQuality": null,
+          "tadaL1": null,
+          "agentUsage": {
+            "complete": true,
+            "turns": 2,
+            "messages": 10,
+            "toolCalls": 19,
+            "inputTokens": 1372225,
+            "cachedInputTokens": 1282816,
+            "uncachedInputTokens": 89409,
+            "outputTokens": 12975
+          },
+          "reviewerUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 1,
+            "toolCalls": 0,
+            "inputTokens": 13567,
+            "cachedInputTokens": 9984,
+            "uncachedInputTokens": 3583,
+            "outputTokens": 496
+          },
+          "codingSeconds": 314.0011588,
+          "elapsedSeconds": null,
+          "dispatch": [
+            {
+              "name": "propose",
+              "timedOut": false,
+              "exitCode": 0
+            },
+            {
+              "name": "apply",
+              "timedOut": false,
+              "exitCode": 0
+            }
+          ],
+          "reevaluated": false,
+          "reranCoding": true,
+          "handoffDatabaseSha256": null,
+          "openSpecArchiveStatus": null
+        },
+        {
+          "id": "resize-tada-01",
+          "task": "resize",
+          "workflow": "tada",
+          "repeat": 1,
+          "status": "pass",
+          "hiddenChecks": {
+            "passed": 10,
+            "failed": 0,
+            "unknown": 0,
+            "scheduled": 10
+          },
+          "originalRegressions": {
+            "passed": 1,
+            "failed": 0,
+            "indeterminate": 0,
+            "observed": 1
+          },
+          "testQuality": {
+            "addedCases": 15,
+            "passingOnSubmission": 15,
+            "passingOnReference": 15,
+            "flaky": 0,
+            "fixtureErrors": 0,
+            "scoredFaults": 3,
+            "detectedFaults": 3
+          },
+          "followUpTestQuality": null,
+          "tadaL1": {
+            "outcome": "PASS",
+            "baseline": "sha256:274d1f9a378a20bb9994259b9f114b2a4d1057cd21d2578431178fb3ac289cf6",
+            "runId": "7eeb10fed0d546b3af283b933fa10dfc"
+          },
+          "agentUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 5,
+            "toolCalls": 13,
+            "inputTokens": 394732,
+            "cachedInputTokens": 367104,
+            "uncachedInputTokens": 27628,
+            "outputTokens": 8027
+          },
+          "reviewerUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 2,
+            "toolCalls": 0,
+            "inputTokens": 14056,
+            "cachedInputTokens": 0,
+            "uncachedInputTokens": 14056,
+            "outputTokens": 622
+          },
+          "codingSeconds": 240.5271071,
+          "elapsedSeconds": null,
+          "dispatch": [
+            {
+              "name": "implement",
+              "timedOut": false,
+              "exitCode": 0
+            }
+          ],
+          "reevaluated": true,
+          "reranCoding": false,
+          "handoffDatabaseSha256": null,
+          "openSpecArchiveStatus": null
+        },
+        {
+          "id": "resize-speckit-01",
+          "task": "resize",
+          "workflow": "speckit",
+          "repeat": 1,
+          "status": "pass",
+          "hiddenChecks": {
+            "passed": 10,
+            "failed": 0,
+            "unknown": 0,
+            "scheduled": 10
+          },
+          "originalRegressions": {
+            "passed": 1,
+            "failed": 0,
+            "indeterminate": 0,
+            "observed": 1
+          },
+          "testQuality": {
+            "addedCases": 21,
+            "passingOnSubmission": 21,
+            "passingOnReference": 21,
+            "flaky": 0,
+            "fixtureErrors": 0,
+            "scoredFaults": 3,
+            "detectedFaults": 3
+          },
+          "followUpTestQuality": null,
+          "tadaL1": null,
+          "agentUsage": {
+            "complete": true,
+            "turns": 4,
+            "messages": 15,
+            "toolCalls": 26,
+            "inputTokens": 3712040,
+            "cachedInputTokens": 3491840,
+            "uncachedInputTokens": 220200,
+            "outputTokens": 48318
+          },
+          "reviewerUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 1,
+            "toolCalls": 0,
+            "inputTokens": 15060,
+            "cachedInputTokens": 0,
+            "uncachedInputTokens": 15060,
+            "outputTokens": 641
+          },
+          "codingSeconds": 681.9198895,
+          "elapsedSeconds": null,
+          "dispatch": [
+            {
+              "name": "specify",
+              "timedOut": false,
+              "exitCode": 0
+            },
+            {
+              "name": "plan",
+              "timedOut": false,
+              "exitCode": 0
+            },
+            {
+              "name": "tasks",
+              "timedOut": false,
+              "exitCode": 0
+            },
+            {
+              "name": "implement",
+              "timedOut": false,
+              "exitCode": 0
+            }
+          ],
+          "reevaluated": true,
+          "reranCoding": false,
+          "handoffDatabaseSha256": null,
+          "openSpecArchiveStatus": null
+        }
+      ],
+      "campaigns": []
+    },
+    {
+      "label": "handoff-smoke",
+      "id": "codex-sdd-handoff-20261126-141353-8a6efffb",
+      "suite": "codex-sdd-handoff",
+      "startedAt": "2026-11-26T14:13:53.9208721+00:00",
+      "seed": 1729,
+      "repeats": 1,
+      "manifestSha256": "66481cbc6157ba9bd99546a7b93a1eeab84d95eeba4b915e0f574d6bc030481b",
+      "retainedComparisonSha256": "a3e3e268489ef51ece666e1cff54ac90616a53f2a8a3b52e7fe78302ffd3de8a",
+      "originBatchId": null,
+      "originManifestSha256": null,
+      "continuation": null,
+      "pins": {
+        "codex": "0.162.1",
+        "sdk": "10.0.403",
+        "model": "gpt-6.1-sol",
+        "effort": "medium",
+        "tada": "0.1.0-alpha.13.107",
+        "speckit": "1.4.0",
+        "openspec": "2.0.0",
+        "sandbox": "elevated workspace-write, offline, approval never",
+        "ticket-1-hidden-checks": "21",
+        "ticket-2-hidden-checks": "23",
+        "tada-sha256": "0578dd3f039f5610661217994569d0f43ffe125aa162ed9d2e1d5bc90fce3ad0",
+        "speckit-sha256": "b189181779417dfd1d7bb72ba35905f75576f80d3f89aef0210986578e11c056",
+        "openspec-sha256": "7d37074f5eb63a7f30c6a157d0957f0f0d2726b3c32ed9992fbe7be24ef5e325",
+        "fixture-sha256": "712958922cc4a607b00d2ba93e49ae42b6cf7426011fc828cef293aeed279aab",
+        "handoff-fixture-sha256": "76ccc3724ae544ef67eac4a02980d89fc558107f45c99359ed0ecf2ecd68af5d",
+        "handoff-evaluator-sha256": "4bde883c892db8dbe73b900d33e331315f5c6b2a8a81af6ea6f219d162616be5",
+        "handoff-runner-sha256": "7e98303c7d6c2520498ab0ef80bae8e724e8723b9bf84c88df3dc872681b20e1",
+        "approval-receipt-sha256": "c55f5185dfdc2ff7e002ebf1952363bd0eefb177c1ec675daddc1be10743195e",
+        "codex-artifact-sha256": "dd13bdb162a184fa04039488b234a8258ef9b76f84e926c505d5742b19249a6a",
+        "http-evaluator-sha256": "c87b07a7a40af4ac8f1d13f1dee50b3151a2ff0d9adc06004c0844856562ceb1",
+        "openspec-cli-sha256": "2d2039ec8ff6436227bb791fd69306dfde4d3e29b975981290192badd3a9991e",
+        "openspec-node-sha256": "c5ff4c736112dd483c750fd4149d30c8a116db1a49b8b3ec88be4b65e6c86c19",
+        "ticket-1-base": "5f6a89811e016e59ef3bbf99464a2afe3ce1962d",
+        "ticket-1-tada-baseline": "sha256:23ca8ec159a25708b2d490319fa57c045babd1463c7916a6e3543aa102b5f505",
+        "ticket-2-control-base": "ed505a2251a9c9c5e4172123497b1ff55f289afd",
+        "ticket-2-tada-baseline": "sha256:cf93da72e6dae9f12d4b27e4b9f37671f6abc33fba95ac98eee947c28524ec2d"
+      },
+      "attempts": [
+        {
+          "id": "ticket-1-plain-01",
+          "task": "ticket-1",
+          "workflow": "plain",
+          "repeat": 1,
+          "status": "pass",
+          "hiddenChecks": {
+            "passed": 21,
+            "failed": 0,
+            "unknown": 0,
+            "scheduled": 21
+          },
+          "originalRegressions": {
+            "passed": 1,
+            "failed": 0,
+            "indeterminate": 0,
+            "observed": 1
+          },
+          "testQuality": {
+            "addedCases": 25,
+            "passingOnSubmission": 25,
+            "passingOnReference": 24,
+            "flaky": 0,
+            "fixtureErrors": 3,
+            "scoredFaults": 5,
+            "detectedFaults": 5
+          },
+          "followUpTestQuality": null,
+          "tadaL1": null,
+          "agentUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 4,
+            "toolCalls": 15,
+            "inputTokens": 520311,
+            "cachedInputTokens": 465792,
+            "uncachedInputTokens": 54519,
+            "outputTokens": 9666
+          },
+          "reviewerUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 1,
+            "toolCalls": 0,
+            "inputTokens": 15965,
+            "cachedInputTokens": 9984,
+            "uncachedInputTokens": 5981,
+            "outputTokens": 782
+          },
+          "codingSeconds": 324.0627862,
+          "elapsedSeconds": 1079.2865465,
+          "dispatch": [
+            {
+              "name": "implement",
+              "timedOut": false,
+              "exitCode": 0
+            }
+          ],
+          "reevaluated": false,
+          "reranCoding": false,
+          "handoffDatabaseSha256": null,
+          "openSpecArchiveStatus": null
+        },
+        {
+          "id": "ticket-2-plain-01",
+          "task": "ticket-2",
+          "workflow": "plain",
+          "repeat": 1,
+          "status": "pass",
+          "hiddenChecks": {
+            "passed": 23,
+            "failed": 0,
+            "unknown": 0,
+            "scheduled": 23
+          },
+          "originalRegressions": {
+            "passed": 1,
+            "failed": 0,
+            "indeterminate": 0,
+            "observed": 1
+          },
+          "testQuality": {
+            "addedCases": 36,
+            "passingOnSubmission": 36,
+            "passingOnReference": 35,
+            "flaky": 0,
+            "fixtureErrors": 0,
+            "scoredFaults": 5,
+            "detectedFaults": 5
+          },
+          "followUpTestQuality": {
+            "addedCases": 36,
+            "passingOnSubmission": 36,
+            "passingOnReference": 35,
+            "flaky": 0,
+            "fixtureErrors": 0,
+            "scoredFaults": 5,
+            "detectedFaults": 5
+          },
+          "tadaL1": null,
+          "agentUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 5,
+            "toolCalls": 17,
+            "inputTokens": 574964,
+            "cachedInputTokens": 528896,
+            "uncachedInputTokens": 46068,
+            "outputTokens": 6515
+          },
+          "reviewerUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 1,
+            "toolCalls": 0,
+            "inputTokens": 20939,
+            "cachedInputTokens": 0,
+            "uncachedInputTokens": 20939,
+            "outputTokens": 850
+          },
+          "codingSeconds": 255.4645639,
+          "elapsedSeconds": 890.2530928,
+          "dispatch": [
+            {
+              "name": "implement",
+              "timedOut": false,
+              "exitCode": 0
+            }
+          ],
+          "reevaluated": false,
+          "reranCoding": false,
+          "handoffDatabaseSha256": "cd63fcac56b1b16ccb7e516459311675b78039b285d55db73688b8563951d0ea",
+          "openSpecArchiveStatus": null
+        },
+        {
+          "id": "ticket-1-speckit-01",
+          "task": "ticket-1",
+          "workflow": "speckit",
+          "repeat": 1,
+          "status": "pass",
+          "hiddenChecks": {
+            "passed": 21,
+            "failed": 0,
+            "unknown": 0,
+            "scheduled": 21
+          },
+          "originalRegressions": {
+            "passed": 1,
+            "failed": 0,
+            "indeterminate": 0,
+            "observed": 1
+          },
+          "testQuality": {
+            "addedCases": 40,
+            "passingOnSubmission": 40,
+            "passingOnReference": 38,
+            "flaky": 0,
+            "fixtureErrors": 3,
+            "scoredFaults": 5,
+            "detectedFaults": 5
+          },
+          "followUpTestQuality": null,
+          "tadaL1": null,
+          "agentUsage": {
+            "complete": true,
+            "turns": 4,
+            "messages": 18,
+            "toolCalls": 49,
+            "inputTokens": 7872668,
+            "cachedInputTokens": 7642496,
+            "uncachedInputTokens": 230172,
+            "outputTokens": 76139
+          },
+          "reviewerUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 1,
+            "toolCalls": 0,
+            "inputTokens": 18115,
+            "cachedInputTokens": 9984,
+            "uncachedInputTokens": 8131,
+            "outputTokens": 853
+          },
+          "codingSeconds": 1084.6289036,
+          "elapsedSeconds": 1648.0697046,
+          "dispatch": [
+            {
+              "name": "specify",
+              "timedOut": false,
+              "exitCode": 0
+            },
+            {
+              "name": "plan",
+              "timedOut": false,
+              "exitCode": 0
+            },
+            {
+              "name": "tasks",
+              "timedOut": false,
+              "exitCode": 0
+            },
+            {
+              "name": "implement",
+              "timedOut": false,
+              "exitCode": 0
+            }
+          ],
+          "reevaluated": false,
+          "reranCoding": false,
+          "handoffDatabaseSha256": null,
+          "openSpecArchiveStatus": null
+        },
+        {
+          "id": "ticket-2-speckit-01",
+          "task": "ticket-2",
+          "workflow": "speckit",
+          "repeat": 1,
+          "status": "pass",
+          "hiddenChecks": {
+            "passed": 23,
+            "failed": 0,
+            "unknown": 0,
+            "scheduled": 23
+          },
+          "originalRegressions": {
+            "passed": 1,
+            "failed": 0,
+            "indeterminate": 0,
+            "observed": 1
+          },
+          "testQuality": {
+            "addedCases": 64,
+            "passingOnSubmission": 64,
+            "passingOnReference": 62,
+            "flaky": 0,
+            "fixtureErrors": 4,
+            "scoredFaults": 5,
+            "detectedFaults": 5
+          },
+          "followUpTestQuality": {
+            "addedCases": 42,
+            "passingOnSubmission": 42,
+            "passingOnReference": 42,
+            "flaky": 0,
+            "fixtureErrors": 4,
+            "scoredFaults": 5,
+            "detectedFaults": 5
+          },
+          "tadaL1": null,
+          "agentUsage": {
+            "complete": true,
+            "turns": 4,
+            "messages": 18,
+            "toolCalls": 38,
+            "inputTokens": 6285668,
+            "cachedInputTokens": 6035840,
+            "uncachedInputTokens": 249828,
+            "outputTokens": 64761
+          },
+          "reviewerUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 2,
+            "toolCalls": 0,
+            "inputTokens": 20330,
+            "cachedInputTokens": 9984,
+            "uncachedInputTokens": 10346,
+            "outputTokens": 998
+          },
+          "codingSeconds": 1021.3660021,
+          "elapsedSeconds": 2226.7740981,
+          "dispatch": [
+            {
+              "name": "specify",
+              "timedOut": false,
+              "exitCode": 0
+            },
+            {
+              "name": "plan",
+              "timedOut": false,
+              "exitCode": 0
+            },
+            {
+              "name": "tasks",
+              "timedOut": false,
+              "exitCode": 0
+            },
+            {
+              "name": "implement",
+              "timedOut": false,
+              "exitCode": 0
+            }
+          ],
+          "reevaluated": false,
+          "reranCoding": false,
+          "handoffDatabaseSha256": "369d28dd316cbcf9cbd10986d40f482604096fab3532e76ba8613ba3b6a3ab60",
+          "openSpecArchiveStatus": null
+        },
+        {
+          "id": "ticket-1-openspec-01",
+          "task": "ticket-1",
+          "workflow": "openspec",
+          "repeat": 1,
+          "status": "pass",
+          "hiddenChecks": {
+            "passed": 21,
+            "failed": 0,
+            "unknown": 0,
+            "scheduled": 21
+          },
+          "originalRegressions": {
+            "passed": 1,
+            "failed": 0,
+            "indeterminate": 0,
+            "observed": 1
+          },
+          "testQuality": {
+            "addedCases": 37,
+            "passingOnSubmission": 37,
+            "passingOnReference": 36,
+            "flaky": 0,
+            "fixtureErrors": 4,
+            "scoredFaults": 5,
+            "detectedFaults": 5
+          },
+          "followUpTestQuality": null,
+          "tadaL1": null,
+          "agentUsage": {
+            "complete": true,
+            "turns": 2,
+            "messages": 12,
+            "toolCalls": 26,
+            "inputTokens": 3218468,
+            "cachedInputTokens": 3105792,
+            "uncachedInputTokens": 112676,
+            "outputTokens": 25848
+          },
+          "reviewerUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 1,
+            "toolCalls": 0,
+            "inputTokens": 17663,
+            "cachedInputTokens": 9984,
+            "uncachedInputTokens": 7679,
+            "outputTokens": 906
+          },
+          "codingSeconds": 709.2586818,
+          "elapsedSeconds": 1713.6155405,
+          "dispatch": [
+            {
+              "name": "propose",
+              "timedOut": false,
+              "exitCode": 0
+            },
+            {
+              "name": "apply",
+              "timedOut": false,
+              "exitCode": 0
+            }
+          ],
+          "reevaluated": false,
+          "reranCoding": false,
+          "handoffDatabaseSha256": null,
+          "openSpecArchiveStatus": null
+        },
+        {
+          "id": "ticket-2-openspec-01",
+          "task": "ticket-2",
+          "workflow": "openspec",
+          "repeat": 1,
+          "status": "pass",
+          "hiddenChecks": {
+            "passed": 23,
+            "failed": 0,
+            "unknown": 0,
+            "scheduled": 23
+          },
+          "originalRegressions": {
+            "passed": 1,
+            "failed": 0,
+            "indeterminate": 0,
+            "observed": 1
+          },
+          "testQuality": {
+            "addedCases": 58,
+            "passingOnSubmission": 58,
+            "passingOnReference": 57,
+            "flaky": 0,
+            "fixtureErrors": 0,
+            "scoredFaults": 5,
+            "detectedFaults": 5
+          },
+          "followUpTestQuality": {
+            "addedCases": 58,
+            "passingOnSubmission": 58,
+            "passingOnReference": 57,
+            "flaky": 0,
+            "fixtureErrors": 0,
+            "scoredFaults": 5,
+            "detectedFaults": 5
+          },
+          "tadaL1": null,
+          "agentUsage": {
+            "complete": true,
+            "turns": 2,
+            "messages": 11,
+            "toolCalls": 23,
+            "inputTokens": 2373062,
+            "cachedInputTokens": 2224896,
+            "uncachedInputTokens": 148166,
+            "outputTokens": 21778
+          },
+          "reviewerUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 2,
+            "toolCalls": 0,
+            "inputTokens": 20110,
+            "cachedInputTokens": 9984,
+            "uncachedInputTokens": 10126,
+            "outputTokens": 1044
+          },
+          "codingSeconds": 489.9026085,
+          "elapsedSeconds": 1387.4204974,
+          "dispatch": [
+            {
+              "name": "propose",
+              "timedOut": false,
+              "exitCode": 0
+            },
+            {
+              "name": "apply",
+              "timedOut": false,
+              "exitCode": 0
+            }
+          ],
+          "reevaluated": false,
+          "reranCoding": false,
+          "handoffDatabaseSha256": "1e81e38c286c989875acc1acff58b8fca8386309aa0d86a525cdfb7431dc85f9",
+          "openSpecArchiveStatus": "archived"
+        },
+        {
+          "id": "ticket-1-tada-01",
+          "task": "ticket-1",
+          "workflow": "tada",
+          "repeat": 1,
+          "status": "pass",
+          "hiddenChecks": {
+            "passed": 21,
+            "failed": 0,
+            "unknown": 0,
+            "scheduled": 21
+          },
+          "originalRegressions": {
+            "passed": 1,
+            "failed": 0,
+            "indeterminate": 0,
+            "observed": 1
+          },
+          "testQuality": {
+            "addedCases": 12,
+            "passingOnSubmission": 12,
+            "passingOnReference": 11,
+            "flaky": 0,
+            "fixtureErrors": 2,
+            "scoredFaults": 5,
+            "detectedFaults": 5
+          },
+          "followUpTestQuality": null,
+          "tadaL1": {
+            "outcome": "PASS",
+            "baseline": "sha256:23ca8ec159a25708b2d490319fa57c045babd1463c7916a6e3543aa102b5f505",
+            "runId": "e0f020d220de4aabbc91ab5b4137b08a"
+          },
+          "agentUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 6,
+            "toolCalls": 25,
+            "inputTokens": 963155,
+            "cachedInputTokens": 922240,
+            "uncachedInputTokens": 40915,
+            "outputTokens": 12429
+          },
+          "reviewerUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 1,
+            "toolCalls": 0,
+            "inputTokens": 15330,
+            "cachedInputTokens": 9984,
+            "uncachedInputTokens": 5346,
+            "outputTokens": 601
+          },
+          "codingSeconds": 417.5017573,
+          "elapsedSeconds": 1082.2582037,
+          "dispatch": [
+            {
+              "name": "implement",
+              "timedOut": false,
+              "exitCode": 0
+            }
+          ],
+          "reevaluated": false,
+          "reranCoding": false,
+          "handoffDatabaseSha256": null,
+          "openSpecArchiveStatus": null
+        },
+        {
+          "id": "ticket-2-tada-01",
+          "task": "ticket-2",
+          "workflow": "tada",
+          "repeat": 1,
+          "status": "pass",
+          "hiddenChecks": {
+            "passed": 23,
+            "failed": 0,
+            "unknown": 0,
+            "scheduled": 23
+          },
+          "originalRegressions": {
+            "passed": 1,
+            "failed": 0,
+            "indeterminate": 0,
+            "observed": 1
+          },
+          "testQuality": {
+            "addedCases": 24,
+            "passingOnSubmission": 24,
+            "passingOnReference": 23,
+            "flaky": 0,
+            "fixtureErrors": 0,
+            "scoredFaults": 5,
+            "detectedFaults": 5
+          },
+          "followUpTestQuality": {
+            "addedCases": 24,
+            "passingOnSubmission": 24,
+            "passingOnReference": 23,
+            "flaky": 0,
+            "fixtureErrors": 0,
+            "scoredFaults": 5,
+            "detectedFaults": 5
+          },
+          "tadaL1": {
+            "outcome": "PASS",
+            "baseline": "sha256:cf93da72e6dae9f12d4b27e4b9f37671f6abc33fba95ac98eee947c28524ec2d",
+            "runId": "a079ca0dc9304b05b7cd0a01cd6c788a"
+          },
+          "agentUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 6,
+            "toolCalls": 23,
+            "inputTokens": 857825,
+            "cachedInputTokens": 819200,
+            "uncachedInputTokens": 38625,
+            "outputTokens": 10690
+          },
+          "reviewerUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 1,
+            "toolCalls": 0,
+            "inputTokens": 17576,
+            "cachedInputTokens": 9984,
+            "uncachedInputTokens": 7592,
+            "outputTokens": 806
+          },
+          "codingSeconds": 357.194073,
+          "elapsedSeconds": 1235.4179838,
+          "dispatch": [
+            {
+              "name": "implement",
+              "timedOut": false,
+              "exitCode": 0
+            }
+          ],
+          "reevaluated": false,
+          "reranCoding": false,
+          "handoffDatabaseSha256": "f979cb0a05ed3f6384dd9c7f09b7ea51f7f9745cd6d66876f8797d6472d21817",
+          "openSpecArchiveStatus": null
+        }
+      ],
+      "campaigns": [
+        {
+          "id": "plain-01",
+          "workflow": "plain",
+          "repeat": 1,
+          "ticket1": "pass",
+          "ticket2": "pass",
+          "passed": true,
+          "codingSeconds": 579.5273501,
+          "elapsedSeconds": 1969.5396393,
+          "agentUsage": {
+            "complete": true,
+            "turns": 2,
+            "messages": 9,
+            "toolCalls": 32,
+            "inputTokens": 1095275,
+            "cachedInputTokens": 994688,
+            "uncachedInputTokens": 100587,
+            "outputTokens": 16181
+          }
+        },
+        {
+          "id": "speckit-01",
+          "workflow": "speckit",
+          "repeat": 1,
+          "ticket1": "pass",
+          "ticket2": "pass",
+          "passed": true,
+          "codingSeconds": 2105.9949057,
+          "elapsedSeconds": 3874.8438027,
+          "agentUsage": {
+            "complete": true,
+            "turns": 8,
+            "messages": 36,
+            "toolCalls": 87,
+            "inputTokens": 14158336,
+            "cachedInputTokens": 13678336,
+            "uncachedInputTokens": 480000,
+            "outputTokens": 140900
+          }
+        },
+        {
+          "id": "openspec-01",
+          "workflow": "openspec",
+          "repeat": 1,
+          "ticket1": "pass",
+          "ticket2": "pass",
+          "passed": true,
+          "codingSeconds": 1199.1612903,
+          "elapsedSeconds": 3101.0360379,
+          "agentUsage": {
+            "complete": true,
+            "turns": 4,
+            "messages": 23,
+            "toolCalls": 49,
+            "inputTokens": 5591530,
+            "cachedInputTokens": 5330688,
+            "uncachedInputTokens": 260842,
+            "outputTokens": 47626
+          }
+        },
+        {
+          "id": "tada-01",
+          "workflow": "tada",
+          "repeat": 1,
+          "ticket1": "pass",
+          "ticket2": "pass",
+          "passed": true,
+          "codingSeconds": 774.6958303,
+          "elapsedSeconds": 2317.6761875,
+          "agentUsage": {
+            "complete": true,
+            "turns": 2,
+            "messages": 12,
+            "toolCalls": 48,
+            "inputTokens": 1820980,
+            "cachedInputTokens": 1741440,
+            "uncachedInputTokens": 79540,
+            "outputTokens": 23119
+          }
+        }
+      ]
+    },
+    {
+      "label": "handoff-repeated",
+      "id": "codex-sdd-handoff-20261127-093637-fc6807b8",
+      "suite": "codex-sdd-handoff",
+      "startedAt": "2026-11-27T09:36:37.5578584+00:00",
+      "seed": 1729,
+      "repeats": 3,
+      "manifestSha256": "e7bb8eb74ccbc2638451e8f696e8d8d61a2df4de0a8bd6aa65edc1d4054ff6a1",
+      "retainedComparisonSha256": "756d30ea1c2234a8b40da4eca64393c4aa164947068d6c16c76247f735b9426f",
+      "originBatchId": "codex-sdd-handoff-20261126-174616-d4d3b005",
+      "originManifestSha256": "6c792056920291bacd8df9f103eb843d84c7ea1184cdac8724d4b75de54949d4",
+      "continuation": {
+        "originRunnerSha256": "7e98303c7d6c2520498ab0ef80bae8e724e8723b9bf84c88df3dc872681b20e1",
+        "retainedSlots": [
+          "ticket-1-plain-01",
+          "ticket-2-plain-01",
+          "ticket-1-speckit-01",
+          "ticket-2-speckit-01",
+          "ticket-1-openspec-01",
+          "ticket-2-openspec-01"
+        ],
+        "interruptedSlot": "ticket-1-tada-01"
+      },
+      "pins": {
+        "codex": "0.162.1",
+        "sdk": "10.0.403",
+        "model": "gpt-6.1-sol",
+        "effort": "medium",
+        "tada": "0.1.0-alpha.13.107",
+        "speckit": "1.4.0",
+        "openspec": "2.0.0",
+        "sandbox": "elevated workspace-write, offline, approval never",
+        "ticket-1-hidden-checks": "21",
+        "ticket-2-hidden-checks": "23",
+        "tada-sha256": "0578dd3f039f5610661217994569d0f43ffe125aa162ed9d2e1d5bc90fce3ad0",
+        "speckit-sha256": "b189181779417dfd1d7bb72ba35905f75576f80d3f89aef0210986578e11c056",
+        "openspec-sha256": "7d37074f5eb63a7f30c6a157d0957f0f0d2726b3c32ed9992fbe7be24ef5e325",
+        "fixture-sha256": "712958922cc4a607b00d2ba93e49ae42b6cf7426011fc828cef293aeed279aab",
+        "handoff-fixture-sha256": "76ccc3724ae544ef67eac4a02980d89fc558107f45c99359ed0ecf2ecd68af5d",
+        "handoff-evaluator-sha256": "4bde883c892db8dbe73b900d33e331315f5c6b2a8a81af6ea6f219d162616be5",
+        "handoff-runner-sha256": "517dc046bfb73a87833207079b2511d1f327ab08327f835716bf33ca78cedb2d",
+        "approval-receipt-sha256": "c55f5185dfdc2ff7e002ebf1952363bd0eefb177c1ec675daddc1be10743195e",
+        "codex-artifact-sha256": "dd13bdb162a184fa04039488b234a8258ef9b76f84e926c505d5742b19249a6a",
+        "http-evaluator-sha256": "c87b07a7a40af4ac8f1d13f1dee50b3151a2ff0d9adc06004c0844856562ceb1",
+        "openspec-cli-sha256": "2d2039ec8ff6436227bb791fd69306dfde4d3e29b975981290192badd3a9991e",
+        "openspec-node-sha256": "c5ff4c736112dd483c750fd4149d30c8a116db1a49b8b3ec88be4b65e6c86c19",
+        "ticket-1-base": "5f6a89811e016e59ef3bbf99464a2afe3ce1962d",
+        "ticket-1-tada-baseline": "sha256:23ca8ec159a25708b2d490319fa57c045babd1463c7916a6e3543aa102b5f505",
+        "ticket-2-control-base": "ed505a2251a9c9c5e4172123497b1ff55f289afd",
+        "ticket-2-tada-baseline": "sha256:cf93da72e6dae9f12d4b27e4b9f37671f6abc33fba95ac98eee947c28524ec2d"
+      },
+      "attempts": [
+        {
+          "id": "ticket-1-plain-01",
+          "task": "ticket-1",
+          "workflow": "plain",
+          "repeat": 1,
+          "status": "pass",
+          "hiddenChecks": {
+            "passed": 21,
+            "failed": 0,
+            "unknown": 0,
+            "scheduled": 21
+          },
+          "originalRegressions": {
+            "passed": 1,
+            "failed": 0,
+            "indeterminate": 0,
+            "observed": 1
+          },
+          "testQuality": {
+            "addedCases": 23,
+            "passingOnSubmission": 23,
+            "passingOnReference": 22,
+            "flaky": 0,
+            "fixtureErrors": 3,
+            "scoredFaults": 5,
+            "detectedFaults": 5
+          },
+          "followUpTestQuality": null,
+          "tadaL1": null,
+          "agentUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 4,
+            "toolCalls": 12,
+            "inputTokens": 446127,
+            "cachedInputTokens": 426880,
+            "uncachedInputTokens": 19247,
+            "outputTokens": 9598
+          },
+          "reviewerUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 1,
+            "toolCalls": 0,
+            "inputTokens": 18007,
+            "cachedInputTokens": 4864,
+            "uncachedInputTokens": 13143,
+            "outputTokens": 741
+          },
+          "codingSeconds": 294.5572275,
+          "elapsedSeconds": 897.7999728,
+          "dispatch": [
+            {
+              "name": "implement",
+              "timedOut": false,
+              "exitCode": 0
+            }
+          ],
+          "reevaluated": false,
+          "reranCoding": false,
+          "handoffDatabaseSha256": null,
+          "openSpecArchiveStatus": null
+        },
+        {
+          "id": "ticket-2-plain-01",
+          "task": "ticket-2",
+          "workflow": "plain",
+          "repeat": 1,
+          "status": "pass",
+          "hiddenChecks": {
+            "passed": 23,
+            "failed": 0,
+            "unknown": 0,
+            "scheduled": 23
+          },
+          "originalRegressions": {
+            "passed": 1,
+            "failed": 0,
+            "indeterminate": 0,
+            "observed": 1
+          },
+          "testQuality": {
+            "addedCases": 34,
+            "passingOnSubmission": 34,
+            "passingOnReference": 33,
+            "flaky": 0,
+            "fixtureErrors": 0,
+            "scoredFaults": 5,
+            "detectedFaults": 5
+          },
+          "followUpTestQuality": {
+            "addedCases": 34,
+            "passingOnSubmission": 34,
+            "passingOnReference": 33,
+            "flaky": 0,
+            "fixtureErrors": 0,
+            "scoredFaults": 5,
+            "detectedFaults": 5
+          },
+          "tadaL1": null,
+          "agentUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 5,
+            "toolCalls": 16,
+            "inputTokens": 375104,
+            "cachedInputTokens": 349440,
+            "uncachedInputTokens": 25664,
+            "outputTokens": 5695
+          },
+          "reviewerUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 1,
+            "toolCalls": 0,
+            "inputTokens": 17620,
+            "cachedInputTokens": 9984,
+            "uncachedInputTokens": 7636,
+            "outputTokens": 800
+          },
+          "codingSeconds": 189.316775,
+          "elapsedSeconds": 844.7231296,
+          "dispatch": [
+            {
+              "name": "implement",
+              "timedOut": false,
+              "exitCode": 0
+            }
+          ],
+          "reevaluated": false,
+          "reranCoding": false,
+          "handoffDatabaseSha256": "bf0304af0951d01083b42261f4945efe2a620764b52bda24ebac5152dc777a7d",
+          "openSpecArchiveStatus": null
+        },
+        {
+          "id": "ticket-1-speckit-01",
+          "task": "ticket-1",
+          "workflow": "speckit",
+          "repeat": 1,
+          "status": "pass",
+          "hiddenChecks": {
+            "passed": 21,
+            "failed": 0,
+            "unknown": 0,
+            "scheduled": 21
+          },
+          "originalRegressions": {
+            "passed": 1,
+            "failed": 0,
+            "indeterminate": 0,
+            "observed": 1
+          },
+          "testQuality": {
+            "addedCases": 49,
+            "passingOnSubmission": 49,
+            "passingOnReference": 48,
+            "flaky": 0,
+            "fixtureErrors": 6,
+            "scoredFaults": 5,
+            "detectedFaults": 5
+          },
+          "followUpTestQuality": null,
+          "tadaL1": null,
+          "agentUsage": {
+            "complete": true,
+            "turns": 4,
+            "messages": 19,
+            "toolCalls": 44,
+            "inputTokens": 6390942,
+            "cachedInputTokens": 6169600,
+            "uncachedInputTokens": 221342,
+            "outputTokens": 75451
+          },
+          "reviewerUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 1,
+            "toolCalls": 0,
+            "inputTokens": 18703,
+            "cachedInputTokens": 9984,
+            "uncachedInputTokens": 8719,
+            "outputTokens": 890
+          },
+          "codingSeconds": 1028.8201039,
+          "elapsedSeconds": 1566.5954139,
+          "dispatch": [
+            {
+              "name": "specify",
+              "timedOut": false,
+              "exitCode": 0
+            },
+            {
+              "name": "plan",
+              "timedOut": false,
+              "exitCode": 0
+            },
+            {
+              "name": "tasks",
+              "timedOut": false,
+              "exitCode": 0
+            },
+            {
+              "name": "implement",
+              "timedOut": false,
+              "exitCode": 0
+            }
+          ],
+          "reevaluated": false,
+          "reranCoding": false,
+          "handoffDatabaseSha256": null,
+          "openSpecArchiveStatus": null
+        },
+        {
+          "id": "ticket-2-speckit-01",
+          "task": "ticket-2",
+          "workflow": "speckit",
+          "repeat": 1,
+          "status": "pass",
+          "hiddenChecks": {
+            "passed": 23,
+            "failed": 0,
+            "unknown": 0,
+            "scheduled": 23
+          },
+          "originalRegressions": {
+            "passed": 1,
+            "failed": 0,
+            "indeterminate": 0,
+            "observed": 1
+          },
+          "testQuality": {
+            "addedCases": 85,
+            "passingOnSubmission": 85,
+            "passingOnReference": 84,
+            "flaky": 0,
+            "fixtureErrors": 0,
+            "scoredFaults": 5,
+            "detectedFaults": 5
+          },
+          "followUpTestQuality": {
+            "addedCases": 56,
+            "passingOnSubmission": 56,
+            "passingOnReference": 56,
+            "flaky": 0,
+            "fixtureErrors": 0,
+            "scoredFaults": 5,
+            "detectedFaults": 5
+          },
+          "tadaL1": null,
+          "agentUsage": {
+            "complete": true,
+            "turns": 4,
+            "messages": 17,
+            "toolCalls": 53,
+            "inputTokens": 5631279,
+            "cachedInputTokens": 5412096,
+            "uncachedInputTokens": 219183,
+            "outputTokens": 83320
+          },
+          "reviewerUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 2,
+            "toolCalls": 0,
+            "inputTokens": 20115,
+            "cachedInputTokens": 9984,
+            "uncachedInputTokens": 10131,
+            "outputTokens": 939
+          },
+          "codingSeconds": 1013.0768627,
+          "elapsedSeconds": 1669.6520718,
+          "dispatch": [
+            {
+              "name": "specify",
+              "timedOut": false,
+              "exitCode": 0
+            },
+            {
+              "name": "plan",
+              "timedOut": false,
+              "exitCode": 0
+            },
+            {
+              "name": "tasks",
+              "timedOut": false,
+              "exitCode": 0
+            },
+            {
+              "name": "implement",
+              "timedOut": false,
+              "exitCode": 0
+            }
+          ],
+          "reevaluated": false,
+          "reranCoding": false,
+          "handoffDatabaseSha256": "5e008ec54d960d35b58aa4c60ef2c081f08f04faa58b1a23e4c75393a179f1cf",
+          "openSpecArchiveStatus": null
+        },
+        {
+          "id": "ticket-1-openspec-01",
+          "task": "ticket-1",
+          "workflow": "openspec",
+          "repeat": 1,
+          "status": "pass",
+          "hiddenChecks": {
+            "passed": 21,
+            "failed": 0,
+            "unknown": 0,
+            "scheduled": 21
+          },
+          "originalRegressions": {
+            "passed": 1,
+            "failed": 0,
+            "indeterminate": 0,
+            "observed": 1
+          },
+          "testQuality": {
+            "addedCases": 34,
+            "passingOnSubmission": 34,
+            "passingOnReference": 33,
+            "flaky": 0,
+            "fixtureErrors": 3,
+            "scoredFaults": 5,
+            "detectedFaults": 5
+          },
+          "followUpTestQuality": null,
+          "tadaL1": null,
+          "agentUsage": {
+            "complete": true,
+            "turns": 2,
+            "messages": 11,
+            "toolCalls": 24,
+            "inputTokens": 1960547,
+            "cachedInputTokens": 1849472,
+            "uncachedInputTokens": 111075,
+            "outputTokens": 23776
+          },
+          "reviewerUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 1,
+            "toolCalls": 0,
+            "inputTokens": 17105,
+            "cachedInputTokens": 9984,
+            "uncachedInputTokens": 7121,
+            "outputTokens": 924
+          },
+          "codingSeconds": 505.4176809,
+          "elapsedSeconds": 1030.4987501,
+          "dispatch": [
+            {
+              "name": "propose",
+              "timedOut": false,
+              "exitCode": 0
+            },
+            {
+              "name": "apply",
+              "timedOut": false,
+              "exitCode": 0
+            }
+          ],
+          "reevaluated": false,
+          "reranCoding": false,
+          "handoffDatabaseSha256": null,
+          "openSpecArchiveStatus": null
+        },
+        {
+          "id": "ticket-2-openspec-01",
+          "task": "ticket-2",
+          "workflow": "openspec",
+          "repeat": 1,
+          "status": "pass",
+          "hiddenChecks": {
+            "passed": 23,
+            "failed": 0,
+            "unknown": 0,
+            "scheduled": 23
+          },
+          "originalRegressions": {
+            "passed": 1,
+            "failed": 0,
+            "indeterminate": 0,
+            "observed": 1
+          },
+          "testQuality": {
+            "addedCases": 53,
+            "passingOnSubmission": 53,
+            "passingOnReference": 52,
+            "flaky": 0,
+            "fixtureErrors": 0,
+            "scoredFaults": 5,
+            "detectedFaults": 5
+          },
+          "followUpTestQuality": {
+            "addedCases": 30,
+            "passingOnSubmission": 30,
+            "passingOnReference": 30,
+            "flaky": 0,
+            "fixtureErrors": 0,
+            "scoredFaults": 5,
+            "detectedFaults": 5
+          },
+          "tadaL1": null,
+          "agentUsage": {
+            "complete": true,
+            "turns": 2,
+            "messages": 11,
+            "toolCalls": 20,
+            "inputTokens": 2174550,
+            "cachedInputTokens": 2047360,
+            "uncachedInputTokens": 127190,
+            "outputTokens": 20956
+          },
+          "reviewerUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 2,
+            "toolCalls": 0,
+            "inputTokens": 19665,
+            "cachedInputTokens": 9984,
+            "uncachedInputTokens": 9681,
+            "outputTokens": 847
+          },
+          "codingSeconds": 462.6016963,
+          "elapsedSeconds": 1603.3471471,
+          "dispatch": [
+            {
+              "name": "propose",
+              "timedOut": false,
+              "exitCode": 0
+            },
+            {
+              "name": "apply",
+              "timedOut": false,
+              "exitCode": 0
+            }
+          ],
+          "reevaluated": false,
+          "reranCoding": false,
+          "handoffDatabaseSha256": "3f2757421981e1e167f6b5701c46801ab0469bd6ad10afdbe46d1fd2d17e9b1c",
+          "openSpecArchiveStatus": "archived"
+        },
+        {
+          "id": "ticket-1-tada-01",
+          "task": "ticket-1",
+          "workflow": "tada",
+          "repeat": 1,
+          "status": "pass",
+          "hiddenChecks": {
+            "passed": 21,
+            "failed": 0,
+            "unknown": 0,
+            "scheduled": 21
+          },
+          "originalRegressions": {
+            "passed": 1,
+            "failed": 0,
+            "indeterminate": 0,
+            "observed": 1
+          },
+          "testQuality": {
+            "addedCases": 23,
+            "passingOnSubmission": 23,
+            "passingOnReference": 22,
+            "flaky": 0,
+            "fixtureErrors": 2,
+            "scoredFaults": 5,
+            "detectedFaults": 5
+          },
+          "followUpTestQuality": null,
+          "tadaL1": {
+            "outcome": "PASS",
+            "baseline": "sha256:23ca8ec159a25708b2d490319fa57c045babd1463c7916a6e3543aa102b5f505",
+            "runId": "58a978f95efe4a8d9907793d3b9d6119"
+          },
+          "agentUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 6,
+            "toolCalls": 20,
+            "inputTokens": 807784,
+            "cachedInputTokens": 771968,
+            "uncachedInputTokens": 35816,
+            "outputTokens": 12513
+          },
+          "reviewerUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 1,
+            "toolCalls": 0,
+            "inputTokens": 15862,
+            "cachedInputTokens": 9984,
+            "uncachedInputTokens": 5878,
+            "outputTokens": 718
+          },
+          "codingSeconds": 834.5377443,
+          "elapsedSeconds": 1486.484391,
+          "dispatch": [
+            {
+              "name": "implement",
+              "timedOut": false,
+              "exitCode": 0
+            }
+          ],
+          "reevaluated": false,
+          "reranCoding": false,
+          "handoffDatabaseSha256": null,
+          "openSpecArchiveStatus": null
+        },
+        {
+          "id": "ticket-2-tada-01",
+          "task": "ticket-2",
+          "workflow": "tada",
+          "repeat": 1,
+          "status": "pass",
+          "hiddenChecks": {
+            "passed": 23,
+            "failed": 0,
+            "unknown": 0,
+            "scheduled": 23
+          },
+          "originalRegressions": {
+            "passed": 1,
+            "failed": 0,
+            "indeterminate": 0,
+            "observed": 1
+          },
+          "testQuality": {
+            "addedCases": 37,
+            "passingOnSubmission": 37,
+            "passingOnReference": 36,
+            "flaky": 0,
+            "fixtureErrors": 0,
+            "scoredFaults": 5,
+            "detectedFaults": 5
+          },
+          "followUpTestQuality": {
+            "addedCases": 29,
+            "passingOnSubmission": 29,
+            "passingOnReference": 28,
+            "flaky": 0,
+            "fixtureErrors": 0,
+            "scoredFaults": 5,
+            "detectedFaults": 5
+          },
+          "tadaL1": {
+            "outcome": "PASS",
+            "baseline": "sha256:cf93da72e6dae9f12d4b27e4b9f37671f6abc33fba95ac98eee947c28524ec2d",
+            "runId": "71bd593eb9964e50b3a2ba3824b9a922"
+          },
+          "agentUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 6,
+            "toolCalls": 20,
+            "inputTokens": 819927,
+            "cachedInputTokens": 782336,
+            "uncachedInputTokens": 37591,
+            "outputTokens": 9885
+          },
+          "reviewerUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 2,
+            "toolCalls": 0,
+            "inputTokens": 20260,
+            "cachedInputTokens": 9984,
+            "uncachedInputTokens": 10276,
+            "outputTokens": 1052
+          },
+          "codingSeconds": 374.4733818,
+          "elapsedSeconds": 1127.3856424,
+          "dispatch": [
+            {
+              "name": "implement",
+              "timedOut": false,
+              "exitCode": 0
+            }
+          ],
+          "reevaluated": false,
+          "reranCoding": false,
+          "handoffDatabaseSha256": "faed678b8584698cfd2f9fe582a7066b92e852dd79fd056fcb7f5ac3ba340a40",
+          "openSpecArchiveStatus": null
+        },
+        {
+          "id": "ticket-1-speckit-02",
+          "task": "ticket-1",
+          "workflow": "speckit",
+          "repeat": 2,
+          "status": "pass",
+          "hiddenChecks": {
+            "passed": 21,
+            "failed": 0,
+            "unknown": 0,
+            "scheduled": 21
+          },
+          "originalRegressions": {
+            "passed": 1,
+            "failed": 0,
+            "indeterminate": 0,
+            "observed": 1
+          },
+          "testQuality": {
+            "addedCases": 43,
+            "passingOnSubmission": 43,
+            "passingOnReference": 42,
+            "flaky": 0,
+            "fixtureErrors": 7,
+            "scoredFaults": 5,
+            "detectedFaults": 5
+          },
+          "followUpTestQuality": null,
+          "tadaL1": null,
+          "agentUsage": {
+            "complete": true,
+            "turns": 4,
+            "messages": 18,
+            "toolCalls": 32,
+            "inputTokens": 5184959,
+            "cachedInputTokens": 4975488,
+            "uncachedInputTokens": 209471,
+            "outputTokens": 87520
+          },
+          "reviewerUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 1,
+            "toolCalls": 0,
+            "inputTokens": 19376,
+            "cachedInputTokens": 5888,
+            "uncachedInputTokens": 13488,
+            "outputTokens": 935
+          },
+          "codingSeconds": 1080.1231799,
+          "elapsedSeconds": 1566.0228993,
+          "dispatch": [
+            {
+              "name": "specify",
+              "timedOut": false,
+              "exitCode": 0
+            },
+            {
+              "name": "plan",
+              "timedOut": false,
+              "exitCode": 0
+            },
+            {
+              "name": "tasks",
+              "timedOut": false,
+              "exitCode": 0
+            },
+            {
+              "name": "implement",
+              "timedOut": false,
+              "exitCode": 0
+            }
+          ],
+          "reevaluated": false,
+          "reranCoding": false,
+          "handoffDatabaseSha256": null,
+          "openSpecArchiveStatus": null
+        },
+        {
+          "id": "ticket-2-speckit-02",
+          "task": "ticket-2",
+          "workflow": "speckit",
+          "repeat": 2,
+          "status": "pass",
+          "hiddenChecks": {
+            "passed": 23,
+            "failed": 0,
+            "unknown": 0,
+            "scheduled": 23
+          },
+          "originalRegressions": {
+            "passed": 1,
+            "failed": 0,
+            "indeterminate": 0,
+            "observed": 1
+          },
+          "testQuality": {
+            "addedCases": 77,
+            "passingOnSubmission": 77,
+            "passingOnReference": 76,
+            "flaky": 1,
+            "fixtureErrors": 1,
+            "scoredFaults": 5,
+            "detectedFaults": 5
+          },
+          "followUpTestQuality": {
+            "addedCases": 52,
+            "passingOnSubmission": 52,
+            "passingOnReference": 52,
+            "flaky": 0,
+            "fixtureErrors": 0,
+            "scoredFaults": 5,
+            "detectedFaults": 5
+          },
+          "tadaL1": null,
+          "agentUsage": {
+            "complete": true,
+            "turns": 4,
+            "messages": 17,
+            "toolCalls": 41,
+            "inputTokens": 5824589,
+            "cachedInputTokens": 5582720,
+            "uncachedInputTokens": 241869,
+            "outputTokens": 92846
+          },
+          "reviewerUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 2,
+            "toolCalls": 0,
+            "inputTokens": 22356,
+            "cachedInputTokens": 9984,
+            "uncachedInputTokens": 12372,
+            "outputTokens": 935
+          },
+          "codingSeconds": 1078.2273476,
+          "elapsedSeconds": 1930.1471486,
+          "dispatch": [
+            {
+              "name": "specify",
+              "timedOut": false,
+              "exitCode": 0
+            },
+            {
+              "name": "plan",
+              "timedOut": false,
+              "exitCode": 0
+            },
+            {
+              "name": "tasks",
+              "timedOut": false,
+              "exitCode": 0
+            },
+            {
+              "name": "implement",
+              "timedOut": false,
+              "exitCode": 0
+            }
+          ],
+          "reevaluated": false,
+          "reranCoding": false,
+          "handoffDatabaseSha256": "5603fa6dbcb85b73274596a1bc6e71fa6ad07b40f0eb3292f6764110d90c9ef5",
+          "openSpecArchiveStatus": null
+        },
+        {
+          "id": "ticket-1-openspec-02",
+          "task": "ticket-1",
+          "workflow": "openspec",
+          "repeat": 2,
+          "status": "pass",
+          "hiddenChecks": {
+            "passed": 21,
+            "failed": 0,
+            "unknown": 0,
+            "scheduled": 21
+          },
+          "originalRegressions": {
+            "passed": 1,
+            "failed": 0,
+            "indeterminate": 0,
+            "observed": 1
+          },
+          "testQuality": {
+            "addedCases": 42,
+            "passingOnSubmission": 42,
+            "passingOnReference": 41,
+            "flaky": 0,
+            "fixtureErrors": 6,
+            "scoredFaults": 5,
+            "detectedFaults": 5
+          },
+          "followUpTestQuality": null,
+          "tadaL1": null,
+          "agentUsage": {
+            "complete": true,
+            "turns": 2,
+            "messages": 11,
+            "toolCalls": 24,
+            "inputTokens": 2055104,
+            "cachedInputTokens": 1941248,
+            "uncachedInputTokens": 113856,
+            "outputTokens": 26463
+          },
+          "reviewerUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 1,
+            "toolCalls": 0,
+            "inputTokens": 18074,
+            "cachedInputTokens": 9984,
+            "uncachedInputTokens": 8090,
+            "outputTokens": 831
+          },
+          "codingSeconds": 587.1877395,
+          "elapsedSeconds": 1193.0540303,
+          "dispatch": [
+            {
+              "name": "propose",
+              "timedOut": false,
+              "exitCode": 0
+            },
+            {
+              "name": "apply",
+              "timedOut": false,
+              "exitCode": 0
+            }
+          ],
+          "reevaluated": false,
+          "reranCoding": false,
+          "handoffDatabaseSha256": null,
+          "openSpecArchiveStatus": null
+        },
+        {
+          "id": "ticket-2-openspec-02",
+          "task": "ticket-2",
+          "workflow": "openspec",
+          "repeat": 2,
+          "status": "indeterminate",
+          "hiddenChecks": {
+            "passed": 22,
+            "failed": 0,
+            "unknown": 1,
+            "scheduled": 23
+          },
+          "originalRegressions": {
+            "passed": 1,
+            "failed": 0,
+            "indeterminate": 0,
+            "observed": 1
+          },
+          "testQuality": {
+            "addedCases": 59,
+            "passingOnSubmission": 59,
+            "passingOnReference": 58,
+            "flaky": 0,
+            "fixtureErrors": 0,
+            "scoredFaults": 5,
+            "detectedFaults": 5
+          },
+          "followUpTestQuality": {
+            "addedCases": 34,
+            "passingOnSubmission": 34,
+            "passingOnReference": 34,
+            "flaky": 0,
+            "fixtureErrors": 0,
+            "scoredFaults": 5,
+            "detectedFaults": 5
+          },
+          "tadaL1": null,
+          "agentUsage": {
+            "complete": true,
+            "turns": 2,
+            "messages": 11,
+            "toolCalls": 30,
+            "inputTokens": 2503236,
+            "cachedInputTokens": 2376704,
+            "uncachedInputTokens": 126532,
+            "outputTokens": 20192
+          },
+          "reviewerUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 2,
+            "toolCalls": 0,
+            "inputTokens": 20173,
+            "cachedInputTokens": 0,
+            "uncachedInputTokens": 20173,
+            "outputTokens": 871
+          },
+          "codingSeconds": 519.1785659,
+          "elapsedSeconds": 1386.6871075,
+          "dispatch": [
+            {
+              "name": "propose",
+              "timedOut": false,
+              "exitCode": 0
+            },
+            {
+              "name": "apply",
+              "timedOut": false,
+              "exitCode": 0
+            }
+          ],
+          "reevaluated": false,
+          "reranCoding": false,
+          "handoffDatabaseSha256": "273bf5fb66930fba081abdb9997cd34eacc1c4a40eb01a1207e28180af4fd68e",
+          "openSpecArchiveStatus": "archived"
+        },
+        {
+          "id": "ticket-1-tada-02",
+          "task": "ticket-1",
+          "workflow": "tada",
+          "repeat": 2,
+          "status": "pass",
+          "hiddenChecks": {
+            "passed": 21,
+            "failed": 0,
+            "unknown": 0,
+            "scheduled": 21
+          },
+          "originalRegressions": {
+            "passed": 1,
+            "failed": 0,
+            "indeterminate": 0,
+            "observed": 1
+          },
+          "testQuality": {
+            "addedCases": 20,
+            "passingOnSubmission": 20,
+            "passingOnReference": 18,
+            "flaky": 0,
+            "fixtureErrors": 1,
+            "scoredFaults": 5,
+            "detectedFaults": 5
+          },
+          "followUpTestQuality": null,
+          "tadaL1": {
+            "outcome": "PASS",
+            "baseline": "sha256:23ca8ec159a25708b2d490319fa57c045babd1463c7916a6e3543aa102b5f505",
+            "runId": "158564d23af24d8188f62be12c466ec8"
+          },
+          "agentUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 6,
+            "toolCalls": 22,
+            "inputTokens": 1100106,
+            "cachedInputTokens": 1057792,
+            "uncachedInputTokens": 42314,
+            "outputTokens": 11087
+          },
+          "reviewerUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 2,
+            "toolCalls": 0,
+            "inputTokens": 14831,
+            "cachedInputTokens": 9984,
+            "uncachedInputTokens": 4847,
+            "outputTokens": 762
+          },
+          "codingSeconds": 462.4726666,
+          "elapsedSeconds": 1174.7664569,
+          "dispatch": [
+            {
+              "name": "implement",
+              "timedOut": false,
+              "exitCode": 0
+            }
+          ],
+          "reevaluated": false,
+          "reranCoding": false,
+          "handoffDatabaseSha256": null,
+          "openSpecArchiveStatus": null
+        },
+        {
+          "id": "ticket-2-tada-02",
+          "task": "ticket-2",
+          "workflow": "tada",
+          "repeat": 2,
+          "status": "pass",
+          "hiddenChecks": {
+            "passed": 23,
+            "failed": 0,
+            "unknown": 0,
+            "scheduled": 23
+          },
+          "originalRegressions": {
+            "passed": 1,
+            "failed": 0,
+            "indeterminate": 0,
+            "observed": 1
+          },
+          "testQuality": {
+            "addedCases": 31,
+            "passingOnSubmission": 31,
+            "passingOnReference": 29,
+            "flaky": 0,
+            "fixtureErrors": 0,
+            "scoredFaults": 5,
+            "detectedFaults": 5
+          },
+          "followUpTestQuality": {
+            "addedCases": 31,
+            "passingOnSubmission": 31,
+            "passingOnReference": 29,
+            "flaky": 0,
+            "fixtureErrors": 0,
+            "scoredFaults": 5,
+            "detectedFaults": 5
+          },
+          "tadaL1": {
+            "outcome": "PASS",
+            "baseline": "sha256:cf93da72e6dae9f12d4b27e4b9f37671f6abc33fba95ac98eee947c28524ec2d",
+            "runId": "3e5e3a51fbad4438a495c851786ecb29"
+          },
+          "agentUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 7,
+            "toolCalls": 20,
+            "inputTokens": 856017,
+            "cachedInputTokens": 812928,
+            "uncachedInputTokens": 43089,
+            "outputTokens": 10029
+          },
+          "reviewerUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 1,
+            "toolCalls": 0,
+            "inputTokens": 19176,
+            "cachedInputTokens": 0,
+            "uncachedInputTokens": 19176,
+            "outputTokens": 813
+          },
+          "codingSeconds": 350.2481357,
+          "elapsedSeconds": 1041.0931307,
+          "dispatch": [
+            {
+              "name": "implement",
+              "timedOut": false,
+              "exitCode": 0
+            }
+          ],
+          "reevaluated": false,
+          "reranCoding": false,
+          "handoffDatabaseSha256": "9de270e705049784664fcbac95533b3a2e125c2735981081125f4d1f43d02ffd",
+          "openSpecArchiveStatus": null
+        },
+        {
+          "id": "ticket-1-plain-02",
+          "task": "ticket-1",
+          "workflow": "plain",
+          "repeat": 2,
+          "status": "pass",
+          "hiddenChecks": {
+            "passed": 21,
+            "failed": 0,
+            "unknown": 0,
+            "scheduled": 21
+          },
+          "originalRegressions": {
+            "passed": 1,
+            "failed": 0,
+            "indeterminate": 0,
+            "observed": 1
+          },
+          "testQuality": {
+            "addedCases": 24,
+            "passingOnSubmission": 24,
+            "passingOnReference": 23,
+            "flaky": 0,
+            "fixtureErrors": 3,
+            "scoredFaults": 5,
+            "detectedFaults": 5
+          },
+          "followUpTestQuality": null,
+          "tadaL1": null,
+          "agentUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 5,
+            "toolCalls": 17,
+            "inputTokens": 524788,
+            "cachedInputTokens": 487168,
+            "uncachedInputTokens": 37620,
+            "outputTokens": 9353
+          },
+          "reviewerUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 1,
+            "toolCalls": 0,
+            "inputTokens": 18630,
+            "cachedInputTokens": 0,
+            "uncachedInputTokens": 18630,
+            "outputTokens": 882
+          },
+          "codingSeconds": 290.773414,
+          "elapsedSeconds": 1005.5116662,
+          "dispatch": [
+            {
+              "name": "implement",
+              "timedOut": false,
+              "exitCode": 0
+            }
+          ],
+          "reevaluated": false,
+          "reranCoding": false,
+          "handoffDatabaseSha256": null,
+          "openSpecArchiveStatus": null
+        },
+        {
+          "id": "ticket-2-plain-02",
+          "task": "ticket-2",
+          "workflow": "plain",
+          "repeat": 2,
+          "status": "pass",
+          "hiddenChecks": {
+            "passed": 23,
+            "failed": 0,
+            "unknown": 0,
+            "scheduled": 23
+          },
+          "originalRegressions": {
+            "passed": 1,
+            "failed": 0,
+            "indeterminate": 0,
+            "observed": 1
+          },
+          "testQuality": {
+            "addedCases": 35,
+            "passingOnSubmission": 35,
+            "passingOnReference": 34,
+            "flaky": 0,
+            "fixtureErrors": 0,
+            "scoredFaults": 5,
+            "detectedFaults": 5
+          },
+          "followUpTestQuality": {
+            "addedCases": 35,
+            "passingOnSubmission": 35,
+            "passingOnReference": 34,
+            "flaky": 0,
+            "fixtureErrors": 0,
+            "scoredFaults": 5,
+            "detectedFaults": 5
+          },
+          "tadaL1": null,
+          "agentUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 4,
+            "toolCalls": 15,
+            "inputTokens": 406305,
+            "cachedInputTokens": 384256,
+            "uncachedInputTokens": 22049,
+            "outputTokens": 6337
+          },
+          "reviewerUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 1,
+            "toolCalls": 0,
+            "inputTokens": 18688,
+            "cachedInputTokens": 9984,
+            "uncachedInputTokens": 8704,
+            "outputTokens": 860
+          },
+          "codingSeconds": 229.9861631,
+          "elapsedSeconds": 916.3202197,
+          "dispatch": [
+            {
+              "name": "implement",
+              "timedOut": false,
+              "exitCode": 0
+            }
+          ],
+          "reevaluated": false,
+          "reranCoding": false,
+          "handoffDatabaseSha256": "69232784915aaeb1254910dc3ebebbf4a04a2afadc7b016f4b83469a893df7c8",
+          "openSpecArchiveStatus": null
+        },
+        {
+          "id": "ticket-1-openspec-03",
+          "task": "ticket-1",
+          "workflow": "openspec",
+          "repeat": 3,
+          "status": "pass",
+          "hiddenChecks": {
+            "passed": 21,
+            "failed": 0,
+            "unknown": 0,
+            "scheduled": 21
+          },
+          "originalRegressions": {
+            "passed": 1,
+            "failed": 0,
+            "indeterminate": 0,
+            "observed": 1
+          },
+          "testQuality": {
+            "addedCases": 41,
+            "passingOnSubmission": 41,
+            "passingOnReference": 39,
+            "flaky": 0,
+            "fixtureErrors": 3,
+            "scoredFaults": 5,
+            "detectedFaults": 5
+          },
+          "followUpTestQuality": null,
+          "tadaL1": null,
+          "agentUsage": {
+            "complete": true,
+            "turns": 2,
+            "messages": 12,
+            "toolCalls": 22,
+            "inputTokens": 2015699,
+            "cachedInputTokens": 1876608,
+            "uncachedInputTokens": 139091,
+            "outputTokens": 25408
+          },
+          "reviewerUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 1,
+            "toolCalls": 0,
+            "inputTokens": 18158,
+            "cachedInputTokens": 9984,
+            "uncachedInputTokens": 8174,
+            "outputTokens": 611
+          },
+          "codingSeconds": 541.5035845,
+          "elapsedSeconds": 1023.0464298,
+          "dispatch": [
+            {
+              "name": "propose",
+              "timedOut": false,
+              "exitCode": 0
+            },
+            {
+              "name": "apply",
+              "timedOut": false,
+              "exitCode": 0
+            }
+          ],
+          "reevaluated": false,
+          "reranCoding": false,
+          "handoffDatabaseSha256": null,
+          "openSpecArchiveStatus": null
+        },
+        {
+          "id": "ticket-2-openspec-03",
+          "task": "ticket-2",
+          "workflow": "openspec",
+          "repeat": 3,
+          "status": "pass",
+          "hiddenChecks": {
+            "passed": 23,
+            "failed": 0,
+            "unknown": 0,
+            "scheduled": 23
+          },
+          "originalRegressions": {
+            "passed": 1,
+            "failed": 0,
+            "indeterminate": 0,
+            "observed": 1
+          },
+          "testQuality": {
+            "addedCases": 62,
+            "passingOnSubmission": 62,
+            "passingOnReference": 60,
+            "flaky": 0,
+            "fixtureErrors": 0,
+            "scoredFaults": 5,
+            "detectedFaults": 5
+          },
+          "followUpTestQuality": {
+            "addedCases": 35,
+            "passingOnSubmission": 35,
+            "passingOnReference": 35,
+            "flaky": 0,
+            "fixtureErrors": 0,
+            "scoredFaults": 5,
+            "detectedFaults": 5
+          },
+          "tadaL1": null,
+          "agentUsage": {
+            "complete": true,
+            "turns": 2,
+            "messages": 12,
+            "toolCalls": 28,
+            "inputTokens": 2545340,
+            "cachedInputTokens": 2398976,
+            "uncachedInputTokens": 146364,
+            "outputTokens": 20086
+          },
+          "reviewerUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 1,
+            "toolCalls": 0,
+            "inputTokens": 21907,
+            "cachedInputTokens": 0,
+            "uncachedInputTokens": 21907,
+            "outputTokens": 869
+          },
+          "codingSeconds": 791.8536639,
+          "elapsedSeconds": 1477.3277828,
+          "dispatch": [
+            {
+              "name": "propose",
+              "timedOut": false,
+              "exitCode": 0
+            },
+            {
+              "name": "apply",
+              "timedOut": false,
+              "exitCode": 0
+            }
+          ],
+          "reevaluated": false,
+          "reranCoding": false,
+          "handoffDatabaseSha256": "424216c30f579aa698f1d3fe55736ef77268b9f8f4091201ab05d1a64c74bb61",
+          "openSpecArchiveStatus": "archived"
+        },
+        {
+          "id": "ticket-1-tada-03",
+          "task": "ticket-1",
+          "workflow": "tada",
+          "repeat": 3,
+          "status": "pass",
+          "hiddenChecks": {
+            "passed": 21,
+            "failed": 0,
+            "unknown": 0,
+            "scheduled": 21
+          },
+          "originalRegressions": {
+            "passed": 1,
+            "failed": 0,
+            "indeterminate": 0,
+            "observed": 1
+          },
+          "testQuality": {
+            "addedCases": 18,
+            "passingOnSubmission": 18,
+            "passingOnReference": 17,
+            "flaky": 0,
+            "fixtureErrors": 1,
+            "scoredFaults": 5,
+            "detectedFaults": 5
+          },
+          "followUpTestQuality": null,
+          "tadaL1": {
+            "outcome": "PASS",
+            "baseline": "sha256:23ca8ec159a25708b2d490319fa57c045babd1463c7916a6e3543aa102b5f505",
+            "runId": "07c1c1c973a449b8af265456e25c62cd"
+          },
+          "agentUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 8,
+            "toolCalls": 24,
+            "inputTokens": 1468323,
+            "cachedInputTokens": 1427584,
+            "uncachedInputTokens": 40739,
+            "outputTokens": 11903
+          },
+          "reviewerUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 2,
+            "toolCalls": 0,
+            "inputTokens": 17503,
+            "cachedInputTokens": 9984,
+            "uncachedInputTokens": 7519,
+            "outputTokens": 668
+          },
+          "codingSeconds": 511.2132958,
+          "elapsedSeconds": 1108.4573229,
+          "dispatch": [
+            {
+              "name": "implement",
+              "timedOut": false,
+              "exitCode": 0
+            }
+          ],
+          "reevaluated": false,
+          "reranCoding": false,
+          "handoffDatabaseSha256": null,
+          "openSpecArchiveStatus": null
+        },
+        {
+          "id": "ticket-2-tada-03",
+          "task": "ticket-2",
+          "workflow": "tada",
+          "repeat": 3,
+          "status": "pass",
+          "hiddenChecks": {
+            "passed": 23,
+            "failed": 0,
+            "unknown": 0,
+            "scheduled": 23
+          },
+          "originalRegressions": {
+            "passed": 1,
+            "failed": 0,
+            "indeterminate": 0,
+            "observed": 1
+          },
+          "testQuality": {
+            "addedCases": 29,
+            "passingOnSubmission": 29,
+            "passingOnReference": 28,
+            "flaky": 0,
+            "fixtureErrors": 0,
+            "scoredFaults": 5,
+            "detectedFaults": 5
+          },
+          "followUpTestQuality": {
+            "addedCases": 29,
+            "passingOnSubmission": 29,
+            "passingOnReference": 28,
+            "flaky": 0,
+            "fixtureErrors": 0,
+            "scoredFaults": 5,
+            "detectedFaults": 5
+          },
+          "tadaL1": {
+            "outcome": "PASS",
+            "baseline": "sha256:cf93da72e6dae9f12d4b27e4b9f37671f6abc33fba95ac98eee947c28524ec2d",
+            "runId": "f6535a1e9fc4411d99a5eb471189d886"
+          },
+          "agentUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 6,
+            "toolCalls": 22,
+            "inputTokens": 753852,
+            "cachedInputTokens": 713600,
+            "uncachedInputTokens": 40252,
+            "outputTokens": 11652
+          },
+          "reviewerUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 1,
+            "toolCalls": 0,
+            "inputTokens": 19491,
+            "cachedInputTokens": 9984,
+            "uncachedInputTokens": 9507,
+            "outputTokens": 999
+          },
+          "codingSeconds": 390.8654711,
+          "elapsedSeconds": 1088.0378056,
+          "dispatch": [
+            {
+              "name": "implement",
+              "timedOut": false,
+              "exitCode": 0
+            }
+          ],
+          "reevaluated": false,
+          "reranCoding": false,
+          "handoffDatabaseSha256": "fe7eae85e70a7cdbf75dd808f93e4c069e35691ed22c85996644e16cee15d8b9",
+          "openSpecArchiveStatus": null
+        },
+        {
+          "id": "ticket-1-plain-03",
+          "task": "ticket-1",
+          "workflow": "plain",
+          "repeat": 3,
+          "status": "pass",
+          "hiddenChecks": {
+            "passed": 21,
+            "failed": 0,
+            "unknown": 0,
+            "scheduled": 21
+          },
+          "originalRegressions": {
+            "passed": 1,
+            "failed": 0,
+            "indeterminate": 0,
+            "observed": 1
+          },
+          "testQuality": {
+            "addedCases": 27,
+            "passingOnSubmission": 27,
+            "passingOnReference": 26,
+            "flaky": 0,
+            "fixtureErrors": 3,
+            "scoredFaults": 5,
+            "detectedFaults": 5
+          },
+          "followUpTestQuality": null,
+          "tadaL1": null,
+          "agentUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 3,
+            "toolCalls": 12,
+            "inputTokens": 331197,
+            "cachedInputTokens": 284928,
+            "uncachedInputTokens": 46269,
+            "outputTokens": 9047
+          },
+          "reviewerUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 1,
+            "toolCalls": 0,
+            "inputTokens": 16088,
+            "cachedInputTokens": 9984,
+            "uncachedInputTokens": 6104,
+            "outputTokens": 760
+          },
+          "codingSeconds": 251.5812477,
+          "elapsedSeconds": 889.0941866,
+          "dispatch": [
+            {
+              "name": "implement",
+              "timedOut": false,
+              "exitCode": 0
+            }
+          ],
+          "reevaluated": false,
+          "reranCoding": false,
+          "handoffDatabaseSha256": null,
+          "openSpecArchiveStatus": null
+        },
+        {
+          "id": "ticket-2-plain-03",
+          "task": "ticket-2",
+          "workflow": "plain",
+          "repeat": 3,
+          "status": "pass",
+          "hiddenChecks": {
+            "passed": 23,
+            "failed": 0,
+            "unknown": 0,
+            "scheduled": 23
+          },
+          "originalRegressions": {
+            "passed": 1,
+            "failed": 0,
+            "indeterminate": 0,
+            "observed": 1
+          },
+          "testQuality": {
+            "addedCases": 37,
+            "passingOnSubmission": 37,
+            "passingOnReference": 36,
+            "flaky": 0,
+            "fixtureErrors": 0,
+            "scoredFaults": 5,
+            "detectedFaults": 5
+          },
+          "followUpTestQuality": {
+            "addedCases": 37,
+            "passingOnSubmission": 37,
+            "passingOnReference": 36,
+            "flaky": 0,
+            "fixtureErrors": 0,
+            "scoredFaults": 5,
+            "detectedFaults": 5
+          },
+          "tadaL1": null,
+          "agentUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 5,
+            "toolCalls": 12,
+            "inputTokens": 349595,
+            "cachedInputTokens": 305024,
+            "uncachedInputTokens": 44571,
+            "outputTokens": 5694
+          },
+          "reviewerUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 1,
+            "toolCalls": 0,
+            "inputTokens": 20627,
+            "cachedInputTokens": 9984,
+            "uncachedInputTokens": 10643,
+            "outputTokens": 882
+          },
+          "codingSeconds": 211.4659066,
+          "elapsedSeconds": 1113.1711555,
+          "dispatch": [
+            {
+              "name": "implement",
+              "timedOut": false,
+              "exitCode": 0
+            }
+          ],
+          "reevaluated": false,
+          "reranCoding": false,
+          "handoffDatabaseSha256": "89688f87c23dcadb0066cd87d5a3c009b7f1a07a0c4844f1e8fb82319821f011",
+          "openSpecArchiveStatus": null
+        },
+        {
+          "id": "ticket-1-speckit-03",
+          "task": "ticket-1",
+          "workflow": "speckit",
+          "repeat": 3,
+          "status": "pass",
+          "hiddenChecks": {
+            "passed": 21,
+            "failed": 0,
+            "unknown": 0,
+            "scheduled": 21
+          },
+          "originalRegressions": {
+            "passed": 1,
+            "failed": 0,
+            "indeterminate": 0,
+            "observed": 1
+          },
+          "testQuality": {
+            "addedCases": 42,
+            "passingOnSubmission": 42,
+            "passingOnReference": 41,
+            "flaky": 0,
+            "fixtureErrors": 3,
+            "scoredFaults": 5,
+            "detectedFaults": 5
+          },
+          "followUpTestQuality": null,
+          "tadaL1": null,
+          "agentUsage": {
+            "complete": true,
+            "turns": 4,
+            "messages": 17,
+            "toolCalls": 38,
+            "inputTokens": 6110717,
+            "cachedInputTokens": 5889408,
+            "uncachedInputTokens": 221309,
+            "outputTokens": 96332
+          },
+          "reviewerUsage": {
+            "complete": true,
+            "turns": 1,
+            "messages": 1,
+            "toolCalls": 0,
+            "inputTokens": 19320,
+            "cachedInputTokens": 9984,
+            "uncachedInputTokens": 9336,
+            "outputTokens": 775
+          },
+          "codingSeconds": 1153.0777182,
+          "elapsedSeconds": 1571.0473281,
+          "dispatch": [
+            {
+              "name": "specify",
+              "timedOut": false,
+              "exitCode": 0
+            },
+            {
+              "name": "plan",
+              "timedOut": false,
+              "exitCode": 0
+            },
+            {
+              "name": "tasks",
+              "timedOut": false,
+              "exitCode": 0
+            },
+            {
+              "name": "implement",
+              "timedOut": false,
+              "exitCode": 0
+            }
+          ],
+          "reevaluated": false,
+          "reranCoding": false,
+          "handoffDatabaseSha256": null,
+          "openSpecArchiveStatus": null
+        },
+        {
+          "id": "ticket-2-speckit-03",
+          "task": "ticket-2",
+          "workflow": "speckit",
+          "repeat": 3,
+          "status": "timed-out",
+          "hiddenChecks": {
+            "passed": 0,
+            "failed": 0,
+            "unknown": 23,
+            "scheduled": 23
+          },
+          "originalRegressions": {
+            "passed": 0,
+            "failed": 0,
+            "indeterminate": 0,
+            "observed": 0
+          },
+          "testQuality": null,
+          "followUpTestQuality": null,
+          "tadaL1": null,
+          "agentUsage": {
+            "complete": false,
+            "turns": 4,
+            "messages": 20,
+            "toolCalls": 42,
+            "inputTokens": 2520991,
+            "cachedInputTokens": 2375168,
+            "uncachedInputTokens": 145823,
+            "outputTokens": 57863
+          },
+          "reviewerUsage": null,
+          "codingSeconds": 1202.3956844,
+          "elapsedSeconds": 1220.7398895,
+          "dispatch": [
+            {
+              "name": "specify",
+              "timedOut": false,
+              "exitCode": 0
+            },
+            {
+              "name": "plan",
+              "timedOut": false,
+              "exitCode": 0
+            },
+            {
+              "name": "tasks",
+              "timedOut": false,
+              "exitCode": 0
+            },
+            {
+              "name": "implement",
+              "timedOut": true,
+              "exitCode": 124
+            }
+          ],
+          "reevaluated": false,
+          "reranCoding": false,
+          "handoffDatabaseSha256": "04a10f2d849f9e0761fd54baf4592a5f50e49fdbf6f540e0fd040f0ed3d17da7",
+          "openSpecArchiveStatus": null
+        }
+      ],
+      "campaigns": [
+        {
+          "id": "plain-01",
+          "workflow": "plain",
+          "repeat": 1,
+          "ticket1": "pass",
+          "ticket2": "pass",
+          "passed": true,
+          "codingSeconds": 483.8740025,
+          "elapsedSeconds": 1742.5231024,
+          "agentUsage": {
+            "complete": true,
+            "turns": 2,
+            "messages": 9,
+            "toolCalls": 28,
+            "inputTokens": 821231,
+            "cachedInputTokens": 776320,
+            "uncachedInputTokens": 44911,
+            "outputTokens": 15293
+          }
+        },
+        {
+          "id": "speckit-01",
+          "workflow": "speckit",
+          "repeat": 1,
+          "ticket1": "pass",
+          "ticket2": "pass",
+          "passed": true,
+          "codingSeconds": 2041.8969666,
+          "elapsedSeconds": 3236.2474856999997,
+          "agentUsage": {
+            "complete": true,
+            "turns": 8,
+            "messages": 36,
+            "toolCalls": 97,
+            "inputTokens": 12022221,
+            "cachedInputTokens": 11581696,
+            "uncachedInputTokens": 440525,
+            "outputTokens": 158771
+          }
+        },
+        {
+          "id": "openspec-01",
+          "workflow": "openspec",
+          "repeat": 1,
+          "ticket1": "pass",
+          "ticket2": "pass",
+          "passed": true,
+          "codingSeconds": 968.0193772,
+          "elapsedSeconds": 2633.8458972,
+          "agentUsage": {
+            "complete": true,
+            "turns": 4,
+            "messages": 22,
+            "toolCalls": 44,
+            "inputTokens": 4135097,
+            "cachedInputTokens": 3896832,
+            "uncachedInputTokens": 238265,
+            "outputTokens": 44732
+          }
+        },
+        {
+          "id": "tada-01",
+          "workflow": "tada",
+          "repeat": 1,
+          "ticket1": "pass",
+          "ticket2": "pass",
+          "passed": true,
+          "codingSeconds": 1209.0111261,
+          "elapsedSeconds": 2613.8700334,
+          "agentUsage": {
+            "complete": true,
+            "turns": 2,
+            "messages": 12,
+            "toolCalls": 40,
+            "inputTokens": 1627711,
+            "cachedInputTokens": 1554304,
+            "uncachedInputTokens": 73407,
+            "outputTokens": 22398
+          }
+        },
+        {
+          "id": "speckit-02",
+          "workflow": "speckit",
+          "repeat": 2,
+          "ticket1": "pass",
+          "ticket2": "pass",
+          "passed": true,
+          "codingSeconds": 2158.3505274999998,
+          "elapsedSeconds": 3496.1700479,
+          "agentUsage": {
+            "complete": true,
+            "turns": 8,
+            "messages": 35,
+            "toolCalls": 73,
+            "inputTokens": 11009548,
+            "cachedInputTokens": 10558208,
+            "uncachedInputTokens": 451340,
+            "outputTokens": 180366
+          }
+        },
+        {
+          "id": "openspec-02",
+          "workflow": "openspec",
+          "repeat": 2,
+          "ticket1": "pass",
+          "ticket2": "indeterminate",
+          "passed": false,
+          "codingSeconds": 1106.3663053999999,
+          "elapsedSeconds": 2579.7411377999997,
+          "agentUsage": {
+            "complete": true,
+            "turns": 4,
+            "messages": 22,
+            "toolCalls": 54,
+            "inputTokens": 4558340,
+            "cachedInputTokens": 4317952,
+            "uncachedInputTokens": 240388,
+            "outputTokens": 46655
+          }
+        },
+        {
+          "id": "tada-02",
+          "workflow": "tada",
+          "repeat": 2,
+          "ticket1": "pass",
+          "ticket2": "pass",
+          "passed": true,
+          "codingSeconds": 812.7208023000001,
+          "elapsedSeconds": 2215.8595876,
+          "agentUsage": {
+            "complete": true,
+            "turns": 2,
+            "messages": 13,
+            "toolCalls": 42,
+            "inputTokens": 1956123,
+            "cachedInputTokens": 1870720,
+            "uncachedInputTokens": 85403,
+            "outputTokens": 21116
+          }
+        },
+        {
+          "id": "plain-02",
+          "workflow": "plain",
+          "repeat": 2,
+          "ticket1": "pass",
+          "ticket2": "pass",
+          "passed": true,
+          "codingSeconds": 520.7595771,
+          "elapsedSeconds": 1921.8318859,
+          "agentUsage": {
+            "complete": true,
+            "turns": 2,
+            "messages": 9,
+            "toolCalls": 32,
+            "inputTokens": 931093,
+            "cachedInputTokens": 871424,
+            "uncachedInputTokens": 59669,
+            "outputTokens": 15690
+          }
+        },
+        {
+          "id": "openspec-03",
+          "workflow": "openspec",
+          "repeat": 3,
+          "ticket1": "pass",
+          "ticket2": "pass",
+          "passed": true,
+          "codingSeconds": 1333.3572484000001,
+          "elapsedSeconds": 2500.3742126,
+          "agentUsage": {
+            "complete": true,
+            "turns": 4,
+            "messages": 24,
+            "toolCalls": 50,
+            "inputTokens": 4561039,
+            "cachedInputTokens": 4275584,
+            "uncachedInputTokens": 285455,
+            "outputTokens": 45494
+          }
+        },
+        {
+          "id": "tada-03",
+          "workflow": "tada",
+          "repeat": 3,
+          "ticket1": "pass",
+          "ticket2": "pass",
+          "passed": true,
+          "codingSeconds": 902.0787669,
+          "elapsedSeconds": 2196.4951284999997,
+          "agentUsage": {
+            "complete": true,
+            "turns": 2,
+            "messages": 14,
+            "toolCalls": 46,
+            "inputTokens": 2222175,
+            "cachedInputTokens": 2141184,
+            "uncachedInputTokens": 80991,
+            "outputTokens": 23555
+          }
+        },
+        {
+          "id": "plain-03",
+          "workflow": "plain",
+          "repeat": 3,
+          "ticket1": "pass",
+          "ticket2": "pass",
+          "passed": true,
+          "codingSeconds": 463.0471543,
+          "elapsedSeconds": 2002.2653421,
+          "agentUsage": {
+            "complete": true,
+            "turns": 2,
+            "messages": 8,
+            "toolCalls": 24,
+            "inputTokens": 680792,
+            "cachedInputTokens": 589952,
+            "uncachedInputTokens": 90840,
+            "outputTokens": 14741
+          }
+        },
+        {
+          "id": "speckit-03",
+          "workflow": "speckit",
+          "repeat": 3,
+          "ticket1": "pass",
+          "ticket2": "timed-out",
+          "passed": false,
+          "codingSeconds": 2355.4734025999996,
+          "elapsedSeconds": 2791.7872176,
+          "agentUsage": {
+            "complete": false,
+            "turns": 8,
+            "messages": 37,
+            "toolCalls": 80,
+            "inputTokens": 8631708,
+            "cachedInputTokens": 8264576,
+            "uncachedInputTokens": 367132,
+            "outputTokens": 154195
+          }
+        }
+      ]
+    }
+  ]
+}

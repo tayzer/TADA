@@ -34,6 +34,8 @@ The runnable Echo API demonstration captures the complete sequence. A reachable 
 
 The demonstration uses explicitly labelled automated control approval. Your application's business approval comes from you.
 
+The [agent-only Codex benchmark](docs/validation/2026-11-27-codex-sdd-benchmarks.md) compares TADA, Spec Kit, OpenSpec and plain Codex on a two-release inventory API.
+
 ## Requirements
 
 | Need | Version |

@@ -3,6 +3,7 @@
     <NativeObserverRoot>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)/../../.artifacts/native'))</NativeObserverRoot>
   </PropertyGroup>
   <ItemGroup>
+    <InternalsVisibleTo Include="Tada.Core.Tests" />
     <None Include="$(NativeObserverRoot)/tada_native_observer.dll" Link="tada_native_observer.dll" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
   <Target Name="BuildNativeObserver" BeforeTargets="PrepareForBuild;GetCopyToOutputDirectoryItems"
